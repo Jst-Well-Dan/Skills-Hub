@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xml:lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="generator" content="huashu-md-html · article theme" />
+
+
+
+
+  <title>SkillHub 入库测试报告</title>
+
+  <!-- Web fonts: Newsreader (display+body serif) + IBM Plex Sans (UI) + JetBrains Mono (code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+
+  <link rel="stylesheet" href="E:\Python_Doc\My_Github\Skills-Hub\extracted-skills\huashu-md-html\huashu-md-html\templates\article\theme.css" />
+
+</head>
+<body>
+  <!-- Reading progress bar -->
+  <div id="reading-progress" aria-hidden="true"></div>
+
+
+  <header class="title-block" role="banner">
+
+    <h1 class="title">SkillHub 入库测试报告</h1>
+
+
+
+  </header>
+
+  <main role="main">
+
+    <article>
+<p>这是一份用于测试 <code>huashu-md-html</code> skill 的短文档。目标是验证 Markdown 到 HTML 的兜底流水线是否可运行，并确认产物具备基本排版结构。</p>
+<h2 id="测试范围">测试范围</h2>
+<table>
+<thead>
+<tr class="header">
+<th>项目</th>
+<th>预期</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>标题层级</td>
+<td>保留 h1 / h2 / h3</td>
+</tr>
+<tr class="even">
+<td>表格</td>
+<td>渲染为可读表格</td>
+</tr>
+<tr class="odd">
+<td>引用</td>
+<td>转换为明确的引用块</td>
+</tr>
+<tr class="even">
+<td>代码</td>
+<td>保留等宽代码块</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>好的文档流水线应该把 Markdown 当作源代码，把 HTML 当作可发布产物。</p>
+</blockquote>
+<h2 id="示例代码">示例代码</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> workflow <span class="op">=</span> [<span class="st">&quot;import&quot;</span><span class="op">,</span> <span class="st">&quot;extract&quot;</span><span class="op">,</span> <span class="st">&quot;document&quot;</span><span class="op">,</span> <span class="st">&quot;validate&quot;</span>]<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(workflow<span class="op">.</span><span class="fu">join</span>(<span class="st">&quot; -&gt; &quot;</span>))<span class="op">;</span></span></code></pre></div>
+<h2 id="结论">结论</h2>
+<p>如果这个文件能稳定转换为 HTML，说明基础模板、Pandoc 调用和输出路径都工作正常。</p>
+    </article>
+  </main>
+
+
+  <!-- Reading progress + code copy + smooth scroll -->
+  <script>
+    (function () {
+      // Reading progress bar
+      var bar = document.getElementById('reading-progress');
+      if (bar) {
+        var update = function () {
+          var doc = document.documentElement;
+          var scrollTop = doc.scrollTop || document.body.scrollTop;
+          var height = doc.scrollHeight - doc.clientHeight;
+          var pct = height > 0 ? (scrollTop / height) * 100 : 0;
+          bar.style.width = pct + '%';
+        };
+        document.addEventListener('scroll', update, { passive: true });
+        update();
+      }
+
+      // Code copy button (added on hover-capable devices)
+      var codeBlocks = document.querySelectorAll('pre > code');
+      codeBlocks.forEach(function (code) {
+        var pre = code.parentElement;
+        if (pre.querySelector('.copy-btn')) return;
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Copy code');
+        btn.textContent = 'Copy';
+        btn.addEventListener('click', function () {
+          navigator.clipboard.writeText(code.innerText).then(function () {
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1600);
+          }, function () {
+            btn.textContent = 'Failed';
+          });
+        });
+        pre.appendChild(btn);
+      });
+
+      // Smooth scroll for in-page anchors (TOC)
+      document.querySelectorAll('nav#TOC a[href^="#"]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          var target = document.querySelector(a.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            history.pushState(null, '', a.getAttribute('href'));
+          }
+        });
+      });
+
+      // Image click-to-expand (lightbox lite)
+      document.querySelectorAll('article img, figure img').forEach(function (img) {
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function () {
+          var overlay = document.createElement('div');
+          overlay.className = 'img-lightbox';
+          var clone = document.createElement('img');
+          clone.src = img.src;
+          overlay.appendChild(clone);
+          overlay.addEventListener('click', function () {
+            overlay.remove();
+            document.body.style.overflow = '';
+          });
+          document.body.style.overflow = 'hidden';
+          document.body.appendChild(overlay);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

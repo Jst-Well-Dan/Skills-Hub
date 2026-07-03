@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+todo.md
+
+.env
+.skillhub-update-backups/
+libraries/.*.tmp/

@@ -1,0 +1,23 @@
+# Punk Avatar Style Catalog
+
+Use these user-visible style names. This catalog references reusable style atoms in the repository-level `styles/` directory. `punk-avatar` may list only the five styles below.
+
+Do not copy prompt bodies into this catalog. Read the selected style's `META.md` and `STYLE.md` after the user chooses a style.
+
+All styles default to `1:1` inside `punk-avatar`, regardless of the `default_ratio` in style metadata. Keep the user's custom ratio only when explicitly provided.
+
+| Style | Style ID | Subject | Metadata | Style | Best For |
+| --- | --- | --- | --- | --- | --- |
+| 像素头像 | `pixel-avatar` | person, pet, object | `styles/pixel-avatar/META.md` | `styles/pixel-avatar/STYLE.md` | Standard profile avatars, icon-like portraits, symbolic avatars, objects, and unclear subjects. |
+| 怪诞灵魂手绘 | `grotesque-soul-sketch` | person, pet | `styles/grotesque-soul-sketch/META.md` | `styles/grotesque-soul-sketch/STYLE.md` | Funny, expressive, sketchy, personality-driven people or pet avatars. |
+| 凌乱蜡笔宠物肖像 | `messy-crayon-pet-portrait` | pet | `styles/messy-crayon-pet-portrait/META.md` | `styles/messy-crayon-pet-portrait/STYLE.md` | Pet avatars, named pet portraits, light crayon and colored-pencil pet drawings. |
+| 时尚速写观察页 | `fashion-sketch-observation` | person | `styles/fashion-sketch-observation/META.md` | `styles/fashion-sketch-observation/STYLE.md` | Human profile portraits with fashion sketch, travel observation, street-photo, or film-still energy. |
+| 拍立得纪念卡 | `polaroid-keepsake` | pet | `styles/polaroid-keepsake/META.md` | `styles/polaroid-keepsake/STYLE.md` | Pet avatar-derived keepsake cards, named pet watercolor polaroid portraits, collectible pet images. |
+
+## Recommendation Rules
+
+- Pet subject: recommend `凌乱蜡笔宠物肖像`, `拍立得纪念卡`, `怪诞灵魂手绘`, and optionally `像素头像`.
+- Person subject: recommend `怪诞灵魂手绘`, `时尚速写观察页`, and `像素头像`.
+- Object subject or unclear subject: recommend `像素头像` first.
+- Do not recommend pet-only styles for people or objects.
+- Do not recommend cover/poster styles here.
