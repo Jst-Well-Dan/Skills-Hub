@@ -56,7 +56,8 @@ def html_template() -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Skills-Hub</title>
+  <meta name="description" content="浏览、筛选并直达优质 Agent Skills 的开源目录。">
+  <title>Skills-Hub - Agent Skills 目录</title>
   <style>
     @font-face {
       font-family: "TsangerJinKai02";
@@ -73,44 +74,65 @@ def html_template() -> str:
       font-display: swap;
     }
     :root {
-      color-scheme: light;
-      --bg: #f5f4ed;
-      --bg-deep: #e8e6dc;
-      --ivory: #faf9f5;
-      --panel: #faf9f5;
-      --panel-muted: #e8e6dc;
-      --panel-lift: #f8f6ef;
-      --text: #141413;
-      --body-text: #3d3d3a;
-      --muted: #504e49;
-      --faint: #6b6a64;
-      --stone: #6b6a64;
-      --line: #e8e6dc;
-      --line-strong: #1B365D;
-      --accent: #1B365D;
-      --accent-strong: #2D5A8A;
-      --accent-soft: #EEF2F7;
-      --tag-bg: #E4ECF5;
-      --warm-warning: #f0e0d8;
-      --warm-warning-text: #8b4513;
-      --shadow: 0 4px 24px rgba(20, 19, 19, .05);
+      color-scheme: light dark;
+      --bg: #f6f8fa;
+      --bg-deep: #eaeef2;
+      --ivory: #ffffff;
+      --panel: #ffffff;
+      --panel-muted: #f6f8fa;
+      --panel-lift: #f3f4f6;
+      --text: #1f2328;
+      --body-text: #3b434b;
+      --muted: #59636e;
+      --faint: #6e7781;
+      --stone: #59636e;
+      --line: #d0d7de;
+      --line-strong: #8c959f;
+      --accent: #0969da;
+      --accent-strong: #0550ae;
+      --accent-soft: #ddf4ff;
+      --tag-bg: #ddf4ff;
+      --accent-text: #ffffff;
+      --shadow: 0 8px 24px rgba(140, 149, 159, .18);
       --ease: cubic-bezier(.16, 1, .3, 1);
-      --serif: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", Charter, Georgia, serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
       --mono: "JetBrains Mono", "SF Mono", Consolas, Monaco, monospace;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --bg-deep: #21262d;
+        --ivory: #161b22;
+        --panel: #161b22;
+        --panel-muted: #0d1117;
+        --panel-lift: #21262d;
+        --text: #f0f6fc;
+        --body-text: #c9d1d9;
+        --muted: #9da7b1;
+        --faint: #8b949e;
+        --stone: #9da7b1;
+        --line: #30363d;
+        --line-strong: #6e7681;
+        --accent: #58a6ff;
+        --accent-strong: #79c0ff;
+        --accent-soft: #0c2d4a;
+        --tag-bg: #0c2d4a;
+        --accent-text: #0d1117;
+        --shadow: 0 8px 24px rgba(1, 4, 9, .38);
+      }
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
       min-width: 320px;
-      background:
-        linear-gradient(135deg, transparent 0 48%, rgba(27, 54, 93, .045) 48% 48.16%, transparent 48.16%),
-        var(--bg);
+      background: var(--bg);
       color: var(--body-text);
-      font-family: var(--serif);
+      font-family: var(--sans);
       font-size: 14px;
       line-height: 1.55;
-      letter-spacing: .25px;
+      letter-spacing: 0;
     }
     a { color: inherit; text-decoration: none; }
     button, input, select { font: inherit; }
@@ -124,13 +146,13 @@ def html_template() -> str:
       top: 0;
       z-index: 30;
       border-bottom: 1px solid var(--line);
-      background: color-mix(in srgb, var(--ivory) 92%, transparent);
-      backdrop-filter: blur(14px);
+      background: color-mix(in srgb, var(--ivory) 94%, transparent);
+      backdrop-filter: blur(16px);
     }
     .topbar-inner {
       max-width: 1360px;
       margin: 0 auto;
-      padding: 14px 24px;
+      padding: 10px 24px;
       display: grid;
       grid-template-columns: minmax(180px, 260px) 1fr auto;
       gap: 18px;
@@ -145,15 +167,15 @@ def html_template() -> str:
     .mark {
       width: 38px;
       height: 38px;
-      border-radius: 4px;
+      border-radius: 10px;
       display: grid;
       place-items: center;
-      border: 1px solid var(--line-strong);
+      border: 1px solid var(--accent);
       background: var(--accent);
-      color: var(--panel);
+      color: var(--accent-text);
       font-weight: 800;
       letter-spacing: 0;
-      box-shadow: 0 0 0 1px rgba(27, 54, 93, .05);
+      box-shadow: none;
     }
     .brand-title {
       margin: 0;
@@ -187,7 +209,7 @@ def html_template() -> str:
     .search-box input::placeholder { color: var(--muted); }
     .search-box input:focus {
       border-color: var(--line-strong);
-      box-shadow: 0 0 0 3px rgba(27, 54, 93, .12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
     }
     .search-icon, .clear-search {
       position: absolute;
@@ -211,6 +233,22 @@ def html_template() -> str:
       align-items: center;
       gap: 8px;
     }
+    .nav-link {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: border-color .18s var(--ease), background .18s var(--ease);
+    }
+    .nav-link:hover { border-color: var(--line-strong); background: var(--panel-lift); }
     .icon-button {
       width: 38px;
       height: 38px;
@@ -228,7 +266,7 @@ def html_template() -> str:
     .layout {
       max-width: 1360px;
       margin: 0 auto;
-      padding: 28px 24px 38px;
+      padding: 32px 24px 48px;
       display: grid;
       grid-template-columns: 280px minmax(0, 1fr);
       gap: 24px;
@@ -236,21 +274,20 @@ def html_template() -> str:
     .sidebar {
       align-self: start;
       position: sticky;
-      top: 84px;
+      top: 76px;
       display: grid;
       gap: 14px;
     }
     .filter-panel {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--panel);
-      box-shadow: var(--shadow);
       overflow: hidden;
     }
     .filter-head {
       padding: 13px 14px;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(90deg, var(--accent-soft), var(--panel));
+      background: var(--panel-muted);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -259,9 +296,8 @@ def html_template() -> str:
     .filter-title {
       margin: 0;
       font-size: 13px;
-      text-transform: uppercase;
-      color: var(--accent);
-      letter-spacing: .4px;
+      color: var(--text);
+      letter-spacing: 0;
     }
     .filter-list {
       padding: 8px;
@@ -273,7 +309,7 @@ def html_template() -> str:
       min-height: 34px;
       padding: 7px 8px;
       border: 0;
-      border-radius: 4px;
+      border-radius: 8px;
       background: transparent;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -312,20 +348,48 @@ def html_template() -> str:
       display: grid;
       gap: 16px;
     }
+    .catalog-intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding: 4px 2px 8px;
+    }
+    .catalog-title {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
+    .catalog-copy {
+      margin: 10px 0 0;
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .catalog-source {
+      color: var(--accent);
+      font-weight: 650;
+      white-space: nowrap;
+    }
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      overflow: hidden;
     }
     .stat {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 16px;
-      min-height: 96px;
+      border-right: 1px solid var(--line);
+      padding: 14px 16px;
+      min-height: 78px;
       display: grid;
       align-content: space-between;
     }
+    .stat:last-child { border-right: 0; }
     .stat-label {
       color: var(--muted);
       font-size: 12px;
@@ -334,13 +398,13 @@ def html_template() -> str:
     .stat-value {
       margin-top: 8px;
       color: var(--text);
-      font-size: 32px;
+      font-size: 27px;
       line-height: 1;
       font-weight: 760;
     }
     .toolbar {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--panel);
       padding: 10px;
       display: flex;
@@ -354,7 +418,7 @@ def html_template() -> str:
       grid-auto-flow: column;
       gap: 3px;
       padding: 3px;
-      border-radius: 8px;
+      border-radius: 9px;
       background: var(--bg-deep);
       border: 1px solid var(--line);
     }
@@ -363,21 +427,21 @@ def html_template() -> str:
       height: 32px;
       padding: 0 12px;
       border: 0;
-      border-radius: 6px;
+      border-radius: 7px;
       background: transparent;
       color: var(--muted);
       cursor: pointer;
     }
     .segment.active {
       background: var(--accent);
-      color: var(--panel);
+      color: var(--accent-text);
       box-shadow: 0 0 0 1px var(--accent);
       font-weight: 650;
     }
     .sort-select {
       height: 38px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 9px;
       background: var(--panel);
       color: var(--text);
       padding: 0 10px;
@@ -398,15 +462,14 @@ def html_template() -> str:
     }
     .project-card {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: var(--panel);
       min-width: 0;
       overflow: hidden;
-      transition: transform .18s var(--ease), border-color .18s var(--ease), background .18s var(--ease);
+      transition: transform .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease);
     }
     .project-card:hover {
       border-color: var(--line-strong);
-      background: var(--panel);
       box-shadow: var(--shadow);
       transform: translateY(-2px);
     }
@@ -415,7 +478,7 @@ def html_template() -> str:
       border: 0;
       background: transparent;
       color: inherit;
-      padding: 15px;
+      padding: 18px;
       text-align: left;
       cursor: pointer;
       display: grid;
@@ -430,7 +493,7 @@ def html_template() -> str:
     .project-name {
       margin: 0;
       color: var(--text);
-      font-size: 18px;
+      font-size: 17px;
       line-height: 1.25;
       overflow-wrap: anywhere;
       text-wrap: balance;
@@ -441,7 +504,7 @@ def html_template() -> str:
       min-height: 24px;
       padding: 3px 8px;
       border: 1px solid var(--line);
-      border-radius: 999px;
+      border-radius: 8px;
       color: var(--accent);
       background: var(--tag-bg);
       font-size: 12px;
@@ -465,17 +528,17 @@ def html_template() -> str:
     .tag {
       min-height: 23px;
       padding: 3px 7px;
-      border: 1px solid #D0DCE9;
-      border-radius: 4px;
+      border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+      border-radius: 6px;
       background: var(--tag-bg);
       color: var(--accent);
       font-size: 12px;
     }
     .project-foot {
-      padding: 11px 15px;
+      padding: 10px 12px 10px 18px;
       border-top: 1px solid var(--line);
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto auto;
       gap: 12px;
       align-items: center;
       color: var(--muted);
@@ -488,6 +551,25 @@ def html_template() -> str:
       white-space: nowrap;
       font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
     }
+    .card-category { white-space: nowrap; }
+    .github-link, .primary-link {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+      transition: background .18s var(--ease), transform .18s var(--ease);
+    }
+    .github-link:hover, .primary-link:hover { background: var(--accent-strong); }
+    .github-link:active, .primary-link:active { transform: translateY(1px); }
     .empty {
       border: 1px dashed var(--line-strong);
       border-radius: 6px;
@@ -544,6 +626,11 @@ def html_template() -> str:
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
       align-items: start;
+    }
+    .drawer-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .drawer-title {
       margin: 0;
@@ -642,14 +729,20 @@ def html_template() -> str:
         order: 3;
       }
       .layout {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
       }
+      .workspace { display: contents; }
+      .catalog-intro { order: 1; }
       .sidebar {
+        order: 2;
         position: static;
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .project-grid { grid-template-columns: 1fr; }
+      .stats { order: 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar { order: 4; }
+      .project-grid, .project-list { order: 5; grid-template-columns: 1fr; }
+      .catalog-intro { grid-template-columns: 1fr; gap: 8px; }
     }
     @media (max-width: 680px) {
       .topbar-inner, .layout {
@@ -659,12 +752,17 @@ def html_template() -> str:
       .sidebar { grid-template-columns: 1fr; }
       .filter-list { max-height: 118px; }
       .stats { grid-template-columns: 1fr 1fr; }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
       .stat-value { font-size: 23px; }
       .toolbar { align-items: stretch; }
       .segmented { width: 100%; grid-template-columns: 1fr 1fr; grid-auto-flow: row; }
       .sort-select { width: 100%; }
       .detail-grid { grid-template-columns: 1fr; }
-      .project-foot { grid-template-columns: 1fr; }
+      .project-foot { grid-template-columns: minmax(0, 1fr) auto; }
+      .card-category { display: none; }
+      .nav-link { padding: 0 10px; }
+      .nav-docs { display: none; }
     }
   </style>
 </head>
@@ -684,8 +782,8 @@ def html_template() -> str:
         <button class="clear-search" id="clearSearch" title="清空搜索" aria-label="清空搜索">×</button>
       </div>
       <div class="actions">
-        <a class="icon-button" href="https://github.com/Jst-Well-Dan/Skills-Hub/blob/main/README.md" title="README" aria-label="README">R</a>
-        <a class="icon-button" href="https://github.com/Jst-Well-Dan/Skills-Hub/blob/main/docs/index.md" title="完整索引" aria-label="完整索引">I</a>
+        <a class="nav-link nav-docs" href="https://github.com/Jst-Well-Dan/Skills-Hub/blob/main/docs/index.md">完整索引</a>
+        <a class="nav-link" href="https://github.com/Jst-Well-Dan/Skills-Hub" target="_blank" rel="noreferrer">项目 GitHub</a>
       </div>
     </div>
   </header>
@@ -707,6 +805,13 @@ def html_template() -> str:
     </aside>
 
     <section class="workspace">
+      <header class="catalog-intro">
+        <div>
+          <h2 class="catalog-title">找到值得使用的 Agent Skills</h2>
+          <p class="catalog-copy">从开源项目中筛选、比较并直达原始仓库。点击卡片查看详情，或直接打开目标 GitHub。</p>
+        </div>
+        <a class="catalog-source" href="https://github.com/Jst-Well-Dan/Skills-Hub" target="_blank" rel="noreferrer">在 GitHub 查看本目录</a>
+      </header>
       <div class="stats" id="stats"></div>
       <div class="toolbar">
         <div class="segmented" role="tablist" aria-label="展示模式">
@@ -733,7 +838,10 @@ def html_template() -> str:
           <h2 class="drawer-title" id="drawerTitle"></h2>
           <p class="description" id="drawerDescription"></p>
         </div>
-        <button class="icon-button" id="closeDrawer" title="关闭" aria-label="关闭">×</button>
+        <div class="drawer-head-actions">
+          <a class="primary-link" id="drawerSourceLink" href="#" target="_blank" rel="noreferrer">打开 GitHub</a>
+          <button class="icon-button" id="closeDrawer" title="关闭" aria-label="关闭">×</button>
+        </div>
       </div>
       <div class="drawer-body" id="drawerBody"></div>
     </section>
@@ -758,10 +866,14 @@ def html_template() -> str:
     const text = (value) => String(value ?? "");
     const categoryLabel = (id) => data.category_labels[id] || id || "未分类";
     const sourceOf = (project) => project.source?.repo || project.source?.type || "local";
+    const sourceUrl = (project) => project.source?.repo
+      ? `https://github.com/${project.source.repo}`
+      : `${REPO_URL}/tree/main/${project.path}`;
     const normalize = (value) => text(value).toLowerCase();
+    const readableText = (value) => text(value).replaceAll("—", " - ").replaceAll("–", "-");
 
     function escapeHtml(value) {
-      return text(value)
+      return readableText(value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -837,6 +949,7 @@ def html_template() -> str:
 
     function projectCard(project) {
       const tags = (project.tags || []).slice(0, 7).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
+      const sourceLabel = project.source?.repo ? "GitHub" : "查看目录";
       return `
         <article class="project-card">
           <button class="project-main" data-project-id="${escapeHtml(project.id)}">
@@ -849,7 +962,8 @@ def html_template() -> str:
           </button>
           <div class="project-foot">
             <span class="path">${escapeHtml(project.path)}</span>
-            <span>${escapeHtml(categoryLabel(project.category))}</span>
+            <span class="card-category">${escapeHtml(categoryLabel(project.category))}</span>
+            <a class="github-link" href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer" aria-label="在 GitHub 打开 ${escapeHtml(project.name)}">${sourceLabel}</a>
           </div>
         </article>
       `;
@@ -869,7 +983,9 @@ def html_template() -> str:
       if (!project) return;
       state.selected = project.id;
       el("drawerTitle").textContent = project.name;
-      el("drawerDescription").textContent = project.description || "暂无简介";
+      el("drawerDescription").textContent = readableText(project.description || "暂无简介");
+      el("drawerSourceLink").href = sourceUrl(project);
+      el("drawerSourceLink").textContent = project.source?.repo ? "打开 GitHub" : "查看项目目录";
       const install = project.install?.command || project.install?.method || "未记录";
       const skills = [...(project.skills || [])].sort((a, b) => a.name.localeCompare(b.name));
       const skillHtml = skills.map((skill) => `
@@ -913,7 +1029,7 @@ def html_template() -> str:
       renderFilters();
       renderProjects(projects);
       el("resultMeta").textContent = `显示 ${projects.length} / ${data.summary.project_count} 个项目`;
-      el("generatedAt").textContent = `${data.summary.project_count} 个库 · ${data.summary.skill_count} 个 skills · ${data.generated_at}`;
+      el("generatedAt").textContent = `${data.summary.project_count} 个库 / ${data.summary.skill_count} 个 skills / ${data.generated_at}`;
       document.querySelectorAll(".segment").forEach((button) => {
         button.classList.toggle("active", button.dataset.view === state.view);
       });

@@ -4192,6 +4192,122 @@
       "category": "daily-tools"
     },
     {
+      "id": "ponytail",
+      "name": "ponytail",
+      "path": "libraries/ponytail",
+      "source": {
+        "type": "github",
+        "repo": "DietrichGebert/ponytail",
+        "ref": "main",
+        "commit": "14a0d79548d4de8fc2de95c1b94bb0de63a739d3",
+        "original_path": "skills"
+      },
+      "tags": [
+        "coding",
+        "workflow"
+      ],
+      "description": "Tags",
+      "added_at": "2026-07-15",
+      "last_checked_at": "2026-07-15",
+      "last_synced_at": "2026-07-15",
+      "skill_count": 6,
+      "skills": [
+        {
+          "id": "ponytail-audit",
+          "name": "ponytail-audit",
+          "path": "libraries/ponytail/ponytail-audit",
+          "original_path": "libraries/ponytail/ponytail-audit",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Whole-repo audit for over-engineering. Like ponytail-review, but scans the entire codebase instead of a diff: a ranked list of what to delete, simplify, or replace with stdlib/native equivalents. Use when the user says \"audit this codebase\", \"audit for over-engineering\", \"what can I delete from this repo\", \"find bloat\", \"ponytail-audit\", or \"/ponytail-audit\". One-shot report, does not apply fixes.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail-audit"
+        },
+        {
+          "id": "ponytail-debt",
+          "name": "ponytail-debt",
+          "path": "libraries/ponytail/ponytail-debt",
+          "original_path": "libraries/ponytail/ponytail-debt",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Harvest every `ponytail:` comment in the codebase into a debt ledger, so the deliberate shortcuts and deferrals ponytail leaves behind get tracked instead of rotting into \"later means never\". Use when the user says \"ponytail debt\", \"/ponytail-debt\", \"what did ponytail defer\", \"list the shortcuts\", \"ponytail ledger\", or \"what did we mark to do later\". One-shot report, changes nothing.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail-debt"
+        },
+        {
+          "id": "ponytail-gain",
+          "name": "ponytail-gain",
+          "path": "libraries/ponytail/ponytail-gain",
+          "original_path": "libraries/ponytail/ponytail-gain",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Show ponytail's measured impact as a compact scoreboard: less code, less cost, more speed, from the benchmark medians. One-shot display, not a persistent mode, and not a per-repo number. Trigger: /ponytail-gain, \"ponytail gain\", \"what does ponytail save\", \"show ponytail impact\", \"ponytail scoreboard\".",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail-gain"
+        },
+        {
+          "id": "ponytail-help",
+          "name": "ponytail-help",
+          "path": "libraries/ponytail/ponytail-help",
+          "original_path": "libraries/ponytail/ponytail-help",
+          "tags": [
+            "docs",
+            "coding",
+            "cli",
+            "frontend"
+          ],
+          "description": "Quick-reference card for all ponytail modes, skills, and commands. One-shot display, not a persistent mode. Trigger: /ponytail-help, \"ponytail help\", \"what ponytail commands\", \"how do I use ponytail\".",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail-help"
+        },
+        {
+          "id": "ponytail-review",
+          "name": "ponytail-review",
+          "path": "libraries/ponytail/ponytail-review",
+          "original_path": "libraries/ponytail/ponytail-review",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Code review focused exclusively on over-engineering. Finds what to delete: reinvented standard library, unneeded dependencies, speculative abstractions, dead flexibility. One line per finding: location, what to cut, what replaces it. Use when the user says \"review for over-engineering\", \"what can we delete\", \"is this over-engineered\", \"simplify review\", or invokes /ponytail-review. Complements correctness-focused review, this one only hunts complexity.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail-review"
+        },
+        {
+          "id": "ponytail",
+          "name": "ponytail",
+          "path": "libraries/ponytail/ponytail",
+          "original_path": "libraries/ponytail/ponytail",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Forces the laziest solution that actually works, simplest, shortest, most minimal. Channels a senior dev who has seen everything: question whether the task needs to exist at all (YAGNI), reach for the standard library before custom code, native platform features before dependencies, one line before fifty. Supports intensity levels: lite, full (default), ultra. Use on ANY coding task: writing, adding, refactoring, fixing, reviewing, or designing code, and choosing libraries or dependencies. Also use whenever the user says \"ponytail\", \"be lazy\", \"lazy mode\", \"simplest solution\", \"minimal solution\", \"yagni\", \"do less\", or \"shortest path\", or complains about over-engineering, bloat, boilerplate, or unnecessary dependencies. Do NOT use for non-coding requests (general knowledge, prose, translation, summaries, recipes).",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail"
+        }
+      ],
+      "category": "coding-tools",
+      "install": {
+        "method": "extracted",
+        "extracted_root": "extracted-skills/ponytail"
+      },
+      "extracted": {
+        "root": "extracted-skills/ponytail",
+        "source_library": "ponytail",
+        "source_path": "libraries/ponytail",
+        "last_extracted_commit": "14a0d79548d4de8fc2de95c1b94bb0de63a739d3",
+        "skill_count": 6
+      }
+    },
+    {
       "id": "punk-skill",
       "name": "punk-skill",
       "path": "libraries/punk-skill",
@@ -5018,6 +5134,238 @@
       },
       "category": "personal-collection",
       "category_locked": true
+    },
+    {
+      "id": "taste-skill",
+      "name": "taste-skill",
+      "path": "libraries/taste-skill",
+      "source": {
+        "type": "github",
+        "repo": "Leonxlnx/taste-skill",
+        "ref": "main",
+        "commit": "b17742737e796305d829b3ad39eda3add0d79060",
+        "original_path": "skills"
+      },
+      "tags": [
+        "coding",
+        "frontend",
+        "image"
+      ],
+      "description": "BRANDKIT IMAGE GENERATION SKILL",
+      "added_at": "2026-07-15",
+      "last_checked_at": "2026-07-15",
+      "last_synced_at": "2026-07-15",
+      "skill_count": 13,
+      "skills": [
+        {
+          "id": "brandkit",
+          "name": "brandkit",
+          "path": "libraries/taste-skill/brandkit",
+          "original_path": "libraries/taste-skill/brandkit",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Premium brand-kit image generation skill for creating high-end brand-guidelines boards, logo systems, identity decks, and visual-world presentations. Trained for minimalist, cinematic, editorial, dark-tech, luxury, cultural, security, gaming, developer-tool, and consumer-app brand systems. Optimized for intentional logo concepting, refined composition, sparse typography, strong symbolic meaning, premium mockups, art-directed imagery, and flexible grid layouts.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/brandkit"
+        },
+        {
+          "id": "industrial-brutalist-ui",
+          "name": "industrial-brutalist-ui",
+          "path": "libraries/taste-skill/brutalist-skill",
+          "original_path": "libraries/taste-skill/brutalist-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "cli",
+            "frontend"
+          ],
+          "description": "Raw mechanical interfaces fusing Swiss typographic print with military terminal aesthetics. Rigid grids, extreme type scale contrast, utilitarian color, analog degradation effects. For data-heavy dashboards, portfolios, or editorial sites that need to feel like declassified blueprints.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/industrial-brutalist-ui"
+        },
+        {
+          "id": "gpt-taste",
+          "name": "gpt-taste",
+          "path": "libraries/taste-skill/gpt-tasteskill",
+          "original_path": "libraries/taste-skill/gpt-tasteskill",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "Elite UX/UI & Advanced GSAP Motion Engineer. Enforces Python-driven true randomization for layout variance, strict AIDA page structure, wide editorial typography (bans 6-line wraps), gapless bento grids, strict GSAP ScrollTriggers (pinning, stacking, scrubbing), inline micro-images, and massive section spacing.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/gpt-taste"
+        },
+        {
+          "id": "image-to-code",
+          "name": "image-to-code",
+          "path": "libraries/taste-skill/image-to-code-skill",
+          "original_path": "libraries/taste-skill/image-to-code-skill",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Elite website image-to-code skill for Codex. For visually important web tasks, it must first generate the design image(s) itself, deeply analyze them, then implement the website to match them as closely as possible. In Codex, it must prefer large, readable, section-specific images instead of tiny compressed boards, generate fresh standalone images for sections or detail views instead of cropping old ones, avoid lazy under-generation, avoid cards-inside-cards-inside-cards UI, and keep the hero clean, spacious, readable, and visible on a small laptop.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/image-to-code"
+        },
+        {
+          "id": "imagegen-frontend-mobile",
+          "name": "imagegen-frontend-mobile",
+          "path": "libraries/taste-skill/imagegen-frontend-mobile",
+          "original_path": "libraries/taste-skill/imagegen-frontend-mobile",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "workflow",
+            "frontend"
+          ],
+          "description": "Elite mobile app image-generation skill for creating premium, app-native screen concepts and flows. Designed for iOS, Android, and cross-platform mobile products. Prioritizes clean hierarchy, comfortably readable text, strong multi-screen consistency, controlled color palettes, non-generic creative direction, textured surfaces, image-led composition, tasteful custom iconography, and clean phone mockup framing. By default, screens should be shown inside a subtle premium iPhone or similar phone mockup with a visible frame, while the main focus stays on the app content itself. This skill generates images only. It does not write code.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/imagegen-frontend-mobile"
+        },
+        {
+          "id": "imagegen-frontend-web",
+          "name": "imagegen-frontend-web",
+          "path": "libraries/taste-skill/imagegen-frontend-web",
+          "original_path": "libraries/taste-skill/imagegen-frontend-web",
+          "tags": [
+            "image",
+            "docs",
+            "finance",
+            "coding",
+            "frontend"
+          ],
+          "description": "Elite frontend image-direction skill for generating premium, conversion-aware website design references. CRITICAL OUTPUT RULE — generate ONE separate horizontal image FOR EVERY section. A landing page with 8 sections produces 8 images. Never compress multiple sections into one image. Enforces composition variety (not always left-text / right-image), background-image freedom, varied CTAs, varied hero scales (giant / mid / mini minimalist), narrative concept spine, second-read moments, and a single consistent palette across all images. Optimized for landing pages, marketing sites, and product comps that developers or coding models can accurately recreate.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/imagegen-frontend-web"
+        },
+        {
+          "id": "minimalist-ui",
+          "name": "minimalist-ui",
+          "path": "libraries/taste-skill/minimalist-skill",
+          "original_path": "libraries/taste-skill/minimalist-skill",
+          "tags": [
+            "browser",
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/minimalist-ui"
+        },
+        {
+          "id": "full-output-enforcement",
+          "name": "full-output-enforcement",
+          "path": "libraries/taste-skill/output-skill",
+          "original_path": "libraries/taste-skill/output-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Overrides default LLM truncation behavior. Enforces complete code generation, bans placeholder patterns, and handles token-limit splits cleanly. Apply to any task requiring exhaustive, unabridged output.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/full-output-enforcement"
+        },
+        {
+          "id": "redesign-existing-projects",
+          "name": "redesign-existing-projects",
+          "path": "libraries/taste-skill/redesign-skill",
+          "original_path": "libraries/taste-skill/redesign-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Upgrades existing websites and apps to premium quality. Audits current design, identifies generic AI patterns, and applies high-end design standards without breaking functionality. Works with any CSS framework or vanilla CSS.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/redesign-existing-projects"
+        },
+        {
+          "id": "high-end-visual-design",
+          "name": "high-end-visual-design",
+          "path": "libraries/taste-skill/soft-skill",
+          "original_path": "libraries/taste-skill/soft-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "Teaches the AI to design like a high-end agency. Defines the exact fonts, spacing, shadows, card structures, and animations that make a website feel expensive. Blocks all the common defaults that make AI designs look cheap or generic.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/high-end-visual-design"
+        },
+        {
+          "id": "stitch-design-taste",
+          "name": "stitch-design-taste",
+          "path": "libraries/taste-skill/stitch-skill",
+          "original_path": "libraries/taste-skill/stitch-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation",
+            "automation"
+          ],
+          "description": "Semantic Design System Skill for Google Stitch. Generates agent-friendly DESIGN.md files that enforce premium, anti-generic UI standards — strict typography, calibrated color, asymmetric layouts, perpetual micro-motion, and hardware-accelerated performance.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/stitch-design-taste"
+        },
+        {
+          "id": "design-taste-frontend-v1",
+          "name": "design-taste-frontend-v1",
+          "path": "libraries/taste-skill/taste-skill-v1",
+          "original_path": "libraries/taste-skill/taste-skill-v1",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is `design-taste-frontend` (v2 experimental), which is a substantial rewrite. Use this v1 install name only if you need exact backward compatibility.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/design-taste-frontend-v1"
+        },
+        {
+          "id": "design-taste-frontend",
+          "name": "design-taste-frontend",
+          "path": "libraries/taste-skill/taste-skill",
+          "original_path": "libraries/taste-skill/taste-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "automation"
+          ],
+          "description": "Anti-slop frontend skill for landing pages, portfolios, and redesigns. The agent reads the brief, infers the right design direction, and ships interfaces that do not look templated. Real design systems when applicable, audit-first on redesigns, strict pre-flight check.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/design-taste-frontend"
+        }
+      ],
+      "category": "frontend-presentation",
+      "install": {
+        "method": "extracted",
+        "extracted_root": "extracted-skills/taste-skill"
+      },
+      "extracted": {
+        "root": "extracted-skills/taste-skill",
+        "source_library": "taste-skill",
+        "source_path": "libraries/taste-skill",
+        "last_extracted_commit": "b17742737e796305d829b3ad39eda3add0d79060",
+        "skill_count": 13
+      }
     },
     {
       "id": "vercel-labsagent-skills",

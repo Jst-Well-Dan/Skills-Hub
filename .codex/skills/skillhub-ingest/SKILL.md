@@ -7,9 +7,7 @@ description: Add, classify, extract, document, and validate GitHub-hosted skills
 
 ## Purpose
 
-Use this workflow to add external GitHub skill repositories to this Skills-Hub project without missing registry, extraction, documentation, or validation steps.
-
-The project stores source snapshots in `libraries/`, extracted installable copies in `extracted-skills/`, registry data in `registry/projects.yaml`, tags in `registry/tags.yaml`, and generated docs in `README.md` plus `docs/`.
+Use this workflow to add external GitHub skill repositories to this Skills-Hub project without missing intake, classification, extraction, or publishing steps. Read the repository `AGENTS.md` first for the project-wide layout, generated-output rules, and baseline validation requirements.
 
 ## Intake Sources
 

@@ -25,7 +25,7 @@ python scripts/generate_site.py
 <!-- SKILLS_INDEX_START -->
 ## 收藏概览
 
-当前共收藏 **29** 个 Skill 库，包含 **288** 个 skills。
+当前共收藏 **31** 个 Skill 库，包含 **307** 个 skills。
 
 ## 按分类查看
 
@@ -68,6 +68,17 @@ python scripts/generate_site.py
   简介：EdgeOne Pages Skills
   - [edgeone-pages-deploy](libraries/edgeone-pages-skills/skills/edgeone-pages-deploy/SKILL.md) `edgeone-pages-deploy` | 可复制：[`extracted-skills/edgeone-pages-skills/edgeone-pages-deploy`](extracted-skills/edgeone-pages-skills/edgeone-pages-deploy) - This skill deploys frontend and full-stack projects to EdgeOne Pages (Tencent EdgeOne). It should be used w...
   - [edgeone-pages-dev](libraries/edgeone-pages-skills/skills/edgeone-pages-dev/SKILL.md) `edgeone-pages-dev` | 可复制：[`extracted-skills/edgeone-pages-skills/edgeone-pages-dev`](extracted-skills/edgeone-pages-skills/edgeone-pages-dev) - This skill guides development of full-stack features on EdgeOne Pages — Edge Functions, Cloud Functions (No...
+
+- [ponytail](libraries/ponytail) `ponytail` - 6 个 skills  
+  分类：编程工具类 | 标签：coding, workflow | 来源：DietrichGebert/ponytail  
+  安装：复制 [`extracted-skills/ponytail`](extracted-skills/ponytail) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：Tags
+  - [ponytail](libraries/ponytail/ponytail/SKILL.md) `ponytail` | 可复制：[`extracted-skills/ponytail/ponytail`](extracted-skills/ponytail/ponytail) - Forces the laziest solution that actually works, simplest, shortest, most minimal. Channels a senior dev wh...
+  - [ponytail-audit](libraries/ponytail/ponytail-audit/SKILL.md) `ponytail-audit` | 可复制：[`extracted-skills/ponytail/ponytail-audit`](extracted-skills/ponytail/ponytail-audit) - Whole-repo audit for over-engineering. Like ponytail-review, but scans the entire codebase instead of a dif...
+  - [ponytail-debt](libraries/ponytail/ponytail-debt/SKILL.md) `ponytail-debt` | 可复制：[`extracted-skills/ponytail/ponytail-debt`](extracted-skills/ponytail/ponytail-debt) - Harvest every `ponytail:` comment in the codebase into a debt ledger, so the deliberate shortcuts and defer...
+  - [ponytail-gain](libraries/ponytail/ponytail-gain/SKILL.md) `ponytail-gain` | 可复制：[`extracted-skills/ponytail/ponytail-gain`](extracted-skills/ponytail/ponytail-gain) - Show ponytail's measured impact as a compact scoreboard: less code, less cost, more speed, from the benchma...
+  - [ponytail-help](libraries/ponytail/ponytail-help/SKILL.md) `ponytail-help` | 可复制：[`extracted-skills/ponytail/ponytail-help`](extracted-skills/ponytail/ponytail-help) - Quick-reference card for all ponytail modes, skills, and commands. One-shot display, not a persistent mode....
+  - [ponytail-review](libraries/ponytail/ponytail-review/SKILL.md) `ponytail-review` | 可复制：[`extracted-skills/ponytail/ponytail-review`](extracted-skills/ponytail/ponytail-review) - Code review focused exclusively on over-engineering. Finds what to delete: reinvented standard library, unn...
 
 - [vercel-labsagent-skills](libraries/vercel-labsagent-skills) `vercel-labsagent-skills` - 9 个 skills  
   分类：编程工具类 | 标签：automation, cli, coding, data, docs, frontend | 来源：vercel-labs/agent-skills  
@@ -187,6 +198,18 @@ python scripts/generate_site.py
   简介：Impeccable
   - [impeccable](libraries/impeccable/plugin/skills/impeccable/SKILL.md) `impeccable` | 可复制：[`extracted-skills/impeccable/impeccable`](extracted-skills/impeccable/impeccable) - Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, opti...
 
+- [taste-skill](libraries/taste-skill) `taste-skill` - 13 个 skills  
+  分类：前端展示类 | 标签：coding, frontend, image | 来源：Leonxlnx/taste-skill  
+  安装：复制 [`extracted-skills/taste-skill`](extracted-skills/taste-skill) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：BRANDKIT IMAGE GENERATION SKILL
+  - [brandkit](libraries/taste-skill/brandkit/SKILL.md) `brandkit` | 可复制：[`extracted-skills/taste-skill/brandkit`](extracted-skills/taste-skill/brandkit) - Premium brand-kit image generation skill for creating high-end brand-guidelines boards, logo systems, ident...
+  - [design-taste-frontend](libraries/taste-skill/taste-skill/SKILL.md) `design-taste-frontend` | 可复制：[`extracted-skills/taste-skill/design-taste-frontend`](extracted-skills/taste-skill/design-taste-frontend) - Anti-slop frontend skill for landing pages, portfolios, and redesigns. The agent reads the brief, infers th...
+  - [design-taste-frontend-v1](libraries/taste-skill/taste-skill-v1/SKILL.md) `design-taste-frontend-v1` | 可复制：[`extracted-skills/taste-skill/design-taste-frontend-v1`](extracted-skills/taste-skill/design-taste-frontend-v1) - The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is...
+  - [full-output-enforcement](libraries/taste-skill/output-skill/SKILL.md) `full-output-enforcement` | 可复制：[`extracted-skills/taste-skill/full-output-enforcement`](extracted-skills/taste-skill/full-output-enforcement) - Overrides default LLM truncation behavior. Enforces complete code generation, bans placeholder patterns, an...
+  - [gpt-taste](libraries/taste-skill/gpt-tasteskill/SKILL.md) `gpt-taste` | 可复制：[`extracted-skills/taste-skill/gpt-taste`](extracted-skills/taste-skill/gpt-taste) - Elite UX/UI & Advanced GSAP Motion Engineer. Enforces Python-driven true randomization for layout variance,...
+  - [high-end-visual-design](libraries/taste-skill/soft-skill/SKILL.md) `high-end-visual-design` | 可复制：[`extracted-skills/taste-skill/high-end-visual-design`](extracted-skills/taste-skill/high-end-visual-design) - Teaches the AI to design like a high-end agency. Defines the exact fonts, spacing, shadows, card structures...
+  - 另有 7 个 skills，见 [taste-skill](libraries/taste-skill) 或 [完整索引](docs/index.md)。
+
 ### 动画动效类
 
 - [lottie](libraries/lottie) `lottie` - 1 个 skills  
@@ -294,6 +317,5 @@ python scripts/generate_site.py
 - [按标签查看](docs/by-tag.md)
 - [按来源查看](docs/by-source.md)
 - [安装与提炼说明](docs/install.md)
-- [Kami 配色方案提取](docs/kami-color-palette.md)
 
 <!-- SKILLS_INDEX_END -->

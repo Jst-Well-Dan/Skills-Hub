@@ -359,6 +359,17 @@
 - `obsidian-cli`：[`extracted-skills/obsidian-skills/obsidian-cli`](../extracted-skills/obsidian-skills/obsidian-cli)
 - `obsidian-markdown`：[`extracted-skills/obsidian-skills/obsidian-markdown`](../extracted-skills/obsidian-skills/obsidian-markdown)
 
+### ponytail
+
+复制 [`extracted-skills/ponytail`](../extracted-skills/ponytail) 下需要的 skill 到 `~/.claude/skills/`。
+
+- `ponytail`：[`extracted-skills/ponytail/ponytail`](../extracted-skills/ponytail/ponytail)
+- `ponytail-audit`：[`extracted-skills/ponytail/ponytail-audit`](../extracted-skills/ponytail/ponytail-audit)
+- `ponytail-debt`：[`extracted-skills/ponytail/ponytail-debt`](../extracted-skills/ponytail/ponytail-debt)
+- `ponytail-gain`：[`extracted-skills/ponytail/ponytail-gain`](../extracted-skills/ponytail/ponytail-gain)
+- `ponytail-help`：[`extracted-skills/ponytail/ponytail-help`](../extracted-skills/ponytail/ponytail-help)
+- `ponytail-review`：[`extracted-skills/ponytail/ponytail-review`](../extracted-skills/ponytail/ponytail-review)
+
 ### punk-skill
 
 复制 [`extracted-skills/punk-skill`](../extracted-skills/punk-skill) 下需要的 skill 到 `~/.claude/skills/`。
@@ -427,6 +438,24 @@
 - `youtube-studio-batch-upload`：[`extracted-skills/swyxio-skills/youtube-studio-batch-upload`](../extracted-skills/swyxio-skills/youtube-studio-batch-upload)
 - `youtube-thumbnails`：[`extracted-skills/swyxio-skills/youtube-thumbnails`](../extracted-skills/swyxio-skills/youtube-thumbnails)
 - `zoom-download`：[`extracted-skills/swyxio-skills/zoom-download`](../extracted-skills/swyxio-skills/zoom-download)
+
+### taste-skill
+
+复制 [`extracted-skills/taste-skill`](../extracted-skills/taste-skill) 下需要的 skill 到 `~/.claude/skills/`。
+
+- `brandkit`：[`extracted-skills/taste-skill/brandkit`](../extracted-skills/taste-skill/brandkit)
+- `design-taste-frontend`：[`extracted-skills/taste-skill/design-taste-frontend`](../extracted-skills/taste-skill/design-taste-frontend)
+- `design-taste-frontend-v1`：[`extracted-skills/taste-skill/design-taste-frontend-v1`](../extracted-skills/taste-skill/design-taste-frontend-v1)
+- `full-output-enforcement`：[`extracted-skills/taste-skill/full-output-enforcement`](../extracted-skills/taste-skill/full-output-enforcement)
+- `gpt-taste`：[`extracted-skills/taste-skill/gpt-taste`](../extracted-skills/taste-skill/gpt-taste)
+- `high-end-visual-design`：[`extracted-skills/taste-skill/high-end-visual-design`](../extracted-skills/taste-skill/high-end-visual-design)
+- `image-to-code`：[`extracted-skills/taste-skill/image-to-code`](../extracted-skills/taste-skill/image-to-code)
+- `imagegen-frontend-mobile`：[`extracted-skills/taste-skill/imagegen-frontend-mobile`](../extracted-skills/taste-skill/imagegen-frontend-mobile)
+- `imagegen-frontend-web`：[`extracted-skills/taste-skill/imagegen-frontend-web`](../extracted-skills/taste-skill/imagegen-frontend-web)
+- `industrial-brutalist-ui`：[`extracted-skills/taste-skill/industrial-brutalist-ui`](../extracted-skills/taste-skill/industrial-brutalist-ui)
+- `minimalist-ui`：[`extracted-skills/taste-skill/minimalist-ui`](../extracted-skills/taste-skill/minimalist-ui)
+- `redesign-existing-projects`：[`extracted-skills/taste-skill/redesign-existing-projects`](../extracted-skills/taste-skill/redesign-existing-projects)
+- `stitch-design-taste`：[`extracted-skills/taste-skill/stitch-design-taste`](../extracted-skills/taste-skill/stitch-design-taste)
 
 ### vercel-labsagent-skills
 

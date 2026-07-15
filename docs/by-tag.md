@@ -185,6 +185,10 @@
   分类：日常工具类 | 标签：cli, coding, data, docs, image, obsidian, research | 来源：kepano/obsidian-skills  
   安装：推荐 `npx skills add git@github.com:kepano/obsidian-skills.git`；也可从 [`extracted-skills/obsidian-skills`](extracted-skills/obsidian-skills) 手动复制。  
   简介：Installation
+- [ponytail](libraries/ponytail) `ponytail` - 6 个 skills  
+  分类：编程工具类 | 标签：coding, workflow | 来源：DietrichGebert/ponytail  
+  安装：复制 [`extracted-skills/ponytail`](extracted-skills/ponytail) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：Tags
 - [skillhub-ingest](libraries/skillhub-ingest) `skillhub-ingest` - 1 个 skills  
   分类：自动化流程类 | 标签：coding, docs, workflow | 来源：local  
   安装：复制 [`extracted-skills/skillhub-ingest`](extracted-skills/skillhub-ingest) 下需要的 skill 到 `~/.claude/skills/`。  
@@ -197,6 +201,10 @@
   分类：个人合集类 | 标签：automation, browser, coding, data, docs, image, research, workflow | 来源：swyxio/skills  
   安装：复制 [`extracted-skills/swyxio-skills`](extracted-skills/swyxio-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：swyxio Skills
+- [taste-skill](libraries/taste-skill) `taste-skill` - 13 个 skills  
+  分类：前端展示类 | 标签：coding, frontend, image | 来源：Leonxlnx/taste-skill  
+  安装：复制 [`extracted-skills/taste-skill`](extracted-skills/taste-skill) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：BRANDKIT IMAGE GENERATION SKILL
 - [vercel-labsagent-skills](libraries/vercel-labsagent-skills) `vercel-labsagent-skills` - 9 个 skills  
   分类：编程工具类 | 标签：automation, cli, coding, data, docs, frontend | 来源：vercel-labs/agent-skills  
   安装：推荐 `npx skills add vercel-labs/agent-skills`；也可从 [`extracted-skills/vercel-labsagent-skills`](extracted-skills/vercel-labsagent-skills) 手动复制。  
@@ -431,6 +439,10 @@
   分类：日常工具类 | 标签：coding, docs, frontend | 来源：teng-lin/notebooklm-py  
   安装：推荐 `npx skills add teng-lin/notebooklm-py`；也可从 [`extracted-skills/notebooklm`](extracted-skills/notebooklm) 手动复制。  
   简介：NotebookLM Automation
+- [taste-skill](libraries/taste-skill) `taste-skill` - 13 个 skills  
+  分类：前端展示类 | 标签：coding, frontend, image | 来源：Leonxlnx/taste-skill  
+  安装：复制 [`extracted-skills/taste-skill`](extracted-skills/taste-skill) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：BRANDKIT IMAGE GENERATION SKILL
 - [vercel-labsagent-skills](libraries/vercel-labsagent-skills) `vercel-labsagent-skills` - 9 个 skills  
   分类：编程工具类 | 标签：automation, cli, coding, data, docs, frontend | 来源：vercel-labs/agent-skills  
   安装：推荐 `npx skills add vercel-labs/agent-skills`；也可从 [`extracted-skills/vercel-labsagent-skills`](extracted-skills/vercel-labsagent-skills) 手动复制。  
@@ -481,6 +493,10 @@
   分类：个人合集类 | 标签：automation, browser, coding, data, docs, image, research, workflow | 来源：swyxio/skills  
   安装：复制 [`extracted-skills/swyxio-skills`](extracted-skills/swyxio-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：swyxio Skills
+- [taste-skill](libraries/taste-skill) `taste-skill` - 13 个 skills  
+  分类：前端展示类 | 标签：coding, frontend, image | 来源：Leonxlnx/taste-skill  
+  安装：复制 [`extracted-skills/taste-skill`](extracted-skills/taste-skill) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：BRANDKIT IMAGE GENERATION SKILL
 
 ## mcp
 
@@ -583,6 +599,10 @@
   分类：日常工具类 | 标签：coding, data, docs, image, workflow | 来源：opendatalab/MinerU-Ecosystem  
   安装：复制 [`extracted-skills/mineru`](extracted-skills/mineru) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：Document Extraction with mineru-open-api
+- [ponytail](libraries/ponytail) `ponytail` - 6 个 skills  
+  分类：编程工具类 | 标签：coding, workflow | 来源：DietrichGebert/ponytail  
+  安装：复制 [`extracted-skills/ponytail`](extracted-skills/ponytail) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：Tags
 - [punk-skill](libraries/punk-skill) `punk-skill` - 2 个 skills  
   分类：内容创作类 | 标签：image, workflow | 来源：adrianpunk/Punk-Skill  
   安装：复制 [`extracted-skills/punk-skill`](extracted-skills/punk-skill) 下需要的 skill 到 `~/.claude/skills/`。  

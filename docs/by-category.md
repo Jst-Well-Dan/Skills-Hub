@@ -22,6 +22,10 @@
   分类：编程工具类 | 标签：automation, coding, docs, frontend, workflow | 来源：edgeone-pages/edgeone-pages-skills  
   安装：推荐 `npx skills add edgeone-pages/edgeone-pages-skills`；也可从 [`extracted-skills/edgeone-pages-skills`](extracted-skills/edgeone-pages-skills) 手动复制。  
   简介：EdgeOne Pages Skills
+- [ponytail](libraries/ponytail) `ponytail` - 6 个 skills  
+  分类：编程工具类 | 标签：coding, workflow | 来源：DietrichGebert/ponytail  
+  安装：复制 [`extracted-skills/ponytail`](extracted-skills/ponytail) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：Tags
 - [vercel-labsagent-skills](libraries/vercel-labsagent-skills) `vercel-labsagent-skills` - 9 个 skills  
   分类：编程工具类 | 标签：automation, cli, coding, data, docs, frontend | 来源：vercel-labs/agent-skills  
   安装：推荐 `npx skills add vercel-labs/agent-skills`；也可从 [`extracted-skills/vercel-labsagent-skills`](extracted-skills/vercel-labsagent-skills) 手动复制。  
@@ -78,6 +82,10 @@
   分类：前端展示类 | 标签：automation, coding, docs, frontend, image, workflow | 来源：pbakaus/impeccable  
   安装：推荐 `npx impeccable skills install`；也可从 [`extracted-skills/impeccable`](extracted-skills/impeccable) 手动复制。  
   简介：Impeccable
+- [taste-skill](libraries/taste-skill) `taste-skill` - 13 个 skills  
+  分类：前端展示类 | 标签：coding, frontend, image | 来源：Leonxlnx/taste-skill  
+  安装：复制 [`extracted-skills/taste-skill`](extracted-skills/taste-skill) 下需要的 skill 到 `~/.claude/skills/`。  
+  简介：BRANDKIT IMAGE GENERATION SKILL
 
 ## 动画动效类
 
