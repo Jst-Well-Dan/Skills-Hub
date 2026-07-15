@@ -21,8 +21,6 @@ def source_label(project: dict) -> str:
 
 def build_payload(projects: list[dict]) -> dict:
     category_counts = Counter(project.get("category", "uncategorized") for project in projects)
-    tag_counts = Counter(tag for project in projects for tag in project.get("tags", []))
-    source_counts = Counter(source_label(project) for project in projects)
     skill_count = sum(project.get("skill_count", len(project.get("skills", []))) for project in projects)
 
     return {
@@ -30,8 +28,6 @@ def build_payload(projects: list[dict]) -> dict:
         "summary": {
             "project_count": len(projects),
             "skill_count": skill_count,
-            "tag_count": len(tag_counts),
-            "source_count": len(source_counts),
         },
         "category_labels": CATEGORY_LABELS,
         "facets": {
@@ -39,11 +35,6 @@ def build_payload(projects: list[dict]) -> dict:
                 {"id": category, "label": CATEGORY_LABELS.get(category, category), "count": category_counts[category]}
                 for category in CATEGORY_LABELS
                 if category_counts[category]
-            ],
-            "tags": [{"id": tag, "label": tag, "count": count} for tag, count in sorted(tag_counts.items())],
-            "sources": [
-                {"id": source, "label": source, "count": count}
-                for source, count in sorted(source_counts.items(), key=lambda item: item[0].lower())
             ],
         },
         "projects": projects,
@@ -93,7 +84,7 @@ def html_template() -> str:
       --accent-soft: #ddf4ff;
       --tag-bg: #ddf4ff;
       --accent-text: #ffffff;
-      --shadow: 0 8px 24px rgba(140, 149, 159, .18);
+      --shadow: 0 3px 12px rgba(140, 149, 159, .14);
       --ease: cubic-bezier(.16, 1, .3, 1);
       --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
       --mono: "JetBrains Mono", "SF Mono", Consolas, Monaco, monospace;
@@ -119,7 +110,7 @@ def html_template() -> str:
         --accent-soft: #0c2d4a;
         --tag-bg: #0c2d4a;
         --accent-text: #0d1117;
-        --shadow: 0 8px 24px rgba(1, 4, 9, .38);
+        --shadow: 0 3px 12px rgba(1, 4, 9, .32);
       }
     }
 
@@ -150,12 +141,12 @@ def html_template() -> str:
       backdrop-filter: blur(16px);
     }
     .topbar-inner {
-      max-width: 1360px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 10px 24px;
+      padding: 12px 24px;
       display: grid;
-      grid-template-columns: minmax(180px, 260px) 1fr auto;
-      gap: 18px;
+      grid-template-columns: 220px minmax(280px, 1fr) auto;
+      gap: 20px;
       align-items: center;
     }
     .brand {
@@ -165,9 +156,9 @@ def html_template() -> str:
       min-width: 0;
     }
     .mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
       display: grid;
       place-items: center;
       border: 1px solid var(--accent);
@@ -180,12 +171,12 @@ def html_template() -> str:
     .brand-title {
       margin: 0;
       color: var(--text);
-      font-size: 19px;
+      font-size: 17px;
       line-height: 1.1;
       font-weight: 720;
     }
     .brand-meta {
-      margin-top: 3px;
+      margin-top: 2px;
       color: var(--muted);
       font-size: 12px;
       white-space: nowrap;
@@ -198,7 +189,7 @@ def html_template() -> str:
     }
     .search-box input {
       width: 100%;
-      height: 44px;
+      height: 42px;
       padding: 0 44px 0 42px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -264,52 +255,44 @@ def html_template() -> str:
     .icon-button:hover { border-color: var(--line-strong); background: var(--panel-lift); transform: translateY(-1px); }
 
     .layout {
-      max-width: 1360px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 32px 24px 48px;
+      padding: 42px 24px 56px;
       display: grid;
-      grid-template-columns: 280px minmax(0, 1fr);
-      gap: 24px;
+      grid-template-columns: 208px minmax(0, 1fr);
+      gap: 40px;
     }
     .sidebar {
       align-self: start;
       position: sticky;
-      top: 76px;
-      display: grid;
-      gap: 14px;
+      top: 88px;
+      padding-right: 24px;
+      border-right: 1px solid var(--line);
     }
     .filter-panel {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-      overflow: hidden;
+      min-width: 0;
     }
     .filter-head {
-      padding: 13px 14px;
-      border-bottom: 1px solid var(--line);
-      background: var(--panel-muted);
+      padding: 0 10px 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
     }
     .filter-title {
       margin: 0;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text);
-      letter-spacing: 0;
+      font-weight: 680;
     }
     .filter-list {
-      padding: 8px;
-      max-height: 250px;
-      overflow: auto;
+      display: grid;
+      gap: 2px;
     }
     .facet {
       width: 100%;
-      min-height: 34px;
-      padding: 7px 8px;
+      min-height: 38px;
+      padding: 8px 10px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 7px;
       background: transparent;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -325,7 +308,6 @@ def html_template() -> str:
       background: var(--accent-soft);
       color: var(--accent);
       font-weight: 650;
-      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, var(--line));
     }
     .facet span:first-child {
       overflow: hidden;
@@ -333,8 +315,8 @@ def html_template() -> str:
       white-space: nowrap;
     }
     .count {
-      min-width: 28px;
-      padding: 2px 6px;
+      min-width: 24px;
+      padding: 1px 5px;
       border-radius: 4px;
       background: var(--panel-lift);
       color: var(--muted);
@@ -346,72 +328,39 @@ def html_template() -> str:
     .workspace {
       min-width: 0;
       display: grid;
-      gap: 16px;
+      gap: 20px;
     }
     .catalog-intro {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 24px;
-      align-items: end;
-      padding: 4px 2px 8px;
+      padding: 0 0 6px;
     }
     .catalog-title {
       margin: 0;
       color: var(--text);
-      font-size: clamp(28px, 4vw, 44px);
-      line-height: 1.08;
-      letter-spacing: -.035em;
+      font-size: 32px;
+      line-height: 1.15;
+      letter-spacing: -.025em;
+      text-wrap: balance;
     }
     .catalog-copy {
-      margin: 10px 0 0;
-      max-width: 58ch;
+      margin: 8px 0 0;
+      max-width: 65ch;
       color: var(--muted);
-      font-size: 15px;
-    }
-    .catalog-source {
-      color: var(--accent);
-      font-weight: 650;
-      white-space: nowrap;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-      overflow: hidden;
-    }
-    .stat {
-      border-right: 1px solid var(--line);
-      padding: 14px 16px;
-      min-height: 78px;
-      display: grid;
-      align-content: space-between;
-    }
-    .stat:last-child { border-right: 0; }
-    .stat-label {
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: .04em;
-    }
-    .stat-value {
-      margin-top: 8px;
-      color: var(--text);
-      font-size: 27px;
-      line-height: 1;
-      font-weight: 760;
+      font-size: 14px;
+      text-wrap: pretty;
     }
     .toolbar {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: var(--panel);
-      padding: 10px;
+      padding: 0 0 14px;
+      border-bottom: 1px solid var(--line);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
+    }
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .segmented {
       display: inline-grid;
@@ -420,10 +369,10 @@ def html_template() -> str:
       padding: 3px;
       border-radius: 9px;
       background: var(--bg-deep);
-      border: 1px solid var(--line);
+      border: 0;
     }
     .segment {
-      min-width: 72px;
+      min-width: 58px;
       height: 32px;
       padding: 0 12px;
       border: 0;
@@ -433,9 +382,9 @@ def html_template() -> str:
       cursor: pointer;
     }
     .segment.active {
-      background: var(--accent);
-      color: var(--accent-text);
-      box-shadow: 0 0 0 1px var(--accent);
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(31, 35, 40, .12);
       font-weight: 650;
     }
     .sort-select {
@@ -447,13 +396,14 @@ def html_template() -> str:
       padding: 0 10px;
     }
     .result-meta {
-      color: var(--muted);
-      font-size: 13px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 650;
     }
     .project-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 16px;
     }
     .project-list {
       display: grid;
@@ -462,7 +412,7 @@ def html_template() -> str:
     }
     .project-card {
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 10px;
       background: var(--panel);
       min-width: 0;
       overflow: hidden;
@@ -471,18 +421,17 @@ def html_template() -> str:
     .project-card:hover {
       border-color: var(--line-strong);
       box-shadow: var(--shadow);
-      transform: translateY(-2px);
     }
     .project-main {
       width: 100%;
       border: 0;
       background: transparent;
       color: inherit;
-      padding: 18px;
+      padding: 20px 20px 14px;
       text-align: left;
       cursor: pointer;
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
     .project-row {
       display: grid;
@@ -505,8 +454,8 @@ def html_template() -> str:
       padding: 3px 8px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      color: var(--accent);
-      background: var(--tag-bg);
+      color: var(--muted);
+      background: var(--panel-muted);
       font-size: 12px;
       white-space: nowrap;
     }
@@ -516,7 +465,7 @@ def html_template() -> str:
       line-height: 1.65;
       font-size: 13px;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -535,40 +484,32 @@ def html_template() -> str:
       font-size: 12px;
     }
     .project-foot {
-      padding: 10px 12px 10px 18px;
-      border-top: 1px solid var(--line);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
-      gap: 12px;
+      padding: 0 20px 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
       align-items: center;
       color: var(--muted);
       font-size: 12px;
     }
-    .path {
-      color: var(--stone);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-    }
     .card-category { white-space: nowrap; }
     .github-link, .primary-link {
       min-height: 34px;
-      padding: 0 11px;
-      border: 1px solid var(--accent);
-      border-radius: 8px;
+      padding: 0;
+      border: 0;
+      border-radius: 6px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: var(--accent);
-      color: var(--accent-text);
+      background: transparent;
+      color: var(--accent);
       font-size: 12px;
       font-weight: 700;
       line-height: 1;
       white-space: nowrap;
       transition: background .18s var(--ease), transform .18s var(--ease);
     }
-    .github-link:hover, .primary-link:hover { background: var(--accent-strong); }
+    .github-link:hover, .primary-link:hover { color: var(--accent-strong); text-decoration: underline; }
     .github-link:active, .primary-link:active { transform: translateY(1px); }
     .empty {
       border: 1px dashed var(--line-strong);
@@ -608,20 +549,10 @@ def html_template() -> str:
       grid-template-rows: auto 1fr;
     }
     .drawer.open .drawer-panel { transform: translateX(0); }
-    .drawer-panel::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 1px;
-      background: linear-gradient(var(--accent), var(--line), transparent);
-      pointer-events: none;
-    }
     .drawer-head {
       padding: 18px;
       border-bottom: 1px solid var(--line);
-      background:
-        linear-gradient(135deg, var(--accent-soft), transparent 48%),
-        var(--panel);
+      background: var(--panel);
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
@@ -652,10 +583,8 @@ def html_template() -> str:
       gap: 10px;
     }
     .detail {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 11px;
-      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 0;
       min-width: 0;
     }
     .detail-label {
@@ -731,36 +660,42 @@ def html_template() -> str:
       .layout {
         display: flex;
         flex-direction: column;
+        gap: 24px;
       }
       .workspace { display: contents; }
       .catalog-intro { order: 1; }
       .sidebar {
         order: 2;
         position: static;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding-right: 0;
+        border-right: 0;
       }
-      .stats { order: 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .toolbar { order: 4; }
-      .project-grid, .project-list { order: 5; grid-template-columns: 1fr; }
-      .catalog-intro { grid-template-columns: 1fr; gap: 8px; }
+      .filter-panel { display: flex; align-items: center; gap: 10px; }
+      .filter-head { padding: 0; flex: 0 0 auto; }
+      .filter-list {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        padding-bottom: 3px;
+      }
+      .facet { width: auto; flex: 0 0 auto; }
+      .toolbar { order: 3; }
+      .project-grid, .project-list { order: 4; grid-template-columns: 1fr; }
     }
     @media (max-width: 680px) {
       .topbar-inner, .layout {
         padding-left: 14px;
         padding-right: 14px;
       }
-      .sidebar { grid-template-columns: 1fr; }
-      .filter-list { max-height: 118px; }
-      .stats { grid-template-columns: 1fr 1fr; }
-      .stat:nth-child(2) { border-right: 0; }
-      .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
-      .stat-value { font-size: 23px; }
+      .layout { padding-top: 28px; }
+      .catalog-title { font-size: 28px; }
       .toolbar { align-items: stretch; }
-      .segmented { width: 100%; grid-template-columns: 1fr 1fr; grid-auto-flow: row; }
-      .sort-select { width: 100%; }
+      .toolbar-actions { width: 100%; justify-content: space-between; }
+      .sort-select { width: auto; flex: 1; }
       .detail-grid { grid-template-columns: 1fr; }
-      .project-foot { grid-template-columns: minmax(0, 1fr) auto; }
-      .card-category { display: none; }
+      .project-main { padding: 17px 17px 12px; }
+      .project-foot { padding: 0 17px 15px; }
       .nav-link { padding: 0 10px; }
       .nav-docs { display: none; }
     }
@@ -773,12 +708,12 @@ def html_template() -> str:
         <div class="mark">SH</div>
         <div>
           <h1 class="brand-title">Skills-Hub</h1>
-          <div class="brand-meta" id="generatedAt"></div>
+          <div class="brand-meta">Agent Skills 目录</div>
         </div>
       </a>
       <div class="search-box">
         <span class="search-icon">⌕</span>
-        <input id="searchInput" type="search" placeholder="搜索 skill、项目、标签、描述" autocomplete="off">
+        <input id="searchInput" type="search" placeholder="搜索项目或 skill" autocomplete="off">
         <button class="clear-search" id="clearSearch" title="清空搜索" aria-label="清空搜索">×</button>
       </div>
       <div class="actions">
@@ -789,42 +724,31 @@ def html_template() -> str:
   </header>
 
   <main class="layout">
-    <aside class="sidebar" aria-label="筛选">
+    <aside class="sidebar" aria-label="分类筛选">
       <section class="filter-panel">
         <div class="filter-head"><h2 class="filter-title">分类</h2></div>
         <div class="filter-list" id="categoryFilters"></div>
-      </section>
-      <section class="filter-panel">
-        <div class="filter-head"><h2 class="filter-title">标签</h2></div>
-        <div class="filter-list" id="tagFilters"></div>
-      </section>
-      <section class="filter-panel">
-        <div class="filter-head"><h2 class="filter-title">来源</h2></div>
-        <div class="filter-list" id="sourceFilters"></div>
       </section>
     </aside>
 
     <section class="workspace">
       <header class="catalog-intro">
-        <div>
-          <h2 class="catalog-title">找到值得使用的 Agent Skills</h2>
-          <p class="catalog-copy">从开源项目中筛选、比较并直达原始仓库。点击卡片查看详情，或直接打开目标 GitHub。</p>
-        </div>
-        <a class="catalog-source" href="https://github.com/Jst-Well-Dan/Skills-Hub" target="_blank" rel="noreferrer">在 GitHub 查看本目录</a>
+        <h2 class="catalog-title">找到合适的 Agent Skill</h2>
+        <p class="catalog-copy">按分类浏览，或搜索项目和能力。点击项目查看包含的 skills，也可以直接前往原始仓库。</p>
       </header>
-      <div class="stats" id="stats"></div>
       <div class="toolbar">
-        <div class="segmented" role="tablist" aria-label="展示模式">
-          <button class="segment active" data-view="grid">网格</button>
-          <button class="segment" data-view="list">列表</button>
-        </div>
         <div class="result-meta" id="resultMeta"></div>
-        <select class="sort-select" id="sortSelect" aria-label="排序">
-          <option value="name">按名称</option>
-          <option value="skills">按 skill 数</option>
-          <option value="updated">按检查日期</option>
-          <option value="category">按分类</option>
-        </select>
+        <div class="toolbar-actions">
+          <div class="segmented" role="tablist" aria-label="展示模式">
+            <button class="segment active" data-view="grid">网格</button>
+            <button class="segment" data-view="list">列表</button>
+          </div>
+          <select class="sort-select" id="sortSelect" aria-label="排序">
+            <option value="name">按名称</option>
+            <option value="skills">按 skill 数</option>
+            <option value="updated">按检查日期</option>
+          </select>
+        </div>
       </div>
       <div class="project-grid" id="projectGrid"></div>
     </section>
@@ -854,8 +778,6 @@ def html_template() -> str:
     const state = {
       query: "",
       category: "all",
-      tag: "all",
-      source: "all",
       sort: "name",
       view: "grid",
       selected: null,
@@ -893,8 +815,6 @@ def html_template() -> str:
 
     function matches(project) {
       if (state.category !== "all" && project.category !== state.category) return false;
-      if (state.tag !== "all" && !(project.tags || []).includes(state.tag)) return false;
-      if (state.source !== "all" && sourceOf(project) !== state.source) return false;
       const terms = normalize(state.query).split(/\s+/).filter(Boolean);
       return terms.every((term) => projectHaystack(project).includes(term));
     }
@@ -904,52 +824,24 @@ def html_template() -> str:
       sorted.sort((a, b) => {
         if (state.sort === "skills") return (b.skill_count || 0) - (a.skill_count || 0) || a.name.localeCompare(b.name);
         if (state.sort === "updated") return text(b.last_checked_at).localeCompare(text(a.last_checked_at)) || a.name.localeCompare(b.name);
-        if (state.sort === "category") return categoryLabel(a.category).localeCompare(categoryLabel(b.category)) || a.name.localeCompare(b.name);
         return a.name.localeCompare(b.name);
       });
       return sorted;
     }
 
-    function renderStats(projects) {
-      const skillCount = projects.reduce((sum, project) => sum + (project.skill_count || 0), 0);
-      const categories = new Set(projects.map((project) => project.category || "uncategorized")).size;
-      const tags = new Set(projects.flatMap((project) => project.tags || [])).size;
-      const stats = [
-        ["项目", projects.length],
-        ["Skills", skillCount],
-        ["分类", categories],
-        ["标签", tags],
-      ];
-      el("stats").innerHTML = stats.map(([label, value]) => `
-        <div class="stat">
-          <div class="stat-label">${label}</div>
-          <div class="stat-value">${value}</div>
-        </div>
-      `).join("");
-    }
-
-    function renderFacet(containerId, items, key) {
-      const active = state[key];
-      const allLabel = key === "category" ? "全部分类" : key === "tag" ? "全部标签" : "全部来源";
-      const buttons = [{ id: "all", label: allLabel, count: data.summary.project_count }, ...items]
+    function renderCategories() {
+      const buttons = [{ id: "all", label: "全部分类", count: data.summary.project_count }, ...data.facets.categories]
         .map((item) => `
-          <button class="facet ${active === item.id ? "active" : ""}" data-filter-key="${key}" data-filter-value="${escapeHtml(item.id)}" title="${escapeHtml(item.label)}">
+          <button class="facet ${state.category === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}" title="${escapeHtml(item.label)}">
             <span>${escapeHtml(item.label)}</span>
             <span class="count">${item.count}</span>
           </button>
         `).join("");
-      el(containerId).innerHTML = buttons;
-    }
-
-    function renderFilters() {
-      renderFacet("categoryFilters", data.facets.categories, "category");
-      renderFacet("tagFilters", data.facets.tags, "tag");
-      renderFacet("sourceFilters", data.facets.sources, "source");
+      el("categoryFilters").innerHTML = buttons;
     }
 
     function projectCard(project) {
-      const tags = (project.tags || []).slice(0, 7).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
-      const sourceLabel = project.source?.repo ? "GitHub" : "查看目录";
+      const sourceLabel = project.source?.repo ? "打开 GitHub →" : "查看目录 →";
       return `
         <article class="project-card">
           <button class="project-main" data-project-id="${escapeHtml(project.id)}">
@@ -958,10 +850,8 @@ def html_template() -> str:
               <span class="badge">${project.skill_count || 0} skills</span>
             </div>
             <p class="description">${escapeHtml(project.description || "暂无简介")}</p>
-            <div class="tags">${tags}</div>
           </button>
           <div class="project-foot">
-            <span class="path">${escapeHtml(project.path)}</span>
             <span class="card-category">${escapeHtml(categoryLabel(project.category))}</span>
             <a class="github-link" href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer" aria-label="在 GitHub 打开 ${escapeHtml(project.name)}">${sourceLabel}</a>
           </div>
@@ -1025,20 +915,20 @@ def html_template() -> str:
 
     function render() {
       const projects = sortProjects(data.projects.filter(matches));
-      renderStats(projects);
-      renderFilters();
+      renderCategories();
       renderProjects(projects);
-      el("resultMeta").textContent = `显示 ${projects.length} / ${data.summary.project_count} 个项目`;
-      el("generatedAt").textContent = `${data.summary.project_count} 个库 / ${data.summary.skill_count} 个 skills / ${data.generated_at}`;
+      el("resultMeta").textContent = state.query || state.category !== "all"
+        ? `${projects.length} / ${data.summary.project_count} 个项目`
+        : `${data.summary.project_count} 个项目 · ${data.summary.skill_count} 个 skills`;
       document.querySelectorAll(".segment").forEach((button) => {
         button.classList.toggle("active", button.dataset.view === state.view);
       });
     }
 
     document.addEventListener("click", (event) => {
-      const filter = event.target.closest("[data-filter-key]");
-      if (filter) {
-        state[filter.dataset.filterKey] = filter.dataset.filterValue;
+      const category = event.target.closest("[data-category]");
+      if (category) {
+        state.category = category.dataset.category;
         render();
         return;
       }
