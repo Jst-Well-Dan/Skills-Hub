@@ -117,6 +117,21 @@ For shallow-clone fallback or batch `todo.md` intake, rebuilding all extracted s
 python scripts\extract_skills.py
 ```
 
+Generate complete Chinese translations before rebuilding the website. The
+translated front matter `description` is also the Chinese description shown on
+skill cards:
+
+```powershell
+python scripts\translate_skills.py --project <project-id>
+```
+
+For batch intake, translate all missing or stale skills after the registry is
+updated:
+
+```powershell
+python scripts\translate_skills.py --all
+```
+
 Then regenerate generated docs:
 
 ```powershell
@@ -183,6 +198,7 @@ python -m json.tool registry\projects.yaml > $null
 python -m json.tool registry\tags.yaml > $null
 python scripts\list_skills.py --name <target-name> --skills
 python scripts\list_skills.py --category <category-id> --skills
+python scripts\translate_skills.py --project <project-id> --check
 python scripts\generate_site.py
 ```
 
@@ -191,6 +207,7 @@ Also verify:
 - No failed temp directories remain under `libraries/`.
 - Each new project has the expected source snapshot under `libraries/<project-id>/`.
 - Each extracted skill exists under `extracted-skills/<project-id>/`.
+- Translation checks for the new project report no `MISSING` or `STALE` skills.
 - `README.md`, `docs/index.md`, and `docs/by-category.md` mention the new projects.
 - `registry/projects.yaml` does not point at a missing `libraries/<project-id>` directory.
 - `site/index.html` exists and was regenerated after registry or generator changes.

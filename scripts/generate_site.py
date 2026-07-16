@@ -7,12 +7,24 @@ from datetime import date
 from pathlib import Path
 
 from content_sources import load_reviews, reviews_by_skill, translation_file
-from skillhub_common import CATEGORY_LABELS, ROOT, load_registry
+from skillhub_common import CATEGORY_LABELS, ROOT, load_registry, parse_frontmatter
 
 
 SITE_DIR = ROOT / "site"
 ASSETS_DIR = SITE_DIR / "assets"
 REPO_URL = "https://github.com/Jst-Well-Dan/Skills-Hub"
+CATEGORY_LABELS_EN = {
+    "coding-tools": "Coding tools",
+    "daily-tools": "Daily tools",
+    "personal-collection": "Personal collections",
+    "frontend-presentation": "Frontend & presentation",
+    "animation-motion": "Animation & motion",
+    "content-creation": "Content creation",
+    "document-data": "Documents & data",
+    "research-learning": "Research & learning",
+    "automation-workflow": "Automation & workflow",
+    "uncategorized": "Uncategorized",
+}
 
 
 def source_label(project: dict) -> str:
@@ -21,6 +33,21 @@ def source_label(project: dict) -> str:
 
 
 def build_payload(projects: list[dict]) -> dict:
+    for project in projects:
+        for skill in project.get("skills", []):
+            translated = translation_file(project, skill)
+            skill["description_zh"] = (
+                parse_frontmatter(translated).get("description", skill.get("description", ""))
+                if translated.exists()
+                else skill.get("description", "")
+            )
+        description = project.get("description", "")
+        if any("\u4e00" <= char <= "\u9fff" for char in description):
+            project["description_zh"] = description
+        elif len(project.get("skills", [])) == 1:
+            project["description_zh"] = project["skills"][0].get("description_zh", description)
+        else:
+            project["description_zh"] = f"{project['name']} 收录了 {len(project.get('skills', []))} 个 Agent Skills。"
     category_counts = Counter(project.get("category", "uncategorized") for project in projects)
     skill_count = sum(project.get("skill_count", len(project.get("skills", []))) for project in projects)
 
@@ -31,6 +58,7 @@ def build_payload(projects: list[dict]) -> dict:
             "skill_count": skill_count,
         },
         "category_labels": CATEGORY_LABELS,
+        "category_labels_en": CATEGORY_LABELS_EN,
         "facets": {
             "categories": [
                 {"id": category, "label": CATEGORY_LABELS.get(category, category), "count": category_counts[category]}
@@ -254,6 +282,7 @@ def html_template() -> str:
       transition: border-color .18s var(--ease), background .18s var(--ease);
     }
     .nav-link:hover { border-color: var(--line-strong); background: var(--panel-lift); }
+    button.nav-link { cursor: pointer; }
     .icon-button {
       width: 38px;
       height: 38px;
@@ -647,23 +676,6 @@ def html_template() -> str:
       gap: 12px;
     }
     .skill-panel[hidden] { display: none; }
-    .content-tabs {
-      display: inline-flex;
-      width: fit-content;
-      border-bottom: 1px solid var(--line);
-    }
-    .content-tab {
-      min-width: 68px;
-      min-height: 44px;
-      padding: 0 14px;
-      border: 0;
-      border-bottom: 2px solid transparent;
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      font-weight: 650;
-    }
-    .content-tab[aria-selected="true"] { border-color: var(--accent); color: var(--accent); }
     .translation-empty { margin: 0; color: var(--muted); font-size: 13px; }
     .skill-content {
       margin: 0;
@@ -772,7 +784,7 @@ def html_template() -> str:
         <div class="mark">SH</div>
         <div>
           <h1 class="brand-title">Skills-Hub</h1>
-          <div class="brand-meta">Agent Skills 目录</div>
+          <div class="brand-meta" id="brandMeta">Agent Skills 目录</div>
         </div>
       </a>
       <div class="search-box">
@@ -781,36 +793,37 @@ def html_template() -> str:
         <button class="clear-search" id="clearSearch" title="清空搜索" aria-label="清空搜索">×</button>
       </div>
       <div class="actions">
-        <a class="nav-link nav-docs" href="https://github.com/Jst-Well-Dan/Skills-Hub/blob/main/docs/index.md">完整索引</a>
-        <a class="nav-link" href="https://github.com/Jst-Well-Dan/Skills-Hub" target="_blank" rel="noreferrer">项目 GitHub</a>
+        <button class="nav-link" id="languageToggle" type="button" aria-label="Switch to English">EN</button>
+        <a class="nav-link nav-docs" id="docsLink" href="https://github.com/Jst-Well-Dan/Skills-Hub/blob/main/docs/index.md">完整索引</a>
+        <a class="nav-link" id="githubLink" href="https://github.com/Jst-Well-Dan/Skills-Hub" target="_blank" rel="noreferrer">项目 GitHub</a>
       </div>
     </div>
   </header>
 
   <main class="layout">
-    <aside class="sidebar" aria-label="分类筛选">
+    <aside class="sidebar" id="sidebar" aria-label="分类筛选">
       <section class="filter-panel">
-        <div class="filter-head"><h2 class="filter-title">分类</h2></div>
+        <div class="filter-head"><h2 class="filter-title" id="filterTitle">分类</h2></div>
         <div class="filter-list" id="categoryFilters"></div>
       </section>
     </aside>
 
     <section class="workspace">
       <header class="catalog-intro">
-        <h2 class="catalog-title">找到合适的 Agent Skill</h2>
-        <p class="catalog-copy">按分类浏览，或搜索项目和能力。点击项目查看包含的 skills，也可以直接前往原始仓库。</p>
+        <h2 class="catalog-title" id="catalogTitle">找到合适的 Agent Skill</h2>
+        <p class="catalog-copy" id="catalogCopy">按分类浏览，或搜索项目和能力。点击项目查看包含的 skills，也可以直接前往原始仓库。</p>
       </header>
       <div class="toolbar">
         <div class="result-meta" id="resultMeta"></div>
         <div class="toolbar-actions">
-          <div class="segmented" role="tablist" aria-label="展示模式">
-            <button class="segment active" data-view="grid">网格</button>
-            <button class="segment" data-view="list">列表</button>
+          <div class="segmented" id="viewModes" role="tablist" aria-label="展示模式">
+            <button class="segment active" id="gridView" data-view="grid">网格</button>
+            <button class="segment" id="listView" data-view="list">列表</button>
           </div>
           <select class="sort-select" id="sortSelect" aria-label="排序">
-            <option value="name">按名称</option>
-            <option value="skills">按 skill 数</option>
-            <option value="updated">按检查日期</option>
+            <option value="name" id="sortName">按名称</option>
+            <option value="skills" id="sortSkills">按 skill 数</option>
+            <option value="updated" id="sortUpdated">按检查日期</option>
           </select>
         </div>
       </div>
@@ -820,13 +833,14 @@ def html_template() -> str:
 
   <div class="drawer" id="drawer" aria-hidden="true">
     <div class="drawer-backdrop" id="drawerBackdrop"></div>
-    <section class="drawer-panel" role="dialog" aria-modal="true" aria-label="项目详情">
+    <section class="drawer-panel" id="drawerPanel" role="dialog" aria-modal="true" aria-label="项目详情">
       <div class="drawer-head">
         <div>
           <h2 class="drawer-title" id="drawerTitle"></h2>
           <p class="description" id="drawerDescription"></p>
         </div>
         <div class="drawer-head-actions">
+          <button class="nav-link language-toggle" id="drawerLanguageToggle" type="button" aria-label="Switch to English">EN</button>
           <a class="primary-link" id="drawerSourceLink" href="#" target="_blank" rel="noreferrer">打开 GitHub</a>
           <button class="icon-button" id="closeDrawer" title="关闭" aria-label="关闭">×</button>
         </div>
@@ -845,13 +859,40 @@ def html_template() -> str:
       sort: "name",
       view: "grid",
       selected: null,
+      language: localStorage.getItem("skill-hub-language") === "en" ? "en" : "zh",
     };
 
     const data = window.SKILL_HUB_DATA;
+    const copy = {
+      zh: {
+        brandMeta: "Agent Skills 目录", search: "搜索项目或 skill", clear: "清空搜索",
+        docs: "完整索引", github: "项目 GitHub", filter: "分类", all: "全部分类",
+        title: "找到合适的 Agent Skill", intro: "按分类浏览，或搜索项目和能力。点击项目查看包含的 skills，也可以直接前往原始仓库。",
+        grid: "网格", list: "列表", sortName: "按名称", sortSkills: "按 skill 数", sortUpdated: "按检查日期",
+        noDescription: "暂无简介", openGithub: "打开 GitHub", viewDirectory: "查看目录", empty: "没有匹配的 skill 库",
+        projectDirectory: "查看项目目录", installHelp: "查看源仓库安装说明", category: "分类", install: "安装",
+        viewContent: "查看内容", collapseContent: "收起内容", loading: "加载中…", loadFailed: "加载失败，请重试",
+        reviews: "相关点评", untranslated: "暂无中文版本，当前显示原文。", projects: "个项目", uncategorized: "未分类",
+        close: "关闭", projectDetails: "项目详情", viewModes: "展示模式", sort: "排序", filters: "分类筛选",
+      },
+      en: {
+        brandMeta: "Agent Skills Directory", search: "Search projects or skills", clear: "Clear search",
+        docs: "Full index", github: "Project GitHub", filter: "Categories", all: "All categories",
+        title: "Find the right Agent Skill", intro: "Browse by category or search projects and capabilities. Open a project to inspect its skills or go directly to the source repository.",
+        grid: "Grid", list: "List", sortName: "By name", sortSkills: "By skill count", sortUpdated: "By check date",
+        noDescription: "No description", openGithub: "Open GitHub", viewDirectory: "View directory", empty: "No matching skill libraries",
+        projectDirectory: "View project directory", installHelp: "View installation instructions in the source repository", category: "Category", install: "Install",
+        viewContent: "View content", collapseContent: "Collapse content", loading: "Loading…", loadFailed: "Failed to load. Try again.",
+        reviews: "Related reviews", untranslated: "", projects: "projects", uncategorized: "Uncategorized",
+        close: "Close", projectDetails: "Project details", viewModes: "View mode", sort: "Sort", filters: "Category filters",
+      },
+    };
     let skillContentPromise;
     const el = (id) => document.getElementById(id);
     const text = (value) => String(value ?? "");
-    const categoryLabel = (id) => data.category_labels[id] || id || "未分类";
+    const t = (key) => copy[state.language][key];
+    const categoryLabel = (id) => (state.language === "zh" ? data.category_labels : data.category_labels_en)[id] || id || t("uncategorized");
+    const descriptionOf = (item) => state.language === "zh" ? item.description_zh || item.description : item.description;
     const sourceOf = (project) => project.source?.repo || project.source?.type || "local";
     const sourceUrl = (project) => project.source?.repo
       ? `https://github.com/${project.source.repo}`
@@ -874,10 +915,11 @@ def html_template() -> str:
 
     function projectHaystack(project) {
       const skills = (project.skills || []).flatMap((skill) => [
-        skill.name, skill.id, skill.description, skill.path, ...(skill.tags || [])
+        skill.name, skill.id, skill.description, skill.description_zh, skill.path, ...(skill.tags || [])
       ]);
       return normalize([
-        project.name, project.id, project.description, project.path, categoryLabel(project.category),
+        project.name, project.id, project.description, project.description_zh, project.path,
+        data.category_labels[project.category], data.category_labels_en[project.category],
         ...(project.tags || []), sourceOf(project), ...skills
       ].join(" "));
     }
@@ -899,10 +941,10 @@ def html_template() -> str:
     }
 
     function renderCategories() {
-      const buttons = [{ id: "all", label: "全部分类", count: data.summary.project_count }, ...data.facets.categories]
+      const buttons = [{ id: "all", count: data.summary.project_count }, ...data.facets.categories]
         .map((item) => `
-          <button class="facet ${state.category === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}" title="${escapeHtml(item.label)}">
-            <span>${escapeHtml(item.label)}</span>
+          <button class="facet ${state.category === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}" title="${escapeHtml(item.id === "all" ? t("all") : categoryLabel(item.id))}">
+            <span>${escapeHtml(item.id === "all" ? t("all") : categoryLabel(item.id))}</span>
             <span class="count">${item.count}</span>
           </button>
         `).join("");
@@ -910,7 +952,7 @@ def html_template() -> str:
     }
 
     function projectCard(project) {
-      const sourceLabel = project.source?.repo ? "打开 GitHub →" : "查看目录 →";
+      const sourceLabel = project.source?.repo ? `${t("openGithub")} →` : `${t("viewDirectory")} →`;
       return `
         <article class="project-card">
           <button class="project-main" data-project-id="${escapeHtml(project.id)}">
@@ -918,11 +960,11 @@ def html_template() -> str:
               <h3 class="project-name">${escapeHtml(project.name)}</h3>
               <span class="badge">${project.skill_count || 0} skills</span>
             </div>
-            <p class="description">${escapeHtml(project.description || "暂无简介")}</p>
+            <p class="description">${escapeHtml(descriptionOf(project) || t("noDescription"))}</p>
           </button>
           <div class="project-foot">
             <span class="card-category">${escapeHtml(categoryLabel(project.category))}</span>
-            <a class="github-link" href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer" aria-label="在 GitHub 打开 ${escapeHtml(project.name)}">${sourceLabel}</a>
+            <a class="github-link" href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer" aria-label="${escapeHtml(`${t("openGithub")}: ${project.name}`)}">${sourceLabel}</a>
           </div>
         </article>
       `;
@@ -932,7 +974,7 @@ def html_template() -> str:
       const grid = el("projectGrid");
       grid.className = state.view === "list" ? "project-list" : "project-grid";
       if (!projects.length) {
-        grid.innerHTML = '<div class="empty">没有匹配的 skill 库</div>';
+        grid.innerHTML = `<div class="empty">${t("empty")}</div>`;
         return;
       }
       grid.innerHTML = projects.map(projectCard).join("");
@@ -942,19 +984,19 @@ def html_template() -> str:
       if (!project) return;
       state.selected = project.id;
       el("drawerTitle").textContent = project.name;
-      el("drawerDescription").textContent = readableText(project.description || "暂无简介");
+      el("drawerDescription").textContent = readableText(descriptionOf(project) || t("noDescription"));
       el("drawerSourceLink").href = sourceUrl(project);
-      el("drawerSourceLink").textContent = project.source?.repo ? "打开 GitHub" : "查看项目目录";
+      el("drawerSourceLink").textContent = project.source?.repo ? t("openGithub") : t("projectDirectory");
       const install = project.install?.method === "npx" && project.install.command
         ? `<code>${escapeHtml(project.install.command)}</code>`
-        : `<a href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer">查看源仓库安装说明</a>`;
+        : `<a href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer">${t("installHelp")}</a>`;
       const skills = [...(project.skills || [])].sort((a, b) => a.name.localeCompare(b.name));
       const skillHtml = skills.map((skill, index) => `
         <article class="skill-item">
           <div class="skill-name">${escapeHtml(skill.name)}</div>
-          <p class="skill-description">${escapeHtml(skill.description || "暂无简介")}</p>
+          <p class="skill-description">${escapeHtml(descriptionOf(skill) || t("noDescription"))}</p>
           <div class="links">
-            <button class="text-link" data-skill-path="${escapeHtml(skill.path)}" data-panel-id="skill-panel-${index}" aria-expanded="false">查看内容</button>
+            <button class="text-link" data-skill-path="${escapeHtml(skill.path)}" data-panel-id="skill-panel-${index}" aria-expanded="false">${t("viewContent")}</button>
           </div>
           <section class="skill-panel" id="skill-panel-${index}" aria-live="polite" hidden></section>
         </article>
@@ -962,8 +1004,8 @@ def html_template() -> str:
 
       el("drawerBody").innerHTML = `
         <div class="detail-grid">
-          <div class="detail"><div class="detail-label">分类</div><div class="detail-value">${escapeHtml(categoryLabel(project.category))}</div></div>
-          <div class="detail"><div class="detail-label">安装</div><div class="detail-value">${install}</div></div>
+          <div class="detail"><div class="detail-label">${t("category")}</div><div class="detail-value">${escapeHtml(categoryLabel(project.category))}</div></div>
+          <div class="detail"><div class="detail-label">${t("install")}</div><div class="detail-value">${install}</div></div>
         </div>
         <h3 class="section-title">Skills · ${skills.length}</h3>
         <div class="skill-list">${skillHtml}</div>
@@ -972,32 +1014,23 @@ def html_template() -> str:
       el("drawer").setAttribute("aria-hidden", "false");
     }
 
-    function setContentLanguage(panel, language) {
+    function setContentLanguage(panel) {
       const record = panel.skillRecord;
       const content = panel.querySelector(".skill-content");
-      const value = language === "translation" ? record.translation : record.original;
-      content.textContent = language === "translation"
+      const translated = state.language === "zh" && record.translation;
+      const value = translated ? record.translation : record.original;
+      content.textContent = translated
         ? text(value).replace(/^<!-- source-sha256: [a-f0-9]+ -->\r?\n/, "")
         : text(value);
-      content.dataset.language = language === "translation" ? "translation" : "original";
-      panel.querySelectorAll("[data-language]").forEach((tab) => {
-        const selected = tab.dataset.language === language;
-        tab.setAttribute("aria-selected", String(selected));
-        tab.tabIndex = selected ? 0 : -1;
-      });
+      content.dataset.language = translated ? "translation" : "original";
     }
 
     function renderSkillPanel(panel, record) {
       panel.skillRecord = record;
-      const tabs = record.translation ? `
-        <div class="content-tabs" role="tablist" aria-label="内容语言">
-          <button class="content-tab" role="tab" data-language="translation" aria-selected="true">中文</button>
-          <button class="content-tab" role="tab" data-language="original" aria-selected="false" tabindex="-1">原文</button>
-        </div>
-      ` : '<p class="translation-empty">暂无中文版本，当前显示原文。</p>';
+      const notice = state.language === "zh" && !record.translation ? `<p class="translation-empty">${t("untranslated")}</p>` : "";
       const reviews = (record.reviews || []).length ? `
         <section class="related-reviews">
-          <h4 class="review-title">相关点评</h4>
+          <h4 class="review-title">${t("reviews")}</h4>
           ${record.reviews.map((review) => `
             <a class="review-link" href="${REPO_URL}/blob/main/docs/reviews/${encodeURIComponent(review.slug)}.md" target="_blank" rel="noreferrer">
               <span>${escapeHtml(review.title)}</span>
@@ -1006,8 +1039,8 @@ def html_template() -> str:
           `).join("")}
         </section>
       ` : "";
-      panel.innerHTML = `${tabs}<pre class="skill-content"></pre>${reviews}`;
-      setContentLanguage(panel, record.translation ? "translation" : "original");
+      panel.innerHTML = `${notice}<pre class="skill-content"></pre>${reviews}`;
+      setContentLanguage(panel);
     }
 
     function closeDrawer() {
@@ -1021,11 +1054,48 @@ def html_template() -> str:
       renderCategories();
       renderProjects(projects);
       el("resultMeta").textContent = state.query || state.category !== "all"
-        ? `${projects.length} / ${data.summary.project_count} 个项目`
-        : `${data.summary.project_count} 个项目 · ${data.summary.skill_count} 个 skills`;
+        ? `${projects.length} / ${data.summary.project_count} ${t("projects")}`
+        : `${data.summary.project_count} ${t("projects")} · ${data.summary.skill_count} skills`;
       document.querySelectorAll(".segment").forEach((button) => {
         button.classList.toggle("active", button.dataset.view === state.view);
       });
+    }
+
+    function applyLanguage() {
+      const zh = state.language === "zh";
+      const expandedSkills = [...document.querySelectorAll('[data-skill-path][aria-expanded="true"]')]
+        .map((button) => button.dataset.skillPath);
+      document.documentElement.lang = zh ? "zh-CN" : "en";
+      document.title = zh ? "Skills-Hub - Agent Skills 目录" : "Skills-Hub - Agent Skills Directory";
+      el("brandMeta").textContent = t("brandMeta");
+      el("searchInput").placeholder = t("search");
+      el("clearSearch").title = el("clearSearch").ariaLabel = t("clear");
+      document.querySelectorAll(".language-toggle, #languageToggle").forEach((button) => {
+        button.textContent = zh ? "EN" : "中";
+        button.ariaLabel = zh ? "Switch to English" : "切换到中文";
+      });
+      el("docsLink").textContent = t("docs");
+      el("githubLink").textContent = t("github");
+      el("filterTitle").textContent = t("filter");
+      el("catalogTitle").textContent = t("title");
+      el("catalogCopy").textContent = t("intro");
+      el("gridView").textContent = t("grid");
+      el("listView").textContent = t("list");
+      el("sortName").textContent = t("sortName");
+      el("sortSkills").textContent = t("sortSkills");
+      el("sortUpdated").textContent = t("sortUpdated");
+      el("sidebar").ariaLabel = t("filters");
+      el("viewModes").ariaLabel = t("viewModes");
+      el("sortSelect").ariaLabel = t("sort");
+      el("drawerPanel").ariaLabel = t("projectDetails");
+      el("closeDrawer").title = el("closeDrawer").ariaLabel = t("close");
+      render();
+      if (state.selected) {
+        renderDrawer(data.projects.find((project) => project.id === state.selected));
+        document.querySelectorAll("[data-skill-path]").forEach((button) => {
+          if (expandedSkills.includes(button.dataset.skillPath)) button.click();
+        });
+      }
     }
 
     document.addEventListener("click", async (event) => {
@@ -1034,11 +1104,11 @@ def html_template() -> str:
         const panel = el(skillButton.dataset.panelId);
         if (!panel.hidden) {
           panel.hidden = true;
-          skillButton.textContent = "查看内容";
+          skillButton.textContent = t("viewContent");
           skillButton.setAttribute("aria-expanded", "false");
           return;
         }
-        skillButton.textContent = "加载中…";
+        skillButton.textContent = t("loading");
         skillButton.disabled = true;
         try {
           const docs = await loadSkillContent();
@@ -1046,18 +1116,13 @@ def html_template() -> str:
           if (!record) throw new Error("missing content");
           renderSkillPanel(panel, record);
           panel.hidden = false;
-          skillButton.textContent = "收起内容";
+          skillButton.textContent = t("collapseContent");
           skillButton.setAttribute("aria-expanded", "true");
         } catch {
-          skillButton.textContent = "加载失败，请重试";
+          skillButton.textContent = t("loadFailed");
         } finally {
           skillButton.disabled = false;
         }
-        return;
-      }
-      const languageTab = event.target.closest("[data-language]");
-      if (languageTab) {
-        setContentLanguage(languageTab.closest(".skill-panel"), languageTab.dataset.language);
         return;
       }
       const category = event.target.closest("[data-category]");
@@ -1085,6 +1150,13 @@ def html_template() -> str:
       state.sort = event.target.value;
       render();
     });
+    document.querySelectorAll(".language-toggle, #languageToggle").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.language = state.language === "zh" ? "en" : "zh";
+        localStorage.setItem("skill-hub-language", state.language);
+        applyLanguage();
+      });
+    });
     document.querySelectorAll(".segment").forEach((button) => {
       button.addEventListener("click", () => {
         state.view = button.dataset.view;
@@ -1095,17 +1167,9 @@ def html_template() -> str:
     el("drawerBackdrop").addEventListener("click", closeDrawer);
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeDrawer();
-      const tab = event.target.closest?.("[data-language]");
-      if (tab && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
-        event.preventDefault();
-        const tabs = [...tab.parentElement.querySelectorAll("[data-language]")];
-        const next = tabs[(tabs.indexOf(tab) + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
-        next.focus();
-        setContentLanguage(next.closest(".skill-panel"), next.dataset.language);
-      }
     });
 
-    render();
+    applyLanguage();
   </script>
 </body>
 </html>

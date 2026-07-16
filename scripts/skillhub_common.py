@@ -249,8 +249,9 @@ def save_tags(tags: list[str] | None = None) -> None:
     TAGS_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def parse_frontmatter(path: Path) -> dict[str, Any]:
-    text = path.read_text(encoding="utf-8", errors="replace")
+def parse_frontmatter_text(text: str) -> dict[str, Any]:
+    if text.startswith("<!-- source-sha256: "):
+        text = text.partition("\n")[2]
     if not text.startswith("---"):
         return {}
     end = text.find("\n---", 3)
@@ -269,8 +270,8 @@ def parse_frontmatter(path: Path) -> dict[str, Any]:
         key, value = line.split(":", 1)
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        if value in {"|", ">", "|-", ">-", "|+", ">+"}:
-            folded = value.startswith(">")
+        if value in {"", "|", ">", "|-", ">-", "|+", ">+"}:
+            folded = value == "" or value.startswith(">")
             collected: list[str] = []
             index += 1
             while index < len(lines):
@@ -287,6 +288,10 @@ def parse_frontmatter(path: Path) -> dict[str, Any]:
             meta[key] = value
         index += 1
     return meta
+
+
+def parse_frontmatter(path: Path) -> dict[str, Any]:
+    return parse_frontmatter_text(path.read_text(encoding="utf-8", errors="replace"))
 
 
 def find_repo_root(path: Path) -> Path | None:
