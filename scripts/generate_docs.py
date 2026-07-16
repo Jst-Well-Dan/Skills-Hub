@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from content_sources import REVIEW_TYPES, load_reviews
 from skillhub_common import CATEGORY_LABELS, DOCS_DIR, ROOT, load_registry
 
 
@@ -59,7 +60,14 @@ def skill_line(skill: dict) -> str:
 
 def build_index(projects: list[dict]) -> str:
     skill_count = sum(project["skill_count"] for project in projects)
-    lines = ["# Skill 库总览", "", f"当前共收藏 {len(projects)} 个 Skill 库，包含 {skill_count} 个 skills。", ""]
+    lines = [
+        "# Skill 库总览",
+        "",
+        f"当前共收藏 {len(projects)} 个 Skill 库，包含 {skill_count} 个 skills。",
+        "",
+        "另见：[专题点评与测试](reviews/index.md)",
+        "",
+    ]
     for project in sorted(projects, key=lambda x: x["id"]):
         lines.append(project_line(project))
         for skill in sorted(project.get("skills", []), key=lambda x: x["id"]):
@@ -151,9 +159,27 @@ def build_readme_index(projects: list[dict]) -> str:
             "- [按标签查看](docs/by-tag.md)",
             "- [按来源查看](docs/by-source.md)",
             "- [安装与提炼说明](docs/install.md)",
+            "- [专题点评与测试](docs/reviews/index.md)",
         ]
     )
     return "\n".join(lines) + "\n"
+
+
+def write_reviews() -> int:
+    reviews = load_reviews()
+    output_dir = DOCS_DIR / "reviews"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for old_file in output_dir.glob("*.md"):
+        old_file.unlink()
+    lines = ["# 专题点评与测试", ""]
+    for review in reviews:
+        output = output_dir / f"{review['slug']}.md"
+        output.write_text(review["body"], encoding="utf-8")
+        lines.append(f"- [{review['title']}]({output.name}) · {REVIEW_TYPES[review['type']]}")
+    if not reviews:
+        lines.append("暂时还没有点评文章。")
+    (output_dir / "index.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return len(reviews)
 
 
 def build_install_doc(projects: list[dict]) -> str:
@@ -198,8 +224,15 @@ python scripts/list_skills.py --skills
 python scripts/list_skills.py --category coding-tools --skills
 python scripts/search_skills.py pdf
 python scripts/sync_skills.py --check
+python scripts/translate_skills.py --project impeccable
 python scripts/generate_docs.py
+python scripts/generate_site.py
 ```
+
+## 汉化与点评
+
+- 完整译文放在 `translations/<project-id>/<skill-id>/SKILL.md`；用 `translate_skills.py` 按项目或 skill 生成，`--check` 只检查缺失和过期状态。
+- 点评源放在 `reviews/*.md`，使用 JSON front matter 的 `related_projects` 或 `related_skills` 关联目录项；`generate_docs.py` 会生成 `docs/reviews/`。
 
 {START}
 {index}
@@ -233,9 +266,10 @@ def main() -> None:
     (DOCS_DIR / "by-tag.md").write_text(build_by_tag(projects), encoding="utf-8")
     (DOCS_DIR / "by-source.md").write_text(build_by_source(projects), encoding="utf-8")
     (DOCS_DIR / "install.md").write_text(build_install_doc(projects), encoding="utf-8")
+    review_count = write_reviews()
     update_readme(readme_index)
     skill_count = sum(project["skill_count"] for project in projects)
-    print(f"Generated docs for {len(projects)} projects and {skill_count} skills.")
+    print(f"Generated docs for {len(projects)} projects, {skill_count} skills, and {review_count} reviews.")
 
 
 if __name__ == "__main__":

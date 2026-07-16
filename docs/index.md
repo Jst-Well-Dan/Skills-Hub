@@ -2,6 +2,8 @@
 
 当前共收藏 31 个 Skill 库，包含 307 个 skills。
 
+另见：[专题点评与测试](reviews/index.md)
+
 - [agent-browser](libraries/agent-browser) `agent-browser` - 7 个 skills  
   分类：编程工具类 | 标签：browser, cli, coding, data, docs | 来源：vercel-labs/agent-browser  
   安装：推荐 `npx skills add vercel-labs/agent-browser`；也可从 [`extracted-skills/agent-browser`](extracted-skills/agent-browser) 手动复制。  

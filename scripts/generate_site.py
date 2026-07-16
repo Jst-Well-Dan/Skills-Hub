@@ -6,6 +6,7 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
+from content_sources import load_reviews, reviews_by_skill, translation_file
 from skillhub_common import CATEGORY_LABELS, ROOT, load_registry
 
 
@@ -39,6 +40,21 @@ def build_payload(projects: list[dict]) -> dict:
         },
         "projects": projects,
     }
+
+
+def build_skill_content(projects: list[dict]) -> dict[str, dict]:
+    content = {}
+    review_map = reviews_by_skill(projects, load_reviews())
+    for project in projects:
+        for skill in project.get("skills", []):
+            skill_file = ROOT / skill["path"] / "SKILL.md"
+            translated = translation_file(project, skill)
+            content[skill["path"]] = {
+                "original": skill_file.read_text(encoding="utf-8"),
+                "translation": translated.read_text(encoding="utf-8") if translated.exists() else None,
+                "reviews": review_map.get(skill["path"], []),
+            }
+    return content
 
 
 def html_template() -> str:
@@ -82,7 +98,6 @@ def html_template() -> str:
       --accent: #0969da;
       --accent-strong: #0550ae;
       --accent-soft: #ddf4ff;
-      --tag-bg: #ddf4ff;
       --accent-text: #ffffff;
       --shadow: 0 3px 12px rgba(140, 149, 159, .14);
       --ease: cubic-bezier(.16, 1, .3, 1);
@@ -108,7 +123,6 @@ def html_template() -> str:
         --accent: #58a6ff;
         --accent-strong: #79c0ff;
         --accent-soft: #0c2d4a;
-        --tag-bg: #0c2d4a;
         --accent-text: #0d1117;
         --shadow: 0 3px 12px rgba(1, 4, 9, .32);
       }
@@ -323,7 +337,7 @@ def html_template() -> str:
       text-align: center;
       font-size: 12px;
     }
-    .facet.active .count { background: var(--tag-bg); color: var(--accent); }
+    .facet.active .count { background: var(--accent-soft); color: var(--accent); }
 
     .workspace {
       min-width: 0;
@@ -469,20 +483,6 @@ def html_template() -> str:
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .tag {
-      min-height: 23px;
-      padding: 3px 7px;
-      border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
-      border-radius: 6px;
-      background: var(--tag-bg);
-      color: var(--accent);
-      font-size: 12px;
-    }
     .project-foot {
       padding: 0 20px 18px;
       display: flex;
@@ -612,11 +612,6 @@ def html_template() -> str:
       gap: 8px;
       background: var(--panel);
     }
-    .skill-top {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-    }
     .skill-name {
       font-weight: 680;
       color: var(--text);
@@ -634,11 +629,76 @@ def html_template() -> str:
       gap: 8px;
     }
     .text-link {
+      border: 0;
+      padding: 0;
+      background: transparent;
       color: var(--accent);
       font-size: 13px;
       font-weight: 650;
+      cursor: pointer;
     }
-    .text-link:hover { color: var(--accent-strong); }
+    .text-link:hover { color: var(--accent-strong); text-decoration: underline; }
+    .text-link:disabled { color: var(--muted); cursor: wait; text-decoration: none; }
+    .skill-panel {
+      margin-top: 4px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 12px;
+    }
+    .skill-panel[hidden] { display: none; }
+    .content-tabs {
+      display: inline-flex;
+      width: fit-content;
+      border-bottom: 1px solid var(--line);
+    }
+    .content-tab {
+      min-width: 68px;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 650;
+    }
+    .content-tab[aria-selected="true"] { border-color: var(--accent); color: var(--accent); }
+    .translation-empty { margin: 0; color: var(--muted); font-size: 13px; }
+    .skill-content {
+      margin: 0;
+      max-height: 520px;
+      overflow: auto;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-muted);
+      color: var(--body-text);
+      font: 14px/1.7 var(--sans);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .skill-content[data-language="original"] { font: 12px/1.65 var(--mono); }
+    .related-reviews {
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 2px;
+    }
+    .review-title { margin: 0 0 6px; color: var(--text); font-size: 15px; }
+    .review-link {
+      min-height: 44px;
+      padding: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      color: var(--accent);
+      font-weight: 650;
+    }
+    .review-link:last-child { border-bottom: 0; }
+    .review-meta { color: var(--muted); font-size: 12px; font-weight: 400; white-space: nowrap; }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -667,6 +727,8 @@ def html_template() -> str:
       .sidebar {
         order: 2;
         position: static;
+        align-self: stretch;
+        min-width: 0;
         padding-right: 0;
         border-right: 0;
       }
@@ -674,6 +736,8 @@ def html_template() -> str:
       .filter-head { padding: 0; flex: 0 0 auto; }
       .filter-list {
         display: flex;
+        flex: 1;
+        min-width: 0;
         gap: 4px;
         overflow-x: auto;
         scrollbar-width: thin;
@@ -784,6 +848,7 @@ def html_template() -> str:
     };
 
     const data = window.SKILL_HUB_DATA;
+    let skillContentPromise;
     const el = (id) => document.getElementById(id);
     const text = (value) => String(value ?? "");
     const categoryLabel = (id) => data.category_labels[id] || id || "未分类";
@@ -793,6 +858,10 @@ def html_template() -> str:
       : `${REPO_URL}/tree/main/${project.path}`;
     const normalize = (value) => text(value).toLowerCase();
     const readableText = (value) => text(value).replaceAll("—", " - ").replaceAll("–", "-");
+    const loadSkillContent = () => skillContentPromise ||= fetch("skill-content.json").then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    });
 
     function escapeHtml(value) {
       return readableText(value)
@@ -876,35 +945,69 @@ def html_template() -> str:
       el("drawerDescription").textContent = readableText(project.description || "暂无简介");
       el("drawerSourceLink").href = sourceUrl(project);
       el("drawerSourceLink").textContent = project.source?.repo ? "打开 GitHub" : "查看项目目录";
-      const install = project.install?.command || project.install?.method || "未记录";
+      const install = project.install?.method === "npx" && project.install.command
+        ? `<code>${escapeHtml(project.install.command)}</code>`
+        : `<a href="${escapeHtml(sourceUrl(project))}" target="_blank" rel="noreferrer">查看源仓库安装说明</a>`;
       const skills = [...(project.skills || [])].sort((a, b) => a.name.localeCompare(b.name));
-      const skillHtml = skills.map((skill) => `
+      const skillHtml = skills.map((skill, index) => `
         <article class="skill-item">
-          <div class="skill-top">
-            <div class="skill-name">${escapeHtml(skill.name)}</div>
-            <span class="badge">${escapeHtml(skill.id)}</span>
-          </div>
+          <div class="skill-name">${escapeHtml(skill.name)}</div>
           <p class="skill-description">${escapeHtml(skill.description || "暂无简介")}</p>
           <div class="links">
-            <a class="text-link" href="${REPO_URL}/blob/main/${escapeHtml(skill.path)}/SKILL.md">查看 SKILL.md</a>
-            ${skill.extracted_path ? `<a class="text-link" href="${REPO_URL}/tree/main/${escapeHtml(skill.extracted_path)}">复制目录</a>` : ""}
+            <button class="text-link" data-skill-path="${escapeHtml(skill.path)}" data-panel-id="skill-panel-${index}" aria-expanded="false">查看内容</button>
           </div>
+          <section class="skill-panel" id="skill-panel-${index}" aria-live="polite" hidden></section>
         </article>
       `).join("");
 
       el("drawerBody").innerHTML = `
         <div class="detail-grid">
           <div class="detail"><div class="detail-label">分类</div><div class="detail-value">${escapeHtml(categoryLabel(project.category))}</div></div>
-          <div class="detail"><div class="detail-label">来源</div><div class="detail-value">${escapeHtml(sourceOf(project))}</div></div>
-          <div class="detail"><div class="detail-label">安装</div><div class="detail-value">${escapeHtml(install)}</div></div>
-          <div class="detail"><div class="detail-label">路径</div><div class="detail-value">${escapeHtml(project.path)}</div></div>
+          <div class="detail"><div class="detail-label">安装</div><div class="detail-value">${install}</div></div>
         </div>
-        <div class="tags">${(project.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
-        <h3 class="section-title">Skills</h3>
+        <h3 class="section-title">Skills · ${skills.length}</h3>
         <div class="skill-list">${skillHtml}</div>
       `;
       el("drawer").classList.add("open");
       el("drawer").setAttribute("aria-hidden", "false");
+    }
+
+    function setContentLanguage(panel, language) {
+      const record = panel.skillRecord;
+      const content = panel.querySelector(".skill-content");
+      const value = language === "translation" ? record.translation : record.original;
+      content.textContent = language === "translation"
+        ? text(value).replace(/^<!-- source-sha256: [a-f0-9]+ -->\r?\n/, "")
+        : text(value);
+      content.dataset.language = language === "translation" ? "translation" : "original";
+      panel.querySelectorAll("[data-language]").forEach((tab) => {
+        const selected = tab.dataset.language === language;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+    }
+
+    function renderSkillPanel(panel, record) {
+      panel.skillRecord = record;
+      const tabs = record.translation ? `
+        <div class="content-tabs" role="tablist" aria-label="内容语言">
+          <button class="content-tab" role="tab" data-language="translation" aria-selected="true">中文</button>
+          <button class="content-tab" role="tab" data-language="original" aria-selected="false" tabindex="-1">原文</button>
+        </div>
+      ` : '<p class="translation-empty">暂无中文版本，当前显示原文。</p>';
+      const reviews = (record.reviews || []).length ? `
+        <section class="related-reviews">
+          <h4 class="review-title">相关点评</h4>
+          ${record.reviews.map((review) => `
+            <a class="review-link" href="${REPO_URL}/blob/main/docs/reviews/${encodeURIComponent(review.slug)}.md" target="_blank" rel="noreferrer">
+              <span>${escapeHtml(review.title)}</span>
+              <span class="review-meta">${escapeHtml(review.type_label)} →</span>
+            </a>
+          `).join("")}
+        </section>
+      ` : "";
+      panel.innerHTML = `${tabs}<pre class="skill-content"></pre>${reviews}`;
+      setContentLanguage(panel, record.translation ? "translation" : "original");
     }
 
     function closeDrawer() {
@@ -925,7 +1028,38 @@ def html_template() -> str:
       });
     }
 
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", async (event) => {
+      const skillButton = event.target.closest("[data-skill-path]");
+      if (skillButton) {
+        const panel = el(skillButton.dataset.panelId);
+        if (!panel.hidden) {
+          panel.hidden = true;
+          skillButton.textContent = "查看内容";
+          skillButton.setAttribute("aria-expanded", "false");
+          return;
+        }
+        skillButton.textContent = "加载中…";
+        skillButton.disabled = true;
+        try {
+          const docs = await loadSkillContent();
+          const record = docs[skillButton.dataset.skillPath];
+          if (!record) throw new Error("missing content");
+          renderSkillPanel(panel, record);
+          panel.hidden = false;
+          skillButton.textContent = "收起内容";
+          skillButton.setAttribute("aria-expanded", "true");
+        } catch {
+          skillButton.textContent = "加载失败，请重试";
+        } finally {
+          skillButton.disabled = false;
+        }
+        return;
+      }
+      const languageTab = event.target.closest("[data-language]");
+      if (languageTab) {
+        setContentLanguage(languageTab.closest(".skill-panel"), languageTab.dataset.language);
+        return;
+      }
       const category = event.target.closest("[data-category]");
       if (category) {
         state.category = category.dataset.category;
@@ -961,6 +1095,14 @@ def html_template() -> str:
     el("drawerBackdrop").addEventListener("click", closeDrawer);
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeDrawer();
+      const tab = event.target.closest?.("[data-language]");
+      if (tab && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
+        event.preventDefault();
+        const tabs = [...tab.parentElement.querySelectorAll("[data-language]")];
+        const next = tabs[(tabs.indexOf(tab) + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
+        next.focus();
+        setContentLanguage(next.closest(".skill-panel"), next.dataset.language);
+      }
     });
 
     render();
@@ -980,6 +1122,10 @@ def write_site(payload: dict) -> Path:
             shutil.copyfile(source, font_dir / font_name)
     (SITE_DIR / ".nojekyll").write_text("", encoding="utf-8")
     serialized = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    skill_content = build_skill_content(payload["projects"])
+    (SITE_DIR / "skill-content.json").write_text(
+        json.dumps(skill_content, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
     html = html_template().replace("__SKILL_HUB_PAYLOAD__", serialized)
     output = SITE_DIR / "index.html"
     output.write_text(html, encoding="utf-8")

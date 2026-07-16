@@ -12,6 +12,7 @@ python scripts/list_skills.py --skills
 python scripts/list_skills.py --category coding-tools --skills
 python scripts/search_skills.py pdf
 python scripts/sync_skills.py --check
+python scripts/translate_skills.py --project impeccable
 python scripts/generate_docs.py
 python scripts/generate_site.py
 ```
@@ -21,6 +22,11 @@ python scripts/generate_site.py
 运行 `python scripts/generate_site.py` 会读取 `registry/projects.yaml` 并生成静态站点到 `site/index.html`。生成后的页面可直接在浏览器打开，也可以部署到 GitHub Pages、Nginx 或任意静态文件服务。
 
 本仓库使用 GitHub Actions 自动发布 GitHub Pages：推送到 `main` 后，`.github/workflows/pages.yml` 会重新生成 `site/` 并发布为公开网站。
+
+## 汉化与点评
+
+- 完整译文放在 `translations/<project-id>/<skill-id>/SKILL.md`；用 `translate_skills.py` 按项目或 skill 生成，`--check` 只检查缺失和过期状态。
+- 点评源放在 `reviews/*.md`，使用 JSON front matter 的 `related_projects` 或 `related_skills` 关联目录项；`generate_docs.py` 会生成 `docs/reviews/`。
 
 <!-- SKILLS_INDEX_START -->
 ## 收藏概览
@@ -317,5 +323,6 @@ python scripts/generate_site.py
 - [按标签查看](docs/by-tag.md)
 - [按来源查看](docs/by-source.md)
 - [安装与提炼说明](docs/install.md)
+- [专题点评与测试](docs/reviews/index.md)
 
 <!-- SKILLS_INDEX_END -->
