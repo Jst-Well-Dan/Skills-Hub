@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 from datetime import date
 from skillhub_common import (
     ROOT,
@@ -66,8 +67,13 @@ def main() -> None:
             elif original_path:
                 download_github_directory(repo, latest, original_path, target)
             else:
-                print(f"SKIP    {project['id']} has no .git directory; update it manually.")
-                continue
+                temp = target.with_name(f".{target.name}.tmp")
+                if temp.exists():
+                    shutil.rmtree(temp)
+                run(["git", "clone", "--depth", "1", "--branch", ref, f"https://github.com/{repo}.git", str(temp)])
+                if target.exists():
+                    shutil.rmtree(target)
+                shutil.move(str(temp), str(target))
             source["commit"] = latest
             project["last_synced_at"] = today
             print(f"APPLIED {project['id']} -> {project['path']}")

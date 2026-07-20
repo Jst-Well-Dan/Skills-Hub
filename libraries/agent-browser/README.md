@@ -517,7 +517,7 @@ Common tools include:
 - `agent_browser_eval`
 - `agent_browser_close`
 
-Each tool has typed fields such as `url`, `selector`, `text`, `key`, and `session`, so MCP clients show meaningful approval prompts instead of raw command arrays. Each tool also accepts `extraArgs` for advanced CLI flags and exact CLI parity. Tool discovery is paginated and includes read-only/open-world annotations so modern MCP clients can load the large typed surface incrementally.
+Each tool has typed fields such as `url`, `selector`, `text`, `key`, `session`, and `allowedDomains`, so MCP clients show meaningful approval prompts instead of raw command arrays. The common `allowedDomains` array maps to `--allowed-domains` and activates the same WebRTC containment and launch-mode restrictions. Each tool also accepts `extraArgs` for advanced CLI flags and exact CLI parity. Tool discovery is paginated and includes read-only/open-world annotations so modern MCP clients can load the large typed surface incrementally.
 
 Example MCP client config:
 
@@ -557,7 +557,7 @@ agent-browser provides multiple ways to persist login sessions so you don't re-a
 |----------|----------|------------|
 | **Chrome profile reuse** | Reuse your existing Chrome login state (cookies, sessions) with zero setup | `--profile <name>` / `AGENT_BROWSER_PROFILE` |
 | **Persistent profile** | Full browser state (cookies, IndexedDB, service workers, cache) across restarts | `--profile <path>` / `AGENT_BROWSER_PROFILE` |
-| **Session persistence** | Auto-save/restore cookies + localStorage by name | `--session-name <name>` / `AGENT_BROWSER_SESSION_NAME` |
+| **Session persistence** | Auto-save/restore cookies + localStorage from a stable session key | `--session <id> --restore` / `AGENT_BROWSER_RESTORE` |
 | **Import from your browser** | Grab auth from a Chrome session you already logged into | `--auto-connect` + `state save` |
 | **State file** | Load a previously saved state JSON on launch | `--state <path>` / `AGENT_BROWSER_STATE` |
 | **Auth vault** | Store credentials locally (encrypted), login by name | `auth save` / `auth login` |
@@ -578,9 +578,10 @@ agent-browser --auto-connect state save ./my-auth.json
 # 3. Use the saved auth in future sessions
 agent-browser --state ./my-auth.json open https://app.example.com/dashboard
 
-# 4. Or use --session-name for automatic persistence
-agent-browser --session-name myapp state load ./my-auth.json
-# From now on, --session-name myapp auto-saves/restores this state
+# 4. Or use --restore for automatic persistence
+SESSION="$(agent-browser session id --scope worktree --prefix myapp)"
+agent-browser --session "$SESSION" --restore --state ./my-auth.json open https://app.example.com/dashboard
+# From now on, --session "$SESSION" --restore auto-saves/restores this state
 ```
 
 > **Security notes:**
@@ -610,6 +611,12 @@ agent-browser session list
 
 # Show current session
 agent-browser session
+
+# Generate a stable worktree-scoped session id
+agent-browser session id --scope worktree --prefix next-dev-loop
+
+# Inspect daemon, launch, and restore status
+agent-browser session info --json
 ```
 
 Each session has its own:
@@ -668,19 +675,21 @@ The profile directory stores:
 
 ## Session Persistence
 
-Alternatively, use `--session-name` to automatically save and restore cookies and localStorage across browser restarts:
+Use `--restore` with a stable `--session` to automatically save and restore cookies and localStorage across browser restarts:
 
 ```bash
-# Auto-save/load state for "twitter" session
-agent-browser --session-name twitter open twitter.com
+# Generate a stable id for this worktree and auto-save/load state
+SESSION="$(agent-browser session id --scope worktree --prefix twitter)"
+agent-browser --session "$SESSION" --restore open twitter.com
 
 # Login once, then state persists automatically
 # State files stored in ~/.agent-browser/sessions/
 
-# Or via environment variable
-export AGENT_BROWSER_SESSION_NAME=twitter
-agent-browser open twitter.com
+# Optional: validate restored state before auto-saving again
+agent-browser --session "$SESSION" --restore --restore-check-text Dashboard open twitter.com
 ```
+
+State is saved when the browser closes (explicit `close`, idle timeout, or daemon shutdown) and also periodically while the browser is open, so a browser window you close by hand still leaves a recent save behind. Periodic autosave waits for commands to settle, then saves at most once per `AGENT_BROWSER_AUTOSAVE_INTERVAL_MS` (default 30000; set to `0` to save only on close). Idle sessions keep saving on the same interval, so changes the page makes on its own (token refreshes, background requests) are captured too. It respects the `--restore-save` policy.
 
 ### State Encryption
 
@@ -691,12 +700,16 @@ Encrypt saved session data at rest with AES-256-GCM:
 export AGENT_BROWSER_ENCRYPTION_KEY=<64-char-hex-key>
 
 # State files are now encrypted automatically
-agent-browser --session-name secure open example.com
+agent-browser --session secure --restore open example.com
 ```
 
 | Variable                          | Description                                        |
 | --------------------------------- | -------------------------------------------------- |
-| `AGENT_BROWSER_SESSION_NAME`      | Auto-save/load state persistence name              |
+| `AGENT_BROWSER_RESTORE`           | Auto-save/load state persistence name              |
+| `AGENT_BROWSER_RESTORE_SAVE`      | Restore save policy: `auto`, `always`, or `never`  |
+| `AGENT_BROWSER_AUTOSAVE_INTERVAL_MS` | Min ms between periodic autosaves (default: 30000, 0 disables) |
+| `AGENT_BROWSER_NAMESPACE`         | Namespace for daemon sockets and restore state     |
+| `AGENT_BROWSER_SESSION_NAME`      | Legacy auto-save/load state persistence name       |
 | `AGENT_BROWSER_ENCRYPTION_KEY`    | 64-char hex key for AES-256-GCM encryption         |
 | `AGENT_BROWSER_STATE_EXPIRE_DAYS` | Auto-delete states older than N days (default: 30) |
 
@@ -707,7 +720,7 @@ agent-browser includes security features for safe AI agent deployments. All feat
 - **Authentication Vault**: Store credentials locally (always encrypted), reference by name. The LLM never sees passwords. `auth login` navigates with `load` and then waits for login form selectors to appear (SPA-friendly, timeout follows the default action timeout). A key is auto-generated at `~/.agent-browser/.encryption-key` if `AGENT_BROWSER_ENCRYPTION_KEY` is not set: `echo "pass" | agent-browser auth save github --url https://github.com/login --username user --password-stdin` then `agent-browser auth login github`
 - **Plugin System**: Extend agent-browser with external executable plugins. Plugins run out-of-process over the `agent-browser.plugin.v1` stdio JSON protocol and declare capabilities such as `credential.read`, `browser.provider`, `launch.mutate`, or `command.run`.
 - **Content Boundary Markers**: Wrap page output in delimiters so LLMs can distinguish tool output from untrusted content: `--content-boundaries`
-- **Domain Allowlist**: Restrict navigation to trusted domains (wildcards like `*.example.com` also match the bare domain): `--allowed-domains "example.com,*.example.com"`. Sub-resource requests (scripts, images, fetch) and WebSocket/EventSource connections to non-allowed domains are also blocked. Include any CDN domains your target pages depend on (e.g., `*.cdn.example.com`).
+- **Domain Allowlist**: Restrict navigation to trusted domains (wildcards like `*.example.com` also match the bare domain): `--allowed-domains "example.com,*.example.com"`. Sub-resource requests (scripts, images, fetch), WebSocket/EventSource connections, and `sendBeacon` calls to non-allowed domains are blocked. WebRTC peer connections are disabled in supported Chromium sessions while the allowlist is active to prevent STUN, TURN, and DNS traffic from bypassing HTTP interception. Dedicated and shared workers are guarded with a bootstrap wrapper; if a page CSP forbids that wrapper, the worker fails closed rather than running without the allowlist guard. Pre-existing CDP sessions, auto-connect, Chrome profiles, direct-page provider plugins, agent-browser restore or state-file replay, raw Chrome args that select profiles, restore sessions, or open startup pages, iOS, and Safari reject this option because agent-browser cannot install equivalent containment before page scripts run. Include any CDN domains your target pages depend on (e.g., `*.cdn.example.com`).
 - **Action Policy**: Gate destructive actions with a static policy file: `--action-policy ./policy.json`
 - **Action Confirmation**: Require explicit approval for sensitive action categories: `--confirm-actions eval,download`
 - **Output Length Limits**: Prevent context flooding: `--max-output 50000`
@@ -716,7 +729,7 @@ agent-browser includes security features for safe AI agent deployments. All feat
 | ----------------------------------- | ---------------------------------------- |
 | `AGENT_BROWSER_CONTENT_BOUNDARIES`  | Wrap page output in boundary markers     |
 | `AGENT_BROWSER_MAX_OUTPUT`          | Max characters for page output           |
-| `AGENT_BROWSER_ALLOWED_DOMAINS`     | Comma-separated allowed domain patterns  |
+| `AGENT_BROWSER_ALLOWED_DOMAINS`     | Comma-separated allowed domain patterns; requires a fresh controllable browser context without profile/session startup args, restore/state replay, or direct-page provider plugins |
 | `AGENT_BROWSER_ACTION_POLICY`       | Path to action policy JSON file          |
 | `AGENT_BROWSER_CONFIRM_ACTIONS`     | Action categories requiring confirmation |
 | `AGENT_BROWSER_CONFIRM_INTERACTIVE` | Enable interactive confirmation prompts  |
@@ -861,7 +874,13 @@ This is useful for multimodal AI models that can reason about visual layout, unl
 | Option | Description |
 |--------|-------------|
 | `--session <name>` | Use isolated session (or `AGENT_BROWSER_SESSION` env) |
-| `--session-name <name>` | Auto-save/restore session state (or `AGENT_BROWSER_SESSION_NAME` env) |
+| `--restore [name]` | Auto-save/restore session state. Bare `--restore` uses `--session` as the key |
+| `--restore-save <policy>` | Restore save policy: `auto`, `always`, or `never` |
+| `--restore-check-url <glob>` | Validate restored state against a URL pattern |
+| `--restore-check-text <text>` | Validate restored state against page text |
+| `--restore-check-fn <js>` | Validate restored state against a truthy JavaScript expression |
+| `--namespace <name>` | Isolate daemon sockets and restore-state directories |
+| `--session-name <name>` | Legacy alias for restore persistence key |
 | `--profile <name\|path>` | Chrome profile name or persistent directory path (or `AGENT_BROWSER_PROFILE` env) |
 | `--state <path>` | Load storage state from JSON file (or `AGENT_BROWSER_STATE` env) |
 | `--headers <json>` | Set HTTP headers scoped to the URL's origin |
@@ -884,13 +903,14 @@ This is useful for multimodal AI models that can reason about visual layout, unl
 | `--screenshot-quality <n>` | JPEG quality 0-100 (or `AGENT_BROWSER_SCREENSHOT_QUALITY` env) |
 | `--screenshot-format <fmt>` | Screenshot format: `png`, `jpeg` (or `AGENT_BROWSER_SCREENSHOT_FORMAT` env) |
 | `--headed` | Show browser window (not headless) (or `AGENT_BROWSER_HEADED` env) |
+| `--webgpu` | Enable WebGPU; SwiftShader software Vulkan on Linux, no GPU required (or `AGENT_BROWSER_WEBGPU` env) |
 | `--cdp <port\|url>` | Connect via Chrome DevTools Protocol (port or WebSocket URL) |
 | `--auto-connect` | Auto-discover and connect to running Chrome (or `AGENT_BROWSER_AUTO_CONNECT` env) |
 | `--color-scheme <scheme>` | Color scheme: `dark`, `light`, `no-preference` (or `AGENT_BROWSER_COLOR_SCHEME` env) |
 | `--download-path <path>` | Default download directory (or `AGENT_BROWSER_DOWNLOAD_PATH` env) |
 | `--content-boundaries` | Wrap page output in boundary markers for LLM safety (or `AGENT_BROWSER_CONTENT_BOUNDARIES` env) |
 | `--max-output <chars>` | Truncate page output to N characters (or `AGENT_BROWSER_MAX_OUTPUT` env) |
-| `--allowed-domains <list>` | Comma-separated allowed domain patterns (or `AGENT_BROWSER_ALLOWED_DOMAINS` env) |
+| `--allowed-domains <list>` | Comma-separated allowed domain patterns; also disables WebRTC peer connections in supported Chromium sessions and rejects CDP, auto-connect, Chrome profiles, restore/state replay, direct-page provider plugins, unsafe startup `--args`, iOS, and Safari (or `AGENT_BROWSER_ALLOWED_DOMAINS` env) |
 | `--action-policy <path>` | Path to action policy JSON file (or `AGENT_BROWSER_ACTION_POLICY` env) |
 | `--confirm-actions <list>` | Action categories requiring confirmation (or `AGENT_BROWSER_CONFIRM_ACTIONS` env) |
 | `--confirm-interactive` | Interactive confirmation prompts; auto-denies if stdin is not a TTY (or `AGENT_BROWSER_CONFIRM_INTERACTIVE` env) |
@@ -1132,7 +1152,40 @@ agent-browser open example.com --headed
 
 This opens a visible browser window instead of running headless.
 
+On Linux hosts with no display (servers, containers), `--headed` still works: when `DISPLAY` is unset and Xvfb is installed, agent-browser starts a private virtual display for the browser and cleans it up on close (opt out with `AGENT_BROWSER_NO_XVFB=1`). Needed for [WebGPU screenshots](#webgpu), and useful for extensions that misbehave headless.
+
 > **Note:** Browser extensions work in both headed and headless mode (Chrome's `--headless=new`).
+
+## WebGPU
+
+Headless Chrome does not expose WebGPU by default, so pages using it (three.js `WebGPURenderer`, Babylon.js, etc.) silently render black. The `--webgpu` flag enables a launch preset that makes WebGPU work, including in GPU-less containers and CI:
+
+```bash
+agent-browser --webgpu open https://my-webgpu-app.example.com
+agent-browser screenshot app.png
+```
+
+On macOS and Windows this uses the hardware Metal/D3D backend. On Linux it routes WebGPU through SwiftShader's software Vulkan (no GPU needed), which requires the system Vulkan loader and Mesa ICD:
+
+```bash
+apt-get install -y libvulkan1 mesa-vulkan-drivers
+```
+
+One upstream caveat: headless Chrome cannot capture WebGPU canvas presentation in screenshots on Windows and Linux (rendering and in-page readbacks work; the capture is black). Screenshots of WebGPU pages work headless on macOS; on Windows run `--headed` in a logged-in desktop session; on Linux just add `--headed` — when no `DISPLAY` is set and Xvfb is installed, agent-browser starts a private virtual display automatically (opt out with `AGENT_BROWSER_NO_XVFB=1`).
+
+Verify the full pipeline (adapter, render pass, and screenshot capture) with:
+
+```bash
+agent-browser doctor --webgpu
+```
+
+Notes for WebGPU pages:
+
+- WebGPU only exists in secure contexts (`https://`, `http://localhost`, or `file://`).
+- three.js `WebGPURenderer` initializes asynchronously and silently falls back to WebGL2 when no adapter is available — wait for the app to render its first frame before taking a screenshot.
+- To prefer a real GPU on Linux instead of SwiftShader, override both the Vulkan driver and the adapter with `--args "--use-vulkan=native,--use-webgpu-adapter=default"` (user args win over the preset; `--use-webgpu-adapter` alone still enumerates only SwiftShader).
+
+See the [WebGPU docs page](https://agent-browser.dev/webgpu) for the full platform matrix and container recipe.
 
 ## Authenticated Sessions
 
@@ -1201,9 +1254,22 @@ const result = await withAgentBrowserSandbox(async (sandbox) => {
 });
 ```
 
-Install `@agent-browser/sandbox` and `@vercel/sandbox` in the consuming app. See the [sandbox helper example](examples/sandbox/) for minimal Eve and Vercel Sandbox usage, or the [environments example](examples/environments/) for a full UI demo with a deploy-to-Vercel button.
+Install `@agent-browser/sandbox` and `@vercel/sandbox` in the consuming app. See the [sandbox helper example](examples/sandbox/) for minimal Vercel Sandbox usage, or the [environments example](examples/environments/) for a full UI demo with a deploy-to-Vercel button.
 
-Fresh Vercel and Eve sandboxes install Chromium system dependencies by default. Pass `installSystemDependencies: false` only when your sandbox image already includes those libraries.
+Fresh Vercel and eve sandboxes install Chromium system dependencies by default. Pass `installSystemDependencies: false` only when your sandbox image already includes those libraries.
+
+### eve extension
+
+Give an [eve](https://eve.dev) agent the full browser tool set by mounting the [`@agent-browser/eve`](packages/@agent-browser/eve/) extension:
+
+```typescript
+// agent/extensions/browser.ts
+import browser from "@agent-browser/eve";
+
+export default browser({});
+```
+
+This composes ~20 namespaced tools into the agent — `browser__navigate`, `browser__snapshot`, `browser__click`, `browser__fill`, `browser__find`, `browser__screenshot`, and more — all running agent-browser inside the agent's sandbox. agent-browser installs automatically on first use; pre-install it in `agent/sandbox.ts` with the `@agent-browser/eve/sandbox` helpers to bake the cost into the sandbox template instead. Configuration (domain allowlists, output limits, session naming) and per-tool overrides are covered in the [package README](packages/@agent-browser/eve/README.md), and the [eve example](examples/eve/) is a complete app with the extension mounted.
 
 ### Serverless (AWS Lambda)
 

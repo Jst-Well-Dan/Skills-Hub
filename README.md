@@ -31,7 +31,7 @@ python scripts/generate_site.py
 <!-- SKILLS_INDEX_START -->
 ## 收藏概览
 
-当前共收藏 **31** 个 Skill 库，包含 **307** 个 skills。
+当前共收藏 **31** 个 Skill 库，包含 **315** 个 skills。
 
 ## 按分类查看
 
@@ -92,10 +92,10 @@ python scripts/generate_site.py
   简介：Agent Skills
   - [deploy-to-vercel](libraries/vercel-labsagent-skills/skills/deploy-to-vercel/SKILL.md) `deploy-to-vercel` | 可复制：[`extracted-skills/vercel-labsagent-skills/deploy-to-vercel`](extracted-skills/vercel-labsagent-skills/deploy-to-vercel) - Deploy applications and websites to Vercel. Use when the user requests deployment actions like "deploy my a...
   - [vercel-cli-with-tokens](libraries/vercel-labsagent-skills/skills/vercel-cli-with-tokens/SKILL.md) `vercel-cli-with-tokens` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-cli-with-tokens`](extracted-skills/vercel-labsagent-skills/vercel-cli-with-tokens) - Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI usi...
-  - [vercel-composition-patterns](libraries/vercel-labsagent-skills/skills/composition-patterns/SKILL.md) `vercel-composition-patterns` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-composition-patterns`](extracted-skills/vercel-labsagent-skills/vercel-composition-patterns) - React Composition Patterns
+  - [vercel-composition-patterns](libraries/vercel-labsagent-skills/skills/composition-patterns/SKILL.md) `vercel-composition-patterns` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-composition-patterns`](extracted-skills/vercel-labsagent-skills/vercel-composition-patterns) - React composition patterns that scale. Use when refactoring components with boolean prop proliferation, bui...
   - [vercel-optimize](libraries/vercel-labsagent-skills/skills/vercel-optimize/SKILL.md) `vercel-optimize` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-optimize`](extracted-skills/vercel-labsagent-skills/vercel-optimize) - Use for Vercel cost and performance optimization on deployed projects, especially Next.js, SvelteKit, Nuxt,...
   - [vercel-react-best-practices](libraries/vercel-labsagent-skills/skills/react-best-practices/SKILL.md) `vercel-react-best-practices` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-react-best-practices`](extracted-skills/vercel-labsagent-skills/vercel-react-best-practices) - React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used wh...
-  - [vercel-react-native-skills](libraries/vercel-labsagent-skills/skills/react-native-skills/SKILL.md) `vercel-react-native-skills` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-react-native-skills`](extracted-skills/vercel-labsagent-skills/vercel-react-native-skills) - React Native Skills
+  - [vercel-react-native-skills](libraries/vercel-labsagent-skills/skills/react-native-skills/SKILL.md) `vercel-react-native-skills` | 可复制：[`extracted-skills/vercel-labsagent-skills/vercel-react-native-skills`](extracted-skills/vercel-labsagent-skills/vercel-react-native-skills) - React Native and Expo best practices for building performant mobile apps. Use when building React Native co...
   - 另有 3 个 skills，见 [vercel-labsagent-skills](libraries/vercel-labsagent-skills) 或 [完整索引](docs/index.md)。
 
 ### 日常工具类
@@ -133,22 +133,22 @@ python scripts/generate_site.py
   - [canvas-design](libraries/anthropic/skills/canvas-design/SKILL.md) `canvas-design` | 可复制：[`extracted-skills/anthropic/canvas-design`](extracted-skills/anthropic/canvas-design) - Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill w...
   - [claude-api](libraries/anthropic/skills/claude-api/SKILL.md) `claude-api` | 可复制：[`extracted-skills/anthropic/claude-api`](extracted-skills/anthropic/claude-api) - Reference for the Claude API / Anthropic SDK — model ids, pricing, params, streaming, tool use, MCP, agents...
   - [doc-coauthoring](libraries/anthropic/skills/doc-coauthoring/SKILL.md) `doc-coauthoring` | 可复制：[`extracted-skills/anthropic/doc-coauthoring`](extracted-skills/anthropic/doc-coauthoring) - Guide users through a structured workflow for co-authoring documentation. Use when user wants to write docu...
-  - [docx](libraries/anthropic/skills/docx/SKILL.md) `docx` | 可复制：[`extracted-skills/anthropic/docx`](extracted-skills/anthropic/docx) - Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). T...
+  - [docx](libraries/anthropic/skills/docx/SKILL.md) `docx` | 可复制：[`extracted-skills/anthropic/docx`](extracted-skills/anthropic/docx) - Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files) or...
   - 另有 12 个 skills，见 [anthropic](libraries/anthropic) 或 [完整索引](docs/index.md)。
 
-- [mattpocock-skills](libraries/mattpocock-skills) `mattpocock-skills` - 36 个 skills  
+- [mattpocock-skills](libraries/mattpocock-skills) `mattpocock-skills` - 41 个 skills  
   分类：个人合集类 | 标签：automation, cli, coding, data, docs, finance, frontend, obsidian | 来源：mattpocock/skills  
   安装：复制 [`extracted-skills/mattpocock-skills`](extracted-skills/mattpocock-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：Skills For Real Engineers
   - [ask-matt](libraries/mattpocock-skills/skills/engineering/ask-matt/SKILL.md) `ask-matt` | 可复制：[`extracted-skills/mattpocock-skills/ask-matt`](extracted-skills/mattpocock-skills/ask-matt) - Ask which skill or flow fits your situation. A router over the skills in this repo.
+  - [batch-grill-me](libraries/mattpocock-skills/skills/in-progress/batch-grill-me/SKILL.md) `batch-grill-me` | 可复制：[`extracted-skills/mattpocock-skills/batch-grill-me`](extracted-skills/mattpocock-skills/batch-grill-me) - A relentless interview that asks every frontier question at once, round by round.
+  - [claude-handoff](libraries/mattpocock-skills/skills/in-progress/claude-handoff/SKILL.md) `claude-handoff` | 可复制：[`extracted-skills/mattpocock-skills/claude-handoff`](extracted-skills/mattpocock-skills/claude-handoff) - Hand the current conversation off to a fresh background agent that picks up the work immediately.
   - [code-review](libraries/mattpocock-skills/skills/engineering/code-review/SKILL.md) `code-review` | 可复制：[`extracted-skills/mattpocock-skills/code-review`](extracted-skills/mattpocock-skills/code-review) - Review the changes since a fixed point (commit, branch, tag, or merge-base) along two axes — Standards (doe...
   - [codebase-design](libraries/mattpocock-skills/skills/engineering/codebase-design/SKILL.md) `codebase-design` | 可复制：[`extracted-skills/mattpocock-skills/codebase-design`](extracted-skills/mattpocock-skills/codebase-design) - Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's inter...
   - [design-an-interface](libraries/mattpocock-skills/skills/deprecated/design-an-interface/SKILL.md) `design-an-interface` | 可复制：[`extracted-skills/mattpocock-skills/design-an-interface`](extracted-skills/mattpocock-skills/design-an-interface) - Generate multiple radically different interface designs for a module using parallel sub-agents. Use when us...
-  - [diagnosing-bugs](libraries/mattpocock-skills/skills/engineering/diagnosing-bugs/SKILL.md) `diagnosing-bugs` | 可复制：[`extracted-skills/mattpocock-skills/diagnosing-bugs`](extracted-skills/mattpocock-skills/diagnosing-bugs) - Diagnosis loop for hard bugs and performance regressions. Use when the user says "diagnose"/"debug this", o...
-  - [domain-modeling](libraries/mattpocock-skills/skills/engineering/domain-modeling/SKILL.md) `domain-modeling` | 可复制：[`extracted-skills/mattpocock-skills/domain-modeling`](extracted-skills/mattpocock-skills/domain-modeling) - Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubi...
-  - 另有 30 个 skills，见 [mattpocock-skills](libraries/mattpocock-skills) 或 [完整索引](docs/index.md)。
+  - 另有 35 个 skills，见 [mattpocock-skills](libraries/mattpocock-skills) 或 [完整索引](docs/index.md)。
 
-- [swyxio-skills](libraries/swyxio-skills) `swyxio-skills` - 39 个 skills  
+- [swyxio-skills](libraries/swyxio-skills) `swyxio-skills` - 41 个 skills  
   分类：个人合集类 | 标签：automation, browser, coding, data, docs, image, research, workflow | 来源：swyxio/skills  
   安装：复制 [`extracted-skills/swyxio-skills`](extracted-skills/swyxio-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：swyxio Skills
@@ -158,7 +158,7 @@ python scripts/generate_site.py
   - [app-ux-paradigms](libraries/swyxio-skills/app-ux-paradigms/SKILL.md) `app-ux-paradigms` | 可复制：[`extracted-skills/swyxio-skills/app-ux-paradigms`](extracted-skills/swyxio-skills/app-ux-paradigms) - Applies standard web app UX for keyboard shortcuts, modals, overlays, forms, and interaction patterns. Use...
   - [autoreview](libraries/swyxio-skills/autoreview/SKILL.md) `autoreview` | 可复制：[`extracted-skills/swyxio-skills/autoreview`](extracted-skills/swyxio-skills/autoreview) - Run structured closeout code review after non-trivial code edits, branch or PR work, or commits using an au...
   - [claude-session-introspect](libraries/swyxio-skills/claude-session-introspect/SKILL.md) `claude-session-introspect` | 可复制：[`extracted-skills/swyxio-skills/claude-session-introspect`](extracted-skills/swyxio-skills/claude-session-introspect) - Inspect Claude Code session JSONL files at ~/.claude/projects/ to extract real conversation telemetry: toke...
-  - 另有 33 个 skills，见 [swyxio-skills](libraries/swyxio-skills) 或 [完整索引](docs/index.md)。
+  - 另有 35 个 skills，见 [swyxio-skills](libraries/swyxio-skills) 或 [完整索引](docs/index.md)。
 
 ### 前端展示类
 
@@ -187,16 +187,16 @@ python scripts/generate_site.py
   简介：Guizang PPT Skill · 网页 PPT / 配图 / 封面
   - [guizang-ppt-skill](libraries/guizang-ppt-skill/SKILL.md) `guizang-ppt-skill` | 可复制：[`extracted-skills/guizang-ppt-skill/guizang-ppt-skill`](extracted-skills/guizang-ppt-skill/guizang-ppt-skill) - 生成横向翻页网页 PPT（单 HTML 文件），含 WebGL 背景、章节幕封、数据大字报、图片网格等模板。提供两种风格：① "电子杂志 × 电子墨水"（衬线 + 流体背景 + 暖色） ② "瑞士国际主义"（无衬线...
 
-- [html-anything](libraries/html-anything) `html-anything` - 78 个 skills  
+- [html-anything](libraries/html-anything) `html-anything` - 81 个 skills  
   分类：前端展示类 | 标签：coding, docs, frontend, image, workflow | 来源：nexu-io/html-anything  
   安装：复制 [`extracted-skills/html-anything`](extracted-skills/html-anything) 下需要的 skill 到 `~/.claude/skills/`。
   - [article-magazine](libraries/html-anything/article-magazine/SKILL.md) `article-magazine` | 可复制：[`extracted-skills/html-anything/article-magazine`](extracted-skills/html-anything/article-magazine) - Substack / Medium 高级感长文排版, 适合公众号、博客发布
+  - [article-sketchnote-editorial](libraries/html-anything/article-sketchnote-editorial/SKILL.md) `article-sketchnote-editorial` | 可复制：[`extracted-skills/html-anything/article-sketchnote-editorial`](extracted-skills/html-anything/article-sketchnote-editorial) - 把一个概念铸成杂志专题档案——真问题→失败→转折→顿悟→命名, 6 个 layout 模具 + 4 字族对比 + 探案档案细节
   - [blog-post](libraries/html-anything/blog-post/SKILL.md) `blog-post` | 可复制：[`extracted-skills/html-anything/blog-post`](extracted-skills/html-anything/blog-post) - 杂志感长文, 含 masthead、hero、figures、pull quote、作者署名
   - [card-twitter](libraries/html-anything/card-twitter/SKILL.md) `card-twitter` | 可复制：[`extracted-skills/html-anything/card-twitter`](extracted-skills/html-anything/card-twitter) - 推特金句 / 数据卡, 适合配推文
   - [card-xiaohongshu](libraries/html-anything/card-xiaohongshu/SKILL.md) `card-xiaohongshu` | 可复制：[`extracted-skills/html-anything/card-xiaohongshu`](extracted-skills/html-anything/card-xiaohongshu) - 小红书风格知识卡片, 多张联排可滑动浏览
   - [competitive-teardown](libraries/html-anything/competitive-teardown/SKILL.md) `competitive-teardown` | 可复制：[`extracted-skills/html-anything/competitive-teardown`](extracted-skills/html-anything/competitive-teardown) - 定位图 + 功能矩阵 + 价格对比 + 机会窗口, 把竞品资料转成产品决策报告
-  - [dashboard](libraries/html-anything/dashboard/SKILL.md) `dashboard` | 可复制：[`extracted-skills/html-anything/dashboard`](extracted-skills/html-anything/dashboard) - 固定侧栏 + 顶栏 + KPI 网格 + 1-2 张图
-  - 另有 72 个 skills，见 [html-anything](libraries/html-anything) 或 [完整索引](docs/index.md)。
+  - 另有 75 个 skills，见 [html-anything](libraries/html-anything) 或 [完整索引](docs/index.md)。
 
 - [impeccable](libraries/impeccable) `impeccable` - 1 个 skills  
   分类：前端展示类 | 标签：automation, coding, docs, frontend, image, workflow | 来源：pbakaus/impeccable  
@@ -222,7 +222,7 @@ python scripts/generate_site.py
   分类：动画动效类 | 标签：animation, frontend, image, coding | 来源：diffusionstudio/lottie  
   安装：复制 [`extracted-skills/lottie`](extracted-skills/lottie) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：Authoring Renderable Lottie Files
-  - [text-to-lottie](libraries/lottie/text-to-lottie/SKILL.md) `text-to-lottie` | 可复制：[`extracted-skills/lottie/text-to-lottie`](extracted-skills/lottie/text-to-lottie) - Author a Lottie (Bodymovin) JSON animation that renders in a local skia player. Use whenever the user asks...
+  - [text-to-lottie](libraries/lottie/text-to-lottie/SKILL.md) `text-to-lottie` | 可复制：[`extracted-skills/lottie/text-to-lottie`](extracted-skills/lottie/text-to-lottie) - Create, edit, or fix Lottie/Bodymovin JSON animations for the local Skia Skottie player. Use for text-to-Lo...
 
 ### 内容创作类
 
@@ -248,7 +248,7 @@ python scripts/generate_site.py
   分类：内容创作类 | 标签：image, docs, frontend, workflow | 来源：op7418/guizang-social-card-skill  
   安装：推荐 `npx skills add https://github.com/op7418/guizang-social-card-skill --skill guizang-social-card-skill`；也可从 [`extracted-skills/guizang-social-card-skill`](extracted-skills/guizang-social-card-skill) 手动复制。  
   简介：Guizang Social Card Skill · 小红书图文 / 公众号封面对
-  - [guizang-social-card-skill](libraries/guizang-social-card-skill/SKILL.md) `guizang-social-card-skill` | 可复制：[`extracted-skills/guizang-social-card-skill/guizang-social-card-skill`](extracted-skills/guizang-social-card-skill/guizang-social-card-skill) - Generate Guizang-style social card image sets and WeChat official account cover pairs from articles, script...
+  - [guizang-social-card-skill](libraries/guizang-social-card-skill/SKILL.md) `guizang-social-card-skill` | 可复制：[`extracted-skills/guizang-social-card-skill/guizang-social-card-skill`](extracted-skills/guizang-social-card-skill/guizang-social-card-skill) - Generate Guizang-style social card image sets, Live Photo motion cards, material-first Live Photo puzzle la...
 
 - [huashu-md-html](libraries/huashu-md-html) `huashu-md-html` - 1 个 skills  
   分类：内容创作类 | 标签：docs, frontend, pdf, workflow | 来源：alchaincyf/huashu-md-html  
@@ -268,17 +268,17 @@ python scripts/generate_site.py
   - [huashu-douyin-script](libraries/huashu-skills/huashu-douyin-script/SKILL.md) `huashu-douyin-script` | 可复制：[`extracted-skills/huashu-skills/huashu-douyin-script`](extracted-skills/huashu-skills/huashu-douyin-script) - 抖音爆款脚本创作工作流。从竞品视频拆解到脚本生成的完整流程：下载抖音视频→Gemini视频分析→爆款公式提炼→脚本+分镜生成→AI味审校。 当用户提到"抖音脚本"、"爆款拆解"、"竞品分析"、"带货脚本"、"千川素...
   - 另有 15 个 skills，见 [huashu-skills](libraries/huashu-skills) 或 [完整索引](docs/index.md)。
 
-- [ljg-skills](libraries/ljg-skills) `ljg-skills` - 23 个 skills  
+- [ljg-skills](libraries/ljg-skills) `ljg-skills` - 21 个 skills  
   分类：内容创作类 | 标签：automation, coding, data, docs, finance, frontend, pdf, research | 来源：lijigang/ljg-skills  
-  安装：推荐 `npx skills add lijigang/ljg-skills -g --all`；也可从 [`extracted-skills/ljg-skills`](extracted-skills/ljg-skills) 手动复制。  
+  安装：复制 [`extracted-skills/ljg-skills`](extracted-skills/ljg-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：ljg-skills
-  - [ljg-book](libraries/ljg-skills/skills/ljg-book/SKILL.md) `ljg-book` | 可复制：[`extracted-skills/ljg-skills/ljg-book`](extracted-skills/ljg-skills/ljg-book) - 拆一本书，以「问题」为轴心走一条线。五件事：作者在答什么问题（问题），这个问题之前各流派/社会共识怎么答（零点），作者带来什么独特洞见——公式/理论框架/模型/概念四选一——相对共识挪动了什么（位移/delta），...
+  - [ljg-blind](libraries/ljg-skills/skills/ljg-blind/SKILL.md) `ljg-blind` | 可复制：[`extracted-skills/ljg-skills/ljg-blind`](extracted-skills/ljg-skills/ljg-blind) - 盲区扫描——读昨天你与 AI 的全部对话，照出暴露的思维盲区（不是不懂的知识，是让某类真相一直看不见的思维习惯），再从微信读书挑一本书的一章精准补上，落成一篇完整分析笔记。Use when user says '扫...
+  - [ljg-book](libraries/ljg-skills/skills/ljg-book/SKILL.md) `ljg-book` | 可复制：[`extracted-skills/ljg-skills/ljg-book`](extracted-skills/ljg-skills/ljg-book) - Book reader that reconstructs a book as x -> f -> f(x): the problem it addresses, the author's central answ...
   - [ljg-card](libraries/ljg-skills/skills/ljg-card/SKILL.md) `ljg-card` | 可复制：[`extracted-skills/ljg-skills/ljg-card`](extracted-skills/ljg-skills/ljg-card) - Content caster (铸). Transforms content into PNG visuals. Seven molds: -l (default) long reading card, -i in...
-  - [ljg-invest](libraries/ljg-skills/skills/ljg-invest/SKILL.md) `ljg-invest` | 可复制：[`extracted-skills/ljg-skills/ljg-invest`](extracted-skills/ljg-skills/ljg-invest) - 投资分析, 生成一份深度投资分析报告。不做传统投资分析——核心判断是项目是否是一台「秩序创造机器」。Use when user says '投资报告', '投资分析', '分析这个项目', '写投资报告', 'in...
+  - [ljg-constraint](libraries/ljg-skills/skills/ljg-constraint/SKILL.md) `ljg-constraint` | 可复制：[`extracted-skills/ljg-skills/ljg-constraint`](extracted-skills/ljg-skills/ljg-constraint) - 给一个领域、专业、角色、产品或争论找出真正框住它的几条约束，判明它们属于世界/规则/解释（硬/软/自设），看这组约束如何定义身份、补全问题、框出解空间并解释实际行为；尤其用于区分目标相同但约束不同导致的方案分歧，识...
+  - [ljg-invest](libraries/ljg-skills/skills/ljg-invest/SKILL.md) `ljg-invest` | 可复制：[`extracted-skills/ljg-skills/ljg-invest`](extracted-skills/ljg-skills/ljg-invest) - 投资分析。给一个项目（公司名、BP、创始人对话记录），写一份深度投资分析报告。不走传统投资分析的路——核心判断只有一个：这个项目是不是一台「秩序创造机器」。Use when user says '投资报告', '投...
   - [ljg-learn](libraries/ljg-skills/skills/ljg-learn/SKILL.md) `ljg-learn` | 可复制：[`extracted-skills/ljg-skills/ljg-learn`](extracted-skills/ljg-skills/ljg-learn) - Deep concept anatomist that deconstructs any concept through 8 exploration dimensions (history, dialectics,...
-  - [ljg-library](libraries/ljg-skills/skills/ljg-library/SKILL.md) `ljg-library` | 可复制：[`extracted-skills/ljg-skills/ljg-library`](extracted-skills/ljg-skills/ljg-library) - 一本书 → 一幅清晰的「取景框」意向画面 → 一张 2050 图书馆借书卡（PNG）。取景框 = 作者从哪个角度看什么问题、看到了哪幅画面；卡上有真实封面、作者头像、书目信息。取景框 block 用费曼式讲解把这幅...
-  - [ljg-map](libraries/ljg-skills/skills/ljg-map/SKILL.md) `ljg-map` | 可复制：[`extracted-skills/ljg-skills/ljg-map`](extracted-skills/ljg-skills/ljg-map) - 一个行业 → 一张生态地形图卡（PNG）。以《千脑智能》参考系理论为地基：把行业摊成一张可俯瞰的「生态地形」——价值像河一样流过地貌，再在地形上标出两处——「瓶颈」（流量/产能在此收窄的隘口/水坝）和「价值捕获点」...
-  - 另有 17 个 skills，见 [ljg-skills](libraries/ljg-skills) 或 [完整索引](docs/index.md)。
+  - 另有 15 个 skills，见 [ljg-skills](libraries/ljg-skills) 或 [完整索引](docs/index.md)。
 
 - [punk-skill](libraries/punk-skill) `punk-skill` - 2 个 skills  
   分类：内容创作类 | 标签：image, workflow | 来源：adrianpunk/Punk-Skill  
@@ -297,7 +297,7 @@ python scripts/generate_site.py
 
 - [kami](libraries/kami) `kami` - 2 个 skills  
   分类：文档与数据类 | 标签：coding, data, docs, frontend, pdf | 来源：tw93/Kami  
-  安装：推荐 `npx skills add tw93/kami/plugins/kami/skills/kami -a '*' -g -y`；也可从 [`extracted-skills/kami`](extracted-skills/kami) 手动复制。  
+  安装：推荐 `npx skills add tw93/kami/plugins/kami -a universal -g -y`；也可从 [`extracted-skills/kami`](extracted-skills/kami) 手动复制。  
   简介：Why
   - [kami](libraries/kami/plugins/kami/skills/kami/SKILL.md) `kami` | 可复制：[`extracted-skills/kami/kami`](extracted-skills/kami/kami) - Typeset professional documents and product landing pages: resumes, one-pagers, white papers, letters, portf...
   - [kami](libraries/kami/SKILL.md) `kami-2` | 可复制：[`extracted-skills/kami/kami-2`](extracted-skills/kami/kami-2) - Typeset professional documents and product landing pages: resumes, one-pagers, white papers, letters, portf...

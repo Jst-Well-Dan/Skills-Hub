@@ -319,6 +319,8 @@ pub fn print_response_with_opts(resp: &Response, action: Option<&str>, opts: &Ou
     }
 
     if let Some(data) = &resp.data {
+        print_lifecycle_note(data);
+
         // Dialog status response
         if action == Some("dialog") {
             if let Some(has_dialog) = data.get("hasDialog").and_then(|v| v.as_bool()) {
@@ -1195,6 +1197,48 @@ pub fn print_response_with_opts(resp: &Response, action: Option<&str>, opts: &Ou
     }
 
     print_warning(resp);
+}
+
+fn print_lifecycle_note(data: &serde_json::Value) {
+    let Some(lifecycle) = data.get("lifecycle") else {
+        return;
+    };
+
+    let mut parts: Vec<String> = Vec::new();
+    let relaunched = lifecycle
+        .get("relaunchedBrowser")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let launched = lifecycle
+        .get("launched")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let reused = lifecycle
+        .get("reused")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+
+    if relaunched {
+        parts.push("relaunched browser".to_string());
+    } else if launched && !reused {
+        parts.push("launched browser".to_string());
+    }
+
+    if let Some(status) = lifecycle.get("restoreStatus").and_then(|v| v.as_str()) {
+        if !matches!(status, "not_configured" | "pending") {
+            parts.push(format!("restore: {}", status));
+        }
+    }
+
+    if let Some(status) = lifecycle.get("saveStatus").and_then(|v| v.as_str()) {
+        if !matches!(status, "not_attempted" | "not_configured") {
+            parts.push(format!("save: {}", status));
+        }
+    }
+
+    if !parts.is_empty() {
+        eprintln!("{} {}", color::dim("[agent-browser]"), parts.join("; "));
+    }
 }
 
 fn print_warning(resp: &Response) {
@@ -2625,9 +2669,9 @@ Operations:
   clean --older-than <days>          Delete expired state files
 
 Automatic State Persistence:
-  Use --session-name to auto-save/restore state across restarts:
-  agent-browser --session-name myapp open https://example.com
-  Or set AGENT_BROWSER_SESSION_NAME environment variable.
+  Use --restore to auto-save/restore state across restarts:
+  agent-browser --session myapp --restore open https://example.com
+  Or set AGENT_BROWSER_RESTORE environment variable.
 
 State Encryption:
   Set AGENT_BROWSER_ENCRYPTION_KEY (64-char hex) for AES-256-GCM encryption.
@@ -2660,17 +2704,23 @@ instance with separate cookies, storage, and state.
 
 Operations:
   (none)               Show current session name
+  id                   Generate stable session id (--scope worktree|cwd|git-root, --prefix)
+  info                 Show daemon, launch, and restore diagnostics
   list                 List all active sessions
 
 Environment:
   AGENT_BROWSER_SESSION    Default session name
+  AGENT_BROWSER_NAMESPACE  Namespace for daemon sockets and restore state
 
 Global Options:
   --json               Output as JSON
   --session <name>     Use specific session
+  --namespace <name>   Use specific namespace
 
 Examples:
   agent-browser session
+  agent-browser session id --scope worktree --prefix next-dev-loop
+  agent-browser session info --json
   agent-browser session list
   agent-browser --session test open example.com
 "##
@@ -2728,6 +2778,12 @@ encryption key) are gated behind --fix.
 Options:
   --offline            Skip network probes
   --quick              Skip the live headless launch test
+  --webgpu             Also run a live WebGPU render probe (renders via a real
+                       WebGPU pass and pixel-checks both an in-page readback
+                       and a decoded screenshot; launches a second Chrome)
+  --headed             Run the WebGPU probe headed to validate the capture
+                       path (auto-Xvfb on displayless Linux)
+  --debug              Verbose diagnostics from the probes' scratch daemons
   --fix                Also run destructive repairs
   --json               JSON output
 
@@ -2738,6 +2794,8 @@ Exit codes:
 Examples:
   agent-browser doctor
   agent-browser doctor --offline --quick
+  agent-browser doctor --webgpu
+  agent-browser doctor --webgpu --headed
   agent-browser doctor --fix
   agent-browser doctor --json
 "##
@@ -3429,7 +3487,14 @@ Authentication:
   --profile <name|path>      Chrome profile name (e.g., Default) to reuse login state,
                              or a directory path for a persistent custom profile
                              (or AGENT_BROWSER_PROFILE env)
-  --session-name <name>      Auto-save/restore cookies and localStorage by name
+  --restore [name]           Auto-save/restore cookies and localStorage.
+                             Without a name, uses --session as the restore key
+                             (or AGENT_BROWSER_RESTORE env)
+  --restore-save <policy>    Restore auto-save policy: auto, always, never (default: auto)
+  --restore-check-url <glob> Validate restored state against current URL pattern
+  --restore-check-text <txt> Validate restored state against visible page text
+  --restore-check-fn <js>    Validate restored state against a truthy JS expression
+  --session-name <name>      Legacy alias for restore persistence key
                              (or AGENT_BROWSER_SESSION_NAME env)
   --state <path>             Load saved auth state (cookies + storage) from JSON file
                              (or AGENT_BROWSER_STATE env)
@@ -3439,6 +3504,8 @@ Authentication:
 
 Options:
   --session <name>           Isolated session (or AGENT_BROWSER_SESSION env)
+  --namespace <name>         Isolate daemon sockets and restore-state directories
+                             (or AGENT_BROWSER_NAMESPACE env)
   --executable-path <path>   Custom browser executable (or AGENT_BROWSER_EXECUTABLE_PATH)
   --extension <path>         Load browser extensions (repeatable)
   --init-script <path>       Register a page init script before the first navigation (repeatable)
@@ -3464,12 +3531,13 @@ Options:
   --screenshot-quality <n>   JPEG quality 0-100; ignored for PNG (or AGENT_BROWSER_SCREENSHOT_QUALITY)
   --screenshot-format <fmt>  Screenshot format: png, jpeg (or AGENT_BROWSER_SCREENSHOT_FORMAT)
   --headed                   Show browser window (not headless) (or AGENT_BROWSER_HEADED env)
+  --webgpu                   Enable WebGPU; uses SwiftShader software Vulkan on Linux, no GPU required (or AGENT_BROWSER_WEBGPU env)
   --cdp <port>               Connect via CDP (Chrome DevTools Protocol)
   --color-scheme <scheme>    Color scheme: dark, light, no-preference (or AGENT_BROWSER_COLOR_SCHEME)
   --download-path <path>     Default download directory (or AGENT_BROWSER_DOWNLOAD_PATH)
   --content-boundaries       Wrap page output in boundary markers (or AGENT_BROWSER_CONTENT_BOUNDARIES)
   --max-output <chars>       Truncate page output to N chars (or AGENT_BROWSER_MAX_OUTPUT)
-  --allowed-domains <list>   Restrict navigation domains (or AGENT_BROWSER_ALLOWED_DOMAINS)
+  --allowed-domains <list>   Restrict network domains; rejects CDP, auto-connect, profiles, restore/state replay, direct-page providers, unsafe startup args, iOS/Safari (or AGENT_BROWSER_ALLOWED_DOMAINS)
   --action-policy <path>     Action policy JSON file (or AGENT_BROWSER_ACTION_POLICY)
   --confirm-actions <list>   Categories requiring confirmation (or AGENT_BROWSER_CONFIRM_ACTIONS)
   --confirm-interactive      Interactive confirmation prompts; auto-denies if stdin is not a TTY (or AGENT_BROWSER_CONFIRM_INTERACTIVE)
@@ -3508,7 +3576,14 @@ Configuration:
 Environment:
   AGENT_BROWSER_CONFIG           Path to config file (or use --config)
   AGENT_BROWSER_SESSION          Session name (default: "default")
-  AGENT_BROWSER_SESSION_NAME     Auto-save/restore state persistence name
+  AGENT_BROWSER_NAMESPACE        Namespace for daemon sockets and restore state
+  AGENT_BROWSER_RESTORE          Auto-save/restore persistence key
+  AGENT_BROWSER_RESTORE_SAVE     Restore save policy: auto, always, never
+  AGENT_BROWSER_AUTOSAVE_INTERVAL_MS Min ms between periodic session autosaves (default: 30000, 0 disables)
+  AGENT_BROWSER_RESTORE_CHECK_URL URL pattern restored state must match
+  AGENT_BROWSER_RESTORE_CHECK_TEXT Page text restored state must contain
+  AGENT_BROWSER_RESTORE_CHECK_FN JS expression restored state must satisfy
+  AGENT_BROWSER_SESSION_NAME     Legacy auto-save/restore state persistence name
   AGENT_BROWSER_ENCRYPTION_KEY   64-char hex key for AES-256-GCM state encryption
   AGENT_BROWSER_STATE_EXPIRE_DAYS Auto-delete states older than N days (default: 30)
   AGENT_BROWSER_EXECUTABLE_PATH  Custom browser executable path
@@ -3516,6 +3591,8 @@ Environment:
   AGENT_BROWSER_INIT_SCRIPTS     Comma-separated paths to page init scripts
   AGENT_BROWSER_ENABLE           Comma-separated built-in init script features (e.g. react-devtools)
   AGENT_BROWSER_HEADED           Show browser window (not headless)
+  AGENT_BROWSER_NO_XVFB          Disable automatic Xvfb for headed mode on displayless Linux hosts
+  AGENT_BROWSER_WEBGPU           Enable WebGPU (SwiftShader software Vulkan on Linux)
   AGENT_BROWSER_JSON             JSON output
   AGENT_BROWSER_ANNOTATE         Annotated screenshot with numbered labels and legend
   AGENT_BROWSER_DEBUG            Debug output
@@ -3527,7 +3604,7 @@ Environment:
   AGENT_BROWSER_COLOR_SCHEME     Color scheme preference (dark, light, no-preference)
   AGENT_BROWSER_DOWNLOAD_PATH    Default download directory for browser downloads
   AGENT_BROWSER_DEFAULT_TIMEOUT  Default action timeout in ms (default: 25000)
-  AGENT_BROWSER_SESSION_NAME     Auto-save/load state persistence name
+  AGENT_BROWSER_SESSION_NAME     Legacy auto-save/load state persistence name
   AGENT_BROWSER_STATE_EXPIRE_DAYS Auto-delete saved states older than N days (default: 30)
   AGENT_BROWSER_ENCRYPTION_KEY   64-char hex key for AES-256-GCM session encryption
   AGENT_BROWSER_STREAM_PORT      Override WebSocket streaming port (default: OS-assigned)
@@ -3536,7 +3613,7 @@ Environment:
   AGENT_BROWSER_IOS_UDID         Default iOS device UDID
   AGENT_BROWSER_CONTENT_BOUNDARIES Wrap page output in boundary markers
   AGENT_BROWSER_MAX_OUTPUT       Max characters for page output
-  AGENT_BROWSER_ALLOWED_DOMAINS  Comma-separated allowed domain patterns
+  AGENT_BROWSER_ALLOWED_DOMAINS  Comma-separated allowed domain patterns; requires a fresh controllable browser context without profile/session startup args, restore/state replay, or direct-page provider plugins
   AGENT_BROWSER_ACTION_POLICY    Path to action policy JSON file
   AGENT_BROWSER_CONFIRM_ACTIONS  Action categories requiring confirmation
   AGENT_BROWSER_CONFIRM_INTERACTIVE Enable interactive confirmation prompts
@@ -3577,7 +3654,9 @@ Examples:
   agent-browser --profile Default open gmail.com        # Reuse Chrome login state
   agent-browser --profile ~/.myapp open example.com    # Persistent custom profile
   agent-browser profiles                               # List available Chrome profiles
-  agent-browser --session-name myapp open example.com  # Auto-save/restore state
+  SESSION="$(agent-browser session id --scope worktree --prefix myapp)"
+  agent-browser --session "$SESSION" --restore open example.com  # Auto-save/restore state
+  agent-browser session info --json                    # Inspect daemon and restore status
   agent-browser chat "open google.com and search for cats"  # AI chat (single-shot)
   agent-browser chat                                        # AI chat (interactive REPL)
   agent-browser -q chat "summarize this page"               # Quiet mode (text only)

@@ -4,11 +4,13 @@
 ljg-library 图解生成器：把一幅「意向画面」生成为带继刚作主角的卡片插画。
 
 用法：
-  python3 gen_illustration.py --mold a --frame "<英文场景构图+标注>" --out ~/Downloads/x_sketch.png
-  --mold  a = 动物森友会（默认） | c = pixel + cyber-hacker
+  python3 gen_illustration.py --frame "<英文场景构图+标注>" --out ~/Downloads/x_sketch.png
   --frame 这张图的具体构图（英文）：继刚在做/经历什么、隐喻物件、信息怎么流、要哪几个中文标注。
           由 cast 按「意向画面」写出（见 references/extraction.md 第二部分）。
   --ref   继刚墨像参考图（默认 assets/ljg-portrait.png，同目录）——模型据此把主角画成认得出的继刚。
+
+图解风格固定为吉田诚治式绘本感（绘本感异世界日常空间、暖光斜射、治愈又精致），DNA 已内置，
+frame 只写「画什么」、不用写风格词。
 
 依赖 env: LISTENHUB_API_KEY。直接调 marswave（gemini-3-pro-image），绕开任何交互门控，可进批量管线。
 返回：把生成的 PNG 写到 --out，并打印路径。失败打印错误并非零退出。
@@ -17,27 +19,21 @@ import argparse, base64, json, os, sys, urllib.request, pathlib
 
 API = "https://api.marswave.ai/openapi/v1/images/generation"
 
-# 两种 mold 的风格 DNA + 主角规格（继刚从参考图生成、认得出）
-MOLDS = {
-  "a": (
-    "Cozy illustration in the style of Nintendo's Animal Crossing: New Horizons UI. "
-    "Soft rounded cartoon, warm and friendly, gentle soft shadows, thick rounded outlines, no harsh lines. "
-    "Palette: cream/sand #f0ece2 background, signature teal water #19c8b9, wood brown #725d42, sunny yellow #ffcc00, "
-    "grass green #6fba2c, soft pink #f8a6b2 accents. Rounded chunky shapes; leaf/wood/grass/water motifs; "
-    "bubbly cute Animal-Crossing wooden-sign / speech-bubble hand-lettered Chinese labels. "
-    "PROTAGONIST: a cute Animal-Crossing-villager version of the man in the reference image — round friendly "
-    "proportions, KEEP HIM RECOGNIZABLE (his glasses, beard, hairstyle), deadpan-but-cozy. "
-    "Not pixel art, not cyber, not realistic photo."
-  ),
-  "c": (
-    "16-bit PIXEL ART illustration with a cyberpunk hacker aesthetic. Visible chunky pixels, dithering, limited "
-    "neon palette. Dark near-black background (#0a0e14) with subtle CRT scanlines and faint glitch artifacts. "
-    "Neon electric-green / cyan / magenta accents. Moody hacker-terminal vibe. Glowing pixel/terminal-style "
-    "Chinese labels. PROTAGONIST: a 16-bit PIXEL-ART neon SPRITE of the man in the reference image — KEEP HIM "
-    "RECOGNIZABLE (his glasses, beard, hairstyle) as a glowing game-sprite with a bright cyan outline. "
-    "Not smooth vector, not hand-drawn, not realistic photo."
-  ),
-}
+# 图解风格 DNA（吉田诚治）+ 主角规格（继刚从参考图生成、认得出）
+STYLE = (
+    "Warm painterly background illustration in the style of Japanese background artist Yoshida Seiji (吉田誠治), "
+    "as in his art book ものがたりの家: a cozy, lived-in fantasy-everyday space told like a storybook. "
+    "Soft digital painting with rich environmental detail, solid architecture and accurate perspective, deep sense of place. "
+    "Warm low-angle sunlight streaming through windows, gentle glow and floating dust motes; "
+    "honey / amber / wood-brown tones, muted teal-green accents, soft cozy shadows. "
+    "Wooden beams and floors, shelves crammed with books and jars, potted plants, hanging tools, small everyday clutter — "
+    "a magical workshop / old bookshop / quiet library that feels real enough to live in. "
+    "Small neat hand-lettered Chinese labels that sit naturally within the scene. "
+    "PROTAGONIST: the man in the reference image as a believable small-to-mid figure INHABITING the space "
+    "(reading / working / walking through it) — KEEP HIM RECOGNIZABLE (his glasses, beard, hairstyle); "
+    "he carries the core action while the warm, detailed environment wraps around him. "
+    "Painterly storybook illustration, not pixel art, not flat cartoon, not realistic photo."
+)
 
 COMMON = (
   "Generate one standalone 16:9 horizontal Chinese knowledge-card illustration. {dna}\n"
@@ -71,7 +67,6 @@ def find_b64(o):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mold", default="a", choices=["a", "c"])
     ap.add_argument("--frame", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--ref", default=str(pathlib.Path(__file__).with_name("ljg-portrait.png")))
@@ -81,7 +76,7 @@ def main():
     if not key:
         sys.exit("ERROR: LISTENHUB_API_KEY not set in env")
     ref_b64 = base64.b64encode(pathlib.Path(args.ref).read_bytes()).decode()
-    prompt = COMMON.format(dna=MOLDS[args.mold], frame=args.frame)
+    prompt = COMMON.format(dna=STYLE, frame=args.frame)
     payload = {
         "provider": "google",
         "model": "gemini-3-pro-image-preview",

@@ -1,264 +1,103 @@
-<!-- source-sha256: e0eeae89f9f98a389a3e5295a9b0f11a48d1e0674a2bb93d0f031ac83777aa6c -->
+<!-- source-sha256: d2e5e6151f07e8660d8458c8bbcf7ba8b0f02caa04c1d535f523352a0d8442fd -->
 ---
 name: text-to-lottie
-description: 编写可在本地 Skia 播放器中渲染的 Lottie（Bodymovin）JSON 动画。每当用户要求创建、生成、编辑或修复 Lottie 动画，或要求加载“动画”时使用。
+description: 为本地 Skia Skottie 播放器创建、编辑或修复 Lottie/Bodymovin JSON 动画。适用于文本转 Lottie、SVG/徽标/文字动画、加载器/图标、状态反馈、UI 微交互、下三分之一字幕、图表、数据/统计/图表动画、产品宣传、场景/相机运动、视觉效果、场景编辑、插槽/控件以及 Skottie 调试。
 ---
 
-# 编写可渲染的 Lottie 文件
+# 文本转 Lottie
 
-此应用使用 **Skia 的 Skottie** 模块渲染 Lottie，请遵循以下规则并验证结果。
+为官方本地 Skia Skottie 播放器制作可用于生产环境的 Lottie JSON。
+交付物是在播放器中可渲染的场景，而不是孤立的 JSON。
 
-## 设置项目
+## 工作模式
 
-交付物不只是一个 `lottie.json`：还应设置好查看器，并且动画应能在浏览器中预览。如果播放器项目不存在，请创建它；如果已存在，请根据需要安装或更新依赖项、启动开发服务器，并打开本地预览 URL 进行验证。
+- 使用官方播放器项目并在 Skia Skottie 中验证。不要自行制作自定义查看器，也不要为了验证而切换渲染器。
+- 确保此技能可在不同的 Agent Skills 客户端中移植。技能说明中应避免使用特定于宿主的命令、命令模式或编排约定。
+- 尽量少提问并采用更可靠的默认值。仅当某项决策会实质性改变输出时才提问，例如透明背景还是全画幅背景、品牌约束、目标格式或用户提供的源素材。
+- 优先追求干净、用心且专业的动效，而不是仅仅满足提示词的字面要求。
 
-**始终使用官方 GitHub 播放器项目——绝不要手写自定义查看器。** 此技能的 JSON 规则（插槽、属性面板、`?frame=` URL 控制、Skottie wasm 接线）仅适用于该特定项目。**不要**构建自己的 HTML 页面、替换为 `lottie-web`，或搭建定制的 canvas 环境——这些做法都会悄然偏离此播放器的渲染方式，使下方的验证步骤不再适用。如果此计算机上尚无播放器项目，请使用 **degit** 创建该仓库的新副本：
+## 参考资料加载
 
-```bash
-npx degit diffusionstudio/lottie my-animation
-cd my-animation
-npm install   # postinstall 将 CanvasKit wasm 复制到 /public
-npm run dev
-```
+此 `SKILL.md` 是精简的控制平面。仅加载与任务匹配的一级参考资料。不要打开整个参考资料库。
 
-然后打开输出的本地 URL。开发服务器默认为 **`http://localhost:3030`**。如果项目已存在，只需运行 `npm install && npm run dev`。
+在创建、编辑、修复或验证场景前，始终阅读 `references/player-contract.md`。如果路由到的参考资料不可用，则继续使用本文件中的内联规则。
 
-## `/public` 中必需的文件夹结构
+| 用户意图 | 存在时应读取的参考资料 |
+| --- | --- |
+| 任何新建/编辑/修复 Lottie 场景 | `references/player-contract.md` |
+| JSON 结构、关键帧、插槽、形状、素材 | `references/lottie-spec-map.md` |
+| 徽标动画 | `references/recipe-logo.md`、`references/motion-taste.md`、`references/design-taste.md` |
+| 排版、标题、引语、文本显现 | `references/recipe-typography.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 下三分之一字幕、姓名标签、字幕条、叠加层 | `references/recipe-lower-thirds.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 加载器、图标、旋转指示器、徽章动画 | `references/recipe-loaders-icons.md`、`references/motion-taste.md` |
+| 成功、错误、警告、完成、空状态 | `references/recipe-loaders-icons.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| UI 微交互 | `references/recipe-ui-microinteractions.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 通用的“为此 SVG 添加动画”或 SVG 转 Lottie | `references/recipe-svg-animation.md`、`references/svg-compatibility.md`、`references/motion-taste.md` |
+| 相机跟随、平移、缩放、视差、场景运动 | `references/recipe-camera-scene-motion.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 图表、技术线条动画、标注、流程轨迹 | `references/recipe-diagram-technical.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 数据、统计、KPI、图表、指标、仪表板数字 | `references/recipe-data-stats.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 产品发布、功能公告、社交媒体宣传 | `references/recipe-product-promo.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 长文本、多个创意、列表/功能/步骤、时间线、前后对比、问题/解决方案、引语+证明、回顾/故事、产品演示、多语言变体、章节、多节拍序列、单集、跳切/硬切、转场语法 | `references/chapterization-transition-grammar.md`、`references/motion-taste.md` |
+| 发光、玻璃、金属、渐变、填充、气泡/爆裂效果 | `references/recipe-visual-effects.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 徽标/图标/UI/下三分之一字幕工作中的 SVG 输入 | 任务配方以及 `references/svg-compatibility.md` |
+| 起始简报或可复用的项目方向 | `references/recipe-starter-projects.md`、`references/design-taste.md`、`references/motion-taste.md` |
+| 任何“高端”“干净”“极简”“现代”“流畅”或“精致”的限定词 | `references/design-taste.md`（克制的默认设置），以及路由到的配方 |
 
-播放器是一个多场景编辑器：每个场景都位于 `public/projects/` 下各自的文件夹中，应用通过路径路由到相应场景。**你必须严格遵循此布局**——任何不符合布局的内容都会被忽略。
+对于混合提示词，根据主要交付物选择一个主要配方，然后添加源格式或视觉处理所需的辅助参考资料。例如：带发光效果的 SVG 徽标以徽标配方为主，并添加 SVG 兼容性和视觉效果参考；带平移/缩放的产品发布动画使用产品宣传配方，并添加相机场景运动参考；技术 SVG 图表轨迹动画使用图表/技术配方，并添加 SVG 兼容性参考；带玻璃扫光的动态标题使用排版配方，并添加视觉效果参考。
 
-```
-public/
-├── canvaskit.wasm                 # Skia wasm（由 postinstall 复制——请勿修改）
-└── projects/
-    └── <project-slug>/            # 例如 main-project
-        └── <scene-N>/             # 例如 scene-1、scene-2、……（排序方式见下文）
-            ├── lottie.json        # 必需——Bodymovin 动画
-            ├── controls.json      # 可选——属性面板元数据（参见插槽）
-            └── <image files>      # 可选——.png/.jpg/.jpeg/.webp/.gif/.svg 资源
-```
+## 工作流程
 
-扫描器强制执行的规则：
+1. 使用上表对任务进行路由。仅阅读实际存在的相关参考资料。
+2. 找到官方播放器项目，并按照下方的目标优先级解析目标场景。编辑前，确认解析后的路径为 `public/projects/<project>/<scene-N>/lottie.json`；覆盖前立即重新读取该当前文件，因为 UI 可能会将插槽编辑写回源文件。
+3. 制作前确定背景策略。
+4. 编写或更新 `public/projects/<project>/<scene-N>/lottie.json`，并在有帮助时编写或更新 `controls.json`。
+5. 验证 JSON，运行或复用开发服务器，使用 `?frame=N` 检查精确帧，并在完成前修复渲染、设计和动效问题。
 
-- **Slug 是 URL 路径段。** `<project-slug>` 和 `<scene-N>` 必须是适合作为文件夹名称、近似小写的名称；它们会组成路径 `/<project>/<scene>`。侧边栏标签通过将 slug 转换为标题格式生成（`main-project` → “Main Project”，`scene-1` → “Scene 1”）。
-- **场景排序取决于末尾的 `-N`。** 场景的排序顺序由其 slug 末尾的数字决定（`scene-1`、`scene-2`、……，正则表达式 `/-(\d+)$/`）。将新场景命名为 `scene-<N>` 以确保正确排序；末尾没有数字的 slug 排在最后。
-- **`lottie.json` 是必需的。** 不含该文件的场景文件夹会从树中被静默丢弃（没有有效场景的项目也会完全消失）。
-- **图片通过纯文件名引用。** 将图片放入场景文件夹，并在 Lottie 的 `assets[].p` 中仅以文件名引用它（例如 `"p": "background.png"`）；加载器会从同一文件夹解析它。
+## 内联规则
 
-## 文件写入位置（以及加载方式）
+### 设计默认规则（始终适用）
 
-- 将动画写入 **`public/projects/<project>/<scene-N>/lottie.json`**。如果你正在创建全新动画且未指定目标场景，请创建项目文件夹（例如 `public/projects/my-animation/scene-1/`），将 `lottie.json` 写入其中，然后打开 `/my-animation/scene-1`。
-- 应用通过 **`/:project/:scene`**（[`src/router.tsx`](../../../src/router.tsx)）进行路由；`/` 会重定向到第一个项目的第一个场景。画布提供程序（[`src/context/canvas.tsx`](../../../src/context/canvas.tsx)）会获取该场景的 `lottie.json`（以及其中的图片）并进行渲染。
-- 开发服务器运行时，场景插件会**监视文件夹树**。添加、删除或重命名项目或场景文件夹时，侧边栏会通过 Vite 的 HMR socket 实时更新（无需重新加载）。编辑现有 `lottie.json` 的*内容*并不会自动重新加载活动场景——请重新加载页面（或重新导航）以读取手动编辑后的 JSON。
+以下少量默认规则不可协商，适用于每个经过设计的场景。阅读 `references/design-taste.md` 以了解完整的设计理由，尤其是针对任何包含“高端”“干净”“极简”“现代”或“卡片”要求的提示词。
 
-## 示例
+- 高端意味着做减法，而不是做加法。当提示词提到高端、干净、极简、现代、流畅或精致时，默认保持克制：先移除装饰性界面元素，再考虑添加。高端感来自尺寸、字重、亮度、间距和时序，绝不来自卡片、边框、分隔线、阴影、发光或层叠色调。
+- 装饰性界面元素/容器的默认预算为 `0`。除非框架卡片、容器、边框或分隔线能完成留白与对齐无法完成的工作，否则不要添加。分隔网格和列时，首先使用负空间和对齐，其次使用一条细线，最后才考虑填充或带边框的卡片，并且仅在明确合理时使用。
+- 只使用一种表面色调。使用一种背景色调。不要叠加两种近黑色或两种近白色色调来伪造“表面”；这样会显得浑浊。如果卡片表面必须与背景不同，应只做一次有明确目的的刻意层级变化。
+- 一种分隔线样式，一种颜色。如果确实需要分隔线，所有分隔线都使用同一种粗细和颜色，包括标题线和列分隔线。绝不要为不同分隔线使用略有差异的颜色或粗细。
 
-```json lottie.json
-{
-  "v": "5.7.0",
-  "fr": 60,
-  "ip": 0,
-  "op": 90,
-  "w": 512,
-  "h": 512,
-  "nm": "Bouncing ball",
-  "assets": [],
-  "slots": {
-    "ballColor": { "p": { "a": 0, "k": [0.231, 0.6, 1, 1] } },
-    "ballOpacity": { "p": { "a": 0, "k": 100 } },
-    "ballSize": { "p": { "a": 0, "k": [120, 120] } }
-  },
-  "layers": [
-    {
-      "ty": 4,
-      "nm": "ball",
-      "ip": 0,
-      "op": 90,
-      "st": 0,
-      "ks": {
-        "o": { "sid": "ballOpacity" },
-        "r": { "a": 0, "k": 0 },
-        "a": { "a": 0, "k": [0, 0, 0] },
-        "s": { "a": 0, "k": [100, 100, 100] },
-        "p": {
-          "a": 1,
-          "k": [
-            { "t": 0, "s": [256, 140, 0], "i": { "x": [0.5], "y": [1] }, "o": { "x": [0.7], "y": [0] } },
-            { "t": 45, "s": [256, 380, 0], "i": { "x": [0.3], "y": [1] }, "o": { "x": [0.5], "y": [0] } },
-            { "t": 90, "s": [256, 140, 0] }
-          ]
-        }
-      },
-      "shapes": [
-        {
-          "ty": "gr",
-          "nm": "ball-group",
-          "it": [
-            { "ty": "el", "p": { "a": 0, "k": [0, 0] }, "s": { "sid": "ballSize" } },
-            { "ty": "fl", "c": { "sid": "ballColor" }, "o": { "a": 0, "k": 100 } },
-            { "ty": "tr", "p": { "a": 0, "k": [0, 0] }, "a": { "a": 0, "k": [0, 0] }, "s": { "a": 0, "k": [100, 100] }, "r": { "a": 0, "k": 0 }, "o": { "a": 0, "k": 100 } }
-          ]
-        }
-      ]
-    },
-    {
-      "ty": 4,
-      "nm": "background",
-      "ip": 0,
-      "op": 90,
-      "st": 0,
-      "ks": {
-        "o": { "a": 0, "k": 100 },
-        "r": { "a": 0, "k": 0 },
-        "a": { "a": 0, "k": [0, 0, 0] },
-        "s": { "a": 0, "k": [100, 100, 100] },
-        "p": { "a": 0, "k": [256, 256, 0] }
-      },
-      "shapes": [
-        {
-          "ty": "gr",
-          "nm": "background-group",
-          "it": [
-            { "ty": "rc", "p": { "a": 0, "k": [0, 0] }, "s": { "a": 0, "k": [512, 512] }, "r": { "a": 0, "k": 0 } },
-            { "ty": "fl", "c": { "a": 0, "k": [0.5, 0.5, 0.5, 1] }, "o": { "a": 0, "k": 100 } },
-            { "ty": "tr", "p": { "a": 0, "k": [0, 0] }, "a": { "a": 0, "k": [0, 0] }, "s": { "a": 0, "k": [100, 100] }, "r": { "a": 0, "k": 0 }, "o": { "a": 0, "k": 100 } }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
+### 场景规则
 
-```json controls.json
-{
-  "controls": [
-    { "sid": "ballColor", "label": "Ball color" },
-    { "sid": "ballOpacity", "label": "Ball opacity", "min": 0, "max": 100, "step": 1 },
-    { "sid": "ballSize", "label": "Ball size", "min": 20, "max": 400, "step": 1 }
-  ]
-}
-```
+- 场景文件位于 `public/projects/<project>/<scene-N>/lottie.json`。
+- 按权限优先级解析目标场景：显式文件路径优先；其次是类似 `/<project>/<scene>` 的浏览器 URL 路由；再次是任务中已知的项目/场景；否则创建一个新的安全场景。除非任务明确要求编辑当前屏幕上显示的内容，并且不存在更具体的目标，否则仅将 `/__context` 用于发现、验证或获取播放状态。不要让 `/__context.live` 覆盖已知的文件路径、URL 或项目/场景。仅当 `main-project/scene-1` 仍是未经改动的占位场景时才覆盖它；否则创建新场景。
+- 全画幅独立合成应包含一个可见背景图层，并配有 `bgColor` 插槽和 `controls.json` 条目。
+- 默认透明的输出包括徽标、图标、加载器、叠加层、下三分之一字幕和从 SVG 派生的素材，除非用户要求添加背景。
+- 包含顶层 `v`、`fr`、`ip`、`op`、`w`、`h`、`nm`、`assets` 和 `layers`。将 `op` 视为不包含端点。
+- 使用有目的的缓动和分阶段编排。避免默认使用线性运动。根据 `motion-taste.md` 中基于行为的锚点选择缓动（依据运动行为选择，焦点元素的效果最强）；不要退化为所有图层统一使用一种缓动。
+- 对重要的可编辑值使用插槽，并在 `controls.json` 标签/范围能够改善属性面板时添加它们。
+- 对于 SVG 输入，应保留 viewBox、规范化样式、留意填充规则和交叉区域，并在 Skottie 中验证结果。
+- 当场景附带其字体时，原生 Lottie 文本/文本插槽（`ty:5`）可在此播放器中渲染：将 `.ttf`/`.otf`/`.ttc` 放在 `lottie.json` 旁边，在 `fonts.list` 中声明它，并使 `fFamily` 与字体嵌入的字体家族名称一致，然后从文本文档中引用它。加载器会将场景的每种字体传递给 Skottie。优先使用原生文本；仅为有意设计的路径效果（描边显现、字形变形、手写）使用矢量/形状文本。请参阅 player-contract 中的“Native Text”参考资料。
 
-**建议：使用顶层 `nm` 字符串。** 为文档指定根级 `nm` 名称。播放器会将其作为标签渲染在画布上方，并将其公开到智能体上下文中（参见下方的 `/__context`）。
+## 验证
 
-## 公开可编辑属性（插槽 + 属性面板）
+完成前：
 
-应用可以渲染实时**属性面板**（文本输入框和滑块），实时编辑动画中选定的值。它基于 Skottie 原生的**插槽**功能——无需重新解析，更改会在下一帧显示。
+1. 确认预期目标文件路径为 `public/projects/<project>/<scene-N>/lottie.json`。
+2. 验证 JSON：
 
-要使属性可编辑，请执行两项操作：
+   ```bash
+   node -e "JSON.parse(require('fs').readFileSync('public/projects/<project>/<scene-N>/lottie.json','utf8'))"
+   ```
 
-**1. 在 Lottie JSON 中声明插槽。** 添加顶层 `"slots"` 对象，其键为插槽 ID，并使用 `"sid"`（替代或配合内联值）将属性指向某个插槽。插槽的 `"p"` 保存默认值，其结构与该属性通常采用的结构相同。
+3. 确认官方播放器正在运行，并且场景出现在 `GET /__context` 中。
+4. 在浏览器中检查固定帧。对于新场景，检查第 `0` 帧、中间帧和 `op - 1` 帧。
+5. 确认背景策略符合使用场景。
+6. 检查空白画布、素材缺失、未设置样式的形状、错误的图层顺序、不良缓动、不自然的时序、内容裁切、文本溢出以及可见的 SVG 瑕疵。
+7. 仅当动画渲染干净且呈现出明确设计意图时才完成任务。
 
-```jsonc
-{
-  "v": "5.7.0", "fr": 60, "ip": 0, "op": 90, "w": 512, "h": 512, "assets": [],
-  "slots": {
-    "ballColor": { "p": { "a": 0, "k": [0.231, 0.6, 1, 1] } },   // 颜色：RGBA 0–1
-    "ballSize":  { "p": { "a": 0, "k": 120 } }                    // 标量
-  },
-  "layers": [ /* ... */
-    // 在填充中：    "c": { "sid": "ballColor" }
-    // 在标量中：    "s": { "sid": "ballSize" }
-  ]
-}
-```
+## 维护评估
 
-插槽类型与控件的对应关系如下：
+正常制作动画时不要读取评估文件。仅在测试或更改此技能时使用它们：
 
-| 插槽值 | 渲染的控件 |
-|------------|------------------|
-| 标量（单个数字） | 滑块 |
-| 颜色（RGBA 0–1） | 颜色选择器 |
-| vec2（`[x, y]`） | 两个数字输入框 |
-| 文本（字符串） | 文本输入框 |
-
-应用会通过 Skottie 的 `getSlotInfo()` 自动发现插槽——你**不需要**在其他任何位置列出它们即可使其工作。动画只要声明至少一个插槽，面板就会出现。
-
-**你制作的每个动画都必须为背景颜色公开至少一个控件。**
-
-
-```jsonc
-// slots:    "bgColor": { "p": { "a": 0, "k": [1, 1, 1, 1] } }   // 默认白色
-// controls: { "sid": "bgColor", "label": "Background color" }
-```
-
-
-**2.（可选）在场景的 `controls.json` 中描述展示方式。** 插槽只公开 ID 和类型，不包含标签或合理的滑块范围。场景的 `lottie.json` 旁边的伴随文件（即 `public/projects/<project>/<scene-N>/controls.json`）可补充这些信息。它是可选的——缺失的条目会回退到插槽 ID 和通用的 0–100 范围。
-
-```jsonc
-{
-  "controls": [
-    { "sid": "ballColor", "label": "Ball color" },
-    { "sid": "ballSize",  "label": "Ball size", "min": 40, "max": 240, "step": 1 }
-  ]
-}
-```
-
-- `sid` 必须与插槽 ID 完全匹配。
-- `label` 是显示名称；`min`/`max`/`step` 用于设置标量滑块和 vec2 输入框（对颜色或文本无效）。
-- `sid` 未匹配任何插槽的条目会被直接忽略；没有对应条目的插槽仍会使用默认值渲染。
-
-## 用户可以创建或编辑的场景
-
-播放器是实时编辑器，因此场景的 `lottie.json` 不仅是输入——**用户（以及 UI）可能会在你不知情的情况下更改它：**
-
-- 可以通过侧边栏的 `+` 按钮、将 `.json`/`.lottie` 文件拖放到画布，或由你在磁盘上创建文件夹来添加**新项目或场景**。监视器会实时更新树，因此你在 `public/projects/<project>/<scene-N>/` 下写入的文件夹无需重启即可显示。
-- **控件编辑会写回磁盘。** 当用户拖动滑块或编辑使用插槽的值时，应用会将更新后的文档 POST 到 `/__scenes/lottie`，并覆盖该场景的 `lottie.json`——`public/projects` 是事实来源。因此，在重新编辑文件之前，请**从磁盘重新读取它**，不要信任之前的副本；屏幕上的值可能已经不同。
-
-当你想写入或修改场景时，只需将 `lottie.json` 文件写入正确路径（结构见上文）。如果用户指定了现有场景，请使用该场景；否则，请使用下一个 `scene-<N>` 索引创建新场景文件夹，以免覆盖用户的工作。
-
-**对于新项目，覆盖 `public/projects/main-project/scene-1/lottie.json` 中的占位场景。**
-
-## 检查正在播放的内容——`/__context`
-
-开发服务器在 `GET /__context` 提供一个**上下文端点**。优先使用此端点，而不是根据截图猜测：它会返回完整的项目和场景树（包含 `lastModified` 修改时间）、哪个场景处于**活动**状态，以及**实时播放状态**——包括根据已用时间计算出的当前帧：
-
-```bash
-curl -s http://localhost:3030/__context
-```
-
-用它确认文件是否已写入（场景是否出现？）、查看用户当前正在查看哪个场景，以及无需截图即可检查播放头位置。浏览器会向同一端点 POST 心跳——你无需进行 POST。
-
-## 控制播放
-
-通过浏览器工具操作页面时，请**在 URL 中固定帧**并读取画布：
-
-```
-http://localhost:3030/main-project/scene-1?frame=60
-```
-
-- `?frame=N` 会在加载时跳转到帧 `N`，**并暂停**在那里，使画面保持静止以供截图。这是检查特定帧并截图的正确方式。
-- 如果没有 `frame` 参数，动画会像平常一样自动播放（首次加载时）。
-- 帧设置按场景生效，因此请包含场景路径：`/<project>/<scene>?frame=N`。
-
-要更改检查的帧，请导航到新的 URL（或编辑查询字符串并重新加载）。画布是 `<canvas id="main-canvas">`。如果画布为空，则页面尚未完成加载，或 Lottie 解析失败（检查屏幕上的错误）。
-
-## 验证建议
-
-通过 URL 进行验证：`?frame=N` 会跳转并暂停，因此每张截图都会准确落在一个静止帧上。从 `GET /__context`（`live.totalFrames`）读取帧数，或根据 `op` 和 `fr` 计算。
-
-- **新场景 → 三张跨越时间线的截图**：帧 `0`、中点（`op/2`）以及最后一帧（`op-1`）。这样可以一次检查起始状态、运动中途和结束姿态。
-- **小幅编辑 → 一至两张截图**，截取相关区域（更改可见的帧）。无需重新执行完整的三帧检查。
-- **寻找瑕疵，而不仅仅检查是否符合提示词。** 除了“是否符合要求”，还要查找会让输出显得未完成的问题。结果应整洁、有明确设计意图，并达到生产就绪水平。
-
-## 最佳实践
-
-- 优先制作高保真、可用于生产的动画。
-- 使用适当的缓动和时序。线性缓动通常不是最佳选择。
-- 考虑整体动效设计，包括节奏、过渡和视觉连续性。
-- 选择最适合任务的实现方式。
-  - 对于复杂或程序化动画，在 `script/` 中创建脚本来生成 Lottie 文件可能更简单且更易维护。
-  - 对于针对性修改，直接修改 Lottie JSON 可能比重新创建动画更高效。
-
-## 完成前——检查清单
-
-1. 文件位于 `public/projects/<project>/<scene-N>/lottie.json`（遵循文件夹结构；场景命名为 `scene-<N>` 以确保正确排序）。
-2. 文件是有效的 JSON（无注释、无尾随逗号）。使用 `node -e "JSON.parse(require('fs').readFileSync('public/projects/<project>/<scene-N>/lottie.json','utf8'))"` 验证。
-3. 项目是官方 GitHub 播放器（通过 degit 创建）。
-4. 开发服务器正在运行（`npm run dev`）；导航到 `/<project>/<scene>` 查看场景。画布为空（无错误）→ 重新检查组包装。
-5. 画布正在渲染所需动画。
-
-## 参考资料
-
-- Lottie 格式规范：<https://github.com/lottie/lottie-spec/tree/main/docs/specs>
+- `evals/trigger-prompts.json`
+- `evals/routing-prompts.json`
+- `evals/reference-loading-prompts.json`
+- `evals/output-rubric.md`

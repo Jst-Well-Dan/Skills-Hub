@@ -18,6 +18,15 @@ Do not copy prompt bodies into this catalog. Read the selected style's `META.md`
 | 极简公共空间摄影 | `minimal-public-space-photography` | `styles/minimal-public-space-photography/META.md` | `styles/minimal-public-space-photography/STYLE.md` | Opinion essays, long-form articles, cultural observation, spatial order, individual-space metaphors, and restrained editorial photography covers. |
 | 商业杂志头版 | `business-magazine-front-page` | `styles/business-magazine-front-page/META.md` | `styles/business-magazine-front-page/STYLE.md` | Business, technology, AI, startups, investment, trend analysis, sharp magazine-like editorial covers. |
 | 黑白灰先锋几何 | `black-white-gray-avant-geometry` | `styles/black-white-gray-avant-geometry/META.md` | `styles/black-white-gray-avant-geometry/STYLE.md` | Experimental, stark, geometric, modernist, poster-like covers with restrained color. |
+| 黑红剪影 | `black-red-silhouette` | `styles/black-red-silhouette/META.md` | `styles/black-red-silhouette/STYLE.md` | High-impact tutorials, tools, AI workflows, finance, speed, cinema, and direct metaphor covers. |
+| 先锋复古建筑海报 | `avant-retro-architecture-poster` | `styles/avant-retro-architecture-poster/META.md` | `styles/avant-retro-architecture-poster/STYLE.md` | Architecture, landmarks, city posters, travel covers, exhibitions, and place-based editorial visuals. |
+| 复古油墨点阵隐喻 | `retro-ink-dot-matrix-metaphor` | `styles/retro-ink-dot-matrix-metaphor/META.md` | `styles/retro-ink-dot-matrix-metaphor/STYLE.md` | Technology, AI, systems, research, abstract essays, and quiet editorial covers needing a fixed retro print layout. |
+| 黑色复古现代主义封面 | `black-midcentury-modernist-cover` | `styles/black-midcentury-modernist-cover/META.md` | `styles/black-midcentury-modernist-cover/STYLE.md` | Premium retro editorial posters, service scenes, products, people, architecture, and concept covers with black-dominant mid-century modern restraint. |
+| 银色锡纸蓝字 | `silver-foil-blue-minimal` | `styles/silver-foil-blue-minimal/META.md` | `styles/silver-foil-blue-minimal/STYLE.md` | Premium minimal covers for growth paths, methods, business systems, AI tools, and abstract concepts with a single blue line metaphor. |
+| 彩色新构成主义巨构海报 | `color-neo-constructivist-megastructure-poster` | `styles/color-neo-constructivist-megastructure-poster/META.md` | `styles/color-neo-constructivist-megastructure-poster/STYLE.md` | High-impact event, sports, product, city, technology, and editorial covers needing monumental scale, sharp geometry, and bold color tension. |
+| 复古日本科幻动画 | `retro-japanese-sci-fi-anime-cover` | `styles/retro-japanese-sci-fi-anime-cover/META.md` | `styles/retro-japanese-sci-fi-anime-cover/STYLE.md` | High-impact AI, technology, systems, psychology, social, and method covers needing retro sci-fi anime title-card energy. |
+| 法式极简墨线海报 | `french-minimal-ink-poster` | `styles/french-minimal-ink-poster/META.md` | `styles/french-minimal-ink-poster/STYLE.md` | Quiet editorial essays, AI and technology themes, relationships, social systems, and abstract ideas needing a sparse ink metaphor. |
+| 品牌协同连接 | `brand-collaboration-connection` | `styles/brand-collaboration-connection/META.md` | `styles/brand-collaboration-connection/STYLE.md` | Brand collaboration, tool integration, workflow automation, product tutorial, and enterprise partnership covers needing two-logo connection visuals. |
 
 ## Non-Cover Style Atoms
 
@@ -33,8 +42,12 @@ These reusable style atoms exist in `styles/`, but are not part of the default `
 
 ## Automatic Recommendations
 
-- For Xiaohongshu tutorials, prefer `巨型透视中文标题`, `复古手撕拼贴`, `方块世界`, or `积木世界`.
-- For WeChat public account explainers, prefer `商业杂志头版`, `咨询报告视觉`, `黑白极简概念`, `极简公共空间摄影`, or `复古弥散渐变`.
-- For X covers, prefer `商业杂志头版`, `黑白极简概念`, `黑白灰先锋几何`, `极简公共空间摄影`, or `语义转译极简`.
+- For Xiaohongshu tutorials, prefer `巨型透视中文标题`, `黑红剪影`, `复古手撕拼贴`, `方块世界`, or `积木世界`.
+- For WeChat public account explainers, prefer `商业杂志头版`, `黑红剪影`, `咨询报告视觉`, `黑白极简概念`, `复古油墨点阵隐喻`, `极简公共空间摄影`, `复古弥散渐变`, `黑色复古现代主义封面`, or `法式极简墨线海报`.
+- For X covers, prefer `商业杂志头版`, `黑红剪影`, `黑白极简概念`, `复古油墨点阵隐喻`, `银色锡纸蓝字`, `黑白灰先锋几何`, `极简公共空间摄影`, `语义转译极简`, or `法式极简墨线海报`.
+- For video covers, technology explainers, AI tools, systems, code, psychology, or high-conflict social themes needing anime keyframe energy, prefer `复古日本科幻动画`.
+- For tutorials, product launches, workflow automation, tool integrations, brand collaborations, or two-logo partnership covers, prefer `品牌协同连接`.
 - For research-heavy material, prefer `科研期刊概念`.
-- For a single abstract term, prefer `语义转译极简` or `黑白极简概念`.
+- For a single abstract term, prefer `语义转译极简`, `复古油墨点阵隐喻`, `黑白极简概念`, or `法式极简墨线海报`.
+- For architecture, landmarks, cities, travel posters, or place-focused essays, prefer `先锋复古建筑海报`.
+- For events, sports, launches, city-scale topics, or covers needing maximum first-glance impact, prefer `彩色新构成主义巨构海报`.

@@ -11,7 +11,7 @@ set -euo pipefail
 
 # === Configuration (HARDCODED) ===
 SKILLS_REPO="$HOME/code/ljg-skills"
-SKILLS_LOCAL="$HOME/.claude/skills"
+SKILLS_LOCAL="$HOME/.agents/skills"
 REPO_URL="git@github.com:lijigang/ljg-skills.git"
 
 # === Args ===
@@ -177,7 +177,10 @@ mdize_skill() {
       -e 's/__think\.org/__think.md/g' \
       -e 's/__concept\.org/__concept.md/g' \
       -e 's/__rank\.org/__rank.md/g' \
+      -e 's/__structure\.org/__structure.md/g' \
+      -e 's/__constraint\.org/__constraint.md/g' \
       -e 's/__plain\.org/__plain.md/g' \
+      -e 's/__blind\.org/__blind.md/g' \
       -e 's/template\.org/template.md/g' \
       -e 's/org-mode/markdown/g' \
       -e 's/Org-mode/Markdown/g' \
@@ -319,6 +322,21 @@ check_readme() {
   exit 1
 }
 
+# Keep the working repo on the source branch after every successful push.
+return_to_master() {
+  cd "$SKILLS_REPO" || return 0
+  local current_branch
+  current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  if [ "$current_branch" = "master" ]; then
+    return 0
+  fi
+  if git checkout master >/dev/null 2>&1; then
+    ok "repo left on master"
+  else
+    warn "could not switch back to master; check uncommitted changes in $SKILLS_REPO"
+  fi
+}
+
 # === Main ===
 
 setup_repo
@@ -352,6 +370,7 @@ fi
 # (mdize transformations create per-branch divergence from the org-style local).
 push_branch master 0 "feat"
 push_branch md     1 "feat(md)"
+return_to_master
 
 log ""
 log "Done."

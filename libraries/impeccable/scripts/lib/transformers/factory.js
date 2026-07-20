@@ -6,6 +6,7 @@ import {
   generateYamlFrontmatter,
   generateYamlDocument,
   replacePlaceholders,
+  replaceScriptProviderMarker,
   compileProviderBlocks,
   stripRuleMarkers,
 } from '../utils.js';
@@ -235,7 +236,7 @@ export function createTransformer(config) {
       skillBody = skillBody.replace(/\{\{scripts_path\}\}/g, scriptsPath);
       if (bodyTransform) skillBody = bodyTransform(skillBody, skill);
 
-      const content = `${frontmatter}\n\n${skillBody}`;
+      const content = `${frontmatter}\n\n${skillBody}`.replace(/\{\{scripts_path\}\}/g, scriptsPath);
       writeFile(path.join(skillDir, 'SKILL.md'), content);
 
       if (writeOpenAIMetadata) {
@@ -262,7 +263,8 @@ export function createTransformer(config) {
         const scriptsOutDir = path.join(skillDir, 'scripts');
         ensureDir(scriptsOutDir);
         for (const script of skill.scripts) {
-          writeFile(path.join(scriptsOutDir, script.name), script.content);
+          const scriptContent = replaceScriptProviderMarker(script.content, placeholderKey);
+          writeFile(path.join(scriptsOutDir, script.name), scriptContent);
           scriptCount++;
         }
       }

@@ -52,11 +52,11 @@
   分类：个人合集类 | 标签：automation, browser, coding, data, docs, frontend, image, mcp | 来源：anthropics/skills  
   安装：复制 [`extracted-skills/anthropic`](extracted-skills/anthropic) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：ALGORITHMIC PHILOSOPHY CREATION
-- [mattpocock-skills](libraries/mattpocock-skills) `mattpocock-skills` - 36 个 skills  
+- [mattpocock-skills](libraries/mattpocock-skills) `mattpocock-skills` - 41 个 skills  
   分类：个人合集类 | 标签：automation, cli, coding, data, docs, finance, frontend, obsidian | 来源：mattpocock/skills  
   安装：复制 [`extracted-skills/mattpocock-skills`](extracted-skills/mattpocock-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：Skills For Real Engineers
-- [swyxio-skills](libraries/swyxio-skills) `swyxio-skills` - 39 个 skills  
+- [swyxio-skills](libraries/swyxio-skills) `swyxio-skills` - 41 个 skills  
   分类：个人合集类 | 标签：automation, browser, coding, data, docs, image, research, workflow | 来源：swyxio/skills  
   安装：复制 [`extracted-skills/swyxio-skills`](extracted-skills/swyxio-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：swyxio Skills
@@ -75,7 +75,7 @@
   分类：前端展示类 | 标签：coding, docs, frontend | 来源：op7418/guizang-ppt-skill  
   安装：推荐 `npx skills add https://github.com/op7418/guizang-ppt-skill --skill guizang-ppt-skill`；也可从 [`extracted-skills/guizang-ppt-skill`](extracted-skills/guizang-ppt-skill) 手动复制。  
   简介：Guizang PPT Skill · 网页 PPT / 配图 / 封面
-- [html-anything](libraries/html-anything) `html-anything` - 78 个 skills  
+- [html-anything](libraries/html-anything) `html-anything` - 81 个 skills  
   分类：前端展示类 | 标签：coding, docs, frontend, image, workflow | 来源：nexu-io/html-anything  
   安装：复制 [`extracted-skills/html-anything`](extracted-skills/html-anything) 下需要的 skill 到 `~/.claude/skills/`。
 - [impeccable](libraries/impeccable) `impeccable` - 1 个 skills  
@@ -116,9 +116,9 @@
   分类：内容创作类 | 标签：automation, coding, data, docs, image, pdf, research | 来源：alchaincyf/huashu-skills  
   安装：复制 [`extracted-skills/huashu-skills`](extracted-skills/huashu-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：huashu-skills
-- [ljg-skills](libraries/ljg-skills) `ljg-skills` - 23 个 skills  
+- [ljg-skills](libraries/ljg-skills) `ljg-skills` - 21 个 skills  
   分类：内容创作类 | 标签：automation, coding, data, docs, finance, frontend, pdf, research | 来源：lijigang/ljg-skills  
-  安装：推荐 `npx skills add lijigang/ljg-skills -g --all`；也可从 [`extracted-skills/ljg-skills`](extracted-skills/ljg-skills) 手动复制。  
+  安装：复制 [`extracted-skills/ljg-skills`](extracted-skills/ljg-skills) 下需要的 skill 到 `~/.claude/skills/`。  
   简介：ljg-skills
 - [punk-skill](libraries/punk-skill) `punk-skill` - 2 个 skills  
   分类：内容创作类 | 标签：image, workflow | 来源：adrianpunk/Punk-Skill  
@@ -133,7 +133,7 @@
 
 - [kami](libraries/kami) `kami` - 2 个 skills  
   分类：文档与数据类 | 标签：coding, data, docs, frontend, pdf | 来源：tw93/Kami  
-  安装：推荐 `npx skills add tw93/kami/plugins/kami/skills/kami -a '*' -g -y`；也可从 [`extracted-skills/kami`](extracted-skills/kami) 手动复制。  
+  安装：推荐 `npx skills add tw93/kami/plugins/kami -a universal -g -y`；也可从 [`extracted-skills/kami`](extracted-skills/kami) 手动复制。  
   简介：Why
 - [SoftwareCopyright-Skill](libraries/SoftwareCopyright-Skill) `softwarecopyright-skill` - 1 个 skills  
   分类：文档与数据类 | 标签：coding, docs | 来源：Fokkyp/SoftwareCopyright-Skill  

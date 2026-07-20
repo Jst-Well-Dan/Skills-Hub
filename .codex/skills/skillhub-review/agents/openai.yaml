@@ -1,0 +1,4 @@
+interface:
+  display_name: "SkillHub Review"
+  short_description: "Create and publish Skills-Hub review articles"
+  default_prompt: "Use $skillhub-review to create and publish a review for a Skills-Hub project or skill."

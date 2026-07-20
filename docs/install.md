@@ -139,6 +139,7 @@
 复制 [`extracted-skills/html-anything`](../extracted-skills/html-anything) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `article-magazine`：[`extracted-skills/html-anything/article-magazine`](../extracted-skills/html-anything/article-magazine)
+- `article-sketchnote-editorial`：[`extracted-skills/html-anything/article-sketchnote-editorial`](../extracted-skills/html-anything/article-sketchnote-editorial)
 - `blog-post`：[`extracted-skills/html-anything/blog-post`](../extracted-skills/html-anything/blog-post)
 - `card-twitter`：[`extracted-skills/html-anything/card-twitter`](../extracted-skills/html-anything/card-twitter)
 - `card-xiaohongshu`：[`extracted-skills/html-anything/card-xiaohongshu`](../extracted-skills/html-anything/card-xiaohongshu)
@@ -152,6 +153,7 @@
 - `deck-graphify-dark`：[`extracted-skills/html-anything/deck-graphify-dark`](../extracted-skills/html-anything/deck-graphify-dark)
 - `deck-guizang-editorial`：[`extracted-skills/html-anything/deck-guizang-editorial`](../extracted-skills/html-anything/deck-guizang-editorial)
 - `deck-hermes-cyber`：[`extracted-skills/html-anything/deck-hermes-cyber`](../extracted-skills/html-anything/deck-hermes-cyber)
+- `deck-ljg-present`：[`extracted-skills/html-anything/deck-ljg-present`](../extracted-skills/html-anything/deck-ljg-present)
 - `deck-magazine-web`：[`extracted-skills/html-anything/deck-magazine-web`](../extracted-skills/html-anything/deck-magazine-web)
 - `deck-obsidian-claude`：[`extracted-skills/html-anything/deck-obsidian-claude`](../extracted-skills/html-anything/deck-obsidian-claude)
 - `deck-open-slide-canvas`：[`extracted-skills/html-anything/deck-open-slide-canvas`](../extracted-skills/html-anything/deck-open-slide-canvas)
@@ -184,6 +186,7 @@
 - `frame-macos-notification`：[`extracted-skills/html-anything/frame-macos-notification`](../extracted-skills/html-anything/frame-macos-notification)
 - `gamified-app`：[`extracted-skills/html-anything/gamified-app`](../extracted-skills/html-anything/gamified-app)
 - `hr-onboarding`：[`extracted-skills/html-anything/hr-onboarding`](../extracted-skills/html-anything/hr-onboarding)
+- `info-funnel`：[`extracted-skills/html-anything/info-funnel`](../extracted-skills/html-anything/info-funnel)
 - `invoice`：[`extracted-skills/html-anything/invoice`](../extracted-skills/html-anything/invoice)
 - `kanban-board`：[`extracted-skills/html-anything/kanban-board`](../extracted-skills/html-anything/kanban-board)
 - `live-dashboard`：[`extracted-skills/html-anything/live-dashboard`](../extracted-skills/html-anything/live-dashboard)
@@ -257,24 +260,24 @@
 
 ### kami
 
-推荐 `npx skills add tw93/kami/plugins/kami/skills/kami -a '*' -g -y`；也可从 [`extracted-skills/kami`](../extracted-skills/kami) 手动复制。
+推荐 `npx skills add tw93/kami/plugins/kami -a universal -g -y`；也可从 [`extracted-skills/kami`](../extracted-skills/kami) 手动复制。
 
 - `kami`：[`extracted-skills/kami/kami`](../extracted-skills/kami/kami)
 - `kami-2`：[`extracted-skills/kami/kami-2`](../extracted-skills/kami/kami-2)
 
 ### ljg-skills
 
-推荐 `npx skills add lijigang/ljg-skills -g --all`；也可从 [`extracted-skills/ljg-skills`](../extracted-skills/ljg-skills) 手动复制。
+复制 [`extracted-skills/ljg-skills`](../extracted-skills/ljg-skills) 下需要的 skill 到 `~/.claude/skills/`。
 
+- `ljg-blind`：[`extracted-skills/ljg-skills/ljg-blind`](../extracted-skills/ljg-skills/ljg-blind)
 - `ljg-book`：[`extracted-skills/ljg-skills/ljg-book`](../extracted-skills/ljg-skills/ljg-book)
 - `ljg-card`：[`extracted-skills/ljg-skills/ljg-card`](../extracted-skills/ljg-skills/ljg-card)
+- `ljg-constraint`：[`extracted-skills/ljg-skills/ljg-constraint`](../extracted-skills/ljg-skills/ljg-constraint)
 - `ljg-invest`：[`extracted-skills/ljg-skills/ljg-invest`](../extracted-skills/ljg-skills/ljg-invest)
 - `ljg-learn`：[`extracted-skills/ljg-skills/ljg-learn`](../extracted-skills/ljg-skills/ljg-learn)
 - `ljg-library`：[`extracted-skills/ljg-skills/ljg-library`](../extracted-skills/ljg-skills/ljg-library)
 - `ljg-map`：[`extracted-skills/ljg-skills/ljg-map`](../extracted-skills/ljg-skills/ljg-map)
 - `ljg-paper`：[`extracted-skills/ljg-skills/ljg-paper`](../extracted-skills/ljg-skills/ljg-paper)
-- `ljg-paper-flow`：[`extracted-skills/ljg-skills/ljg-paper-flow`](../extracted-skills/ljg-skills/ljg-paper-flow)
-- `ljg-paper-river`：[`extracted-skills/ljg-skills/ljg-paper-river`](../extracted-skills/ljg-skills/ljg-paper-river)
 - `ljg-plain`：[`extracted-skills/ljg-skills/ljg-plain`](../extracted-skills/ljg-skills/ljg-plain)
 - `ljg-present`：[`extracted-skills/ljg-skills/ljg-present`](../extracted-skills/ljg-skills/ljg-present)
 - `ljg-push`：[`extracted-skills/ljg-skills/ljg-push`](../extracted-skills/ljg-skills/ljg-push)
@@ -283,11 +286,9 @@
 - `ljg-read`：[`extracted-skills/ljg-skills/ljg-read`](../extracted-skills/ljg-skills/ljg-read)
 - `ljg-relationship`：[`extracted-skills/ljg-skills/ljg-relationship`](../extracted-skills/ljg-skills/ljg-relationship)
 - `ljg-roundtable`：[`extracted-skills/ljg-skills/ljg-roundtable`](../extracted-skills/ljg-skills/ljg-roundtable)
-- `ljg-skill-map`：[`extracted-skills/ljg-skills/ljg-skill-map`](../extracted-skills/ljg-skills/ljg-skill-map)
+- `ljg-structure`：[`extracted-skills/ljg-skills/ljg-structure`](../extracted-skills/ljg-skills/ljg-structure)
 - `ljg-think`：[`extracted-skills/ljg-skills/ljg-think`](../extracted-skills/ljg-skills/ljg-think)
-- `ljg-travel`：[`extracted-skills/ljg-skills/ljg-travel`](../extracted-skills/ljg-skills/ljg-travel)
 - `ljg-word`：[`extracted-skills/ljg-skills/ljg-word`](../extracted-skills/ljg-skills/ljg-word)
-- `ljg-word-flow`：[`extracted-skills/ljg-skills/ljg-word-flow`](../extracted-skills/ljg-skills/ljg-word-flow)
 - `ljg-writes`：[`extracted-skills/ljg-skills/ljg-writes`](../extracted-skills/ljg-skills/ljg-writes)
 
 ### lottie
@@ -301,6 +302,8 @@
 复制 [`extracted-skills/mattpocock-skills`](../extracted-skills/mattpocock-skills) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `ask-matt`：[`extracted-skills/mattpocock-skills/ask-matt`](../extracted-skills/mattpocock-skills/ask-matt)
+- `batch-grill-me`：[`extracted-skills/mattpocock-skills/batch-grill-me`](../extracted-skills/mattpocock-skills/batch-grill-me)
+- `claude-handoff`：[`extracted-skills/mattpocock-skills/claude-handoff`](../extracted-skills/mattpocock-skills/claude-handoff)
 - `code-review`：[`extracted-skills/mattpocock-skills/code-review`](../extracted-skills/mattpocock-skills/code-review)
 - `codebase-design`：[`extracted-skills/mattpocock-skills/codebase-design`](../extracted-skills/mattpocock-skills/codebase-design)
 - `design-an-interface`：[`extracted-skills/mattpocock-skills/design-an-interface`](../extracted-skills/mattpocock-skills/design-an-interface)
@@ -320,14 +323,17 @@
 - `prototype`：[`extracted-skills/mattpocock-skills/prototype`](../extracted-skills/mattpocock-skills/prototype)
 - `qa`：[`extracted-skills/mattpocock-skills/qa`](../extracted-skills/mattpocock-skills/qa)
 - `request-refactor-plan`：[`extracted-skills/mattpocock-skills/request-refactor-plan`](../extracted-skills/mattpocock-skills/request-refactor-plan)
+- `research`：[`extracted-skills/mattpocock-skills/research`](../extracted-skills/mattpocock-skills/research)
 - `resolving-merge-conflicts`：[`extracted-skills/mattpocock-skills/resolving-merge-conflicts`](../extracted-skills/mattpocock-skills/resolving-merge-conflicts)
 - `scaffold-exercises`：[`extracted-skills/mattpocock-skills/scaffold-exercises`](../extracted-skills/mattpocock-skills/scaffold-exercises)
 - `setup-matt-pocock-skills`：[`extracted-skills/mattpocock-skills/setup-matt-pocock-skills`](../extracted-skills/mattpocock-skills/setup-matt-pocock-skills)
 - `setup-pre-commit`：[`extracted-skills/mattpocock-skills/setup-pre-commit`](../extracted-skills/mattpocock-skills/setup-pre-commit)
+- `setup-ts-deep-modules`：[`extracted-skills/mattpocock-skills/setup-ts-deep-modules`](../extracted-skills/mattpocock-skills/setup-ts-deep-modules)
 - `tdd`：[`extracted-skills/mattpocock-skills/tdd`](../extracted-skills/mattpocock-skills/tdd)
 - `teach`：[`extracted-skills/mattpocock-skills/teach`](../extracted-skills/mattpocock-skills/teach)
-- `to-issues`：[`extracted-skills/mattpocock-skills/to-issues`](../extracted-skills/mattpocock-skills/to-issues)
-- `to-prd`：[`extracted-skills/mattpocock-skills/to-prd`](../extracted-skills/mattpocock-skills/to-prd)
+- `to-questionnaire`：[`extracted-skills/mattpocock-skills/to-questionnaire`](../extracted-skills/mattpocock-skills/to-questionnaire)
+- `to-spec`：[`extracted-skills/mattpocock-skills/to-spec`](../extracted-skills/mattpocock-skills/to-spec)
+- `to-tickets`：[`extracted-skills/mattpocock-skills/to-tickets`](../extracted-skills/mattpocock-skills/to-tickets)
 - `triage`：[`extracted-skills/mattpocock-skills/triage`](../extracted-skills/mattpocock-skills/triage)
 - `ubiquitous-language`：[`extracted-skills/mattpocock-skills/ubiquitous-language`](../extracted-skills/mattpocock-skills/ubiquitous-language)
 - `wayfinder`：[`extracted-skills/mattpocock-skills/wayfinder`](../extracted-skills/mattpocock-skills/wayfinder)
@@ -420,6 +426,7 @@
 - `productionize-app-with-services`：[`extracted-skills/swyxio-skills/productionize-app-with-services`](../extracted-skills/swyxio-skills/productionize-app-with-services)
 - `public-qa-chatbot`：[`extracted-skills/swyxio-skills/public-qa-chatbot`](../extracted-skills/swyxio-skills/public-qa-chatbot)
 - `release-readiness-hardening`：[`extracted-skills/swyxio-skills/release-readiness-hardening`](../extracted-skills/swyxio-skills/release-readiness-hardening)
+- `reserved-handle-policy`：[`extracted-skills/swyxio-skills/reserved-handle-policy`](../extracted-skills/swyxio-skills/reserved-handle-policy)
 - `schedule-design`：[`extracted-skills/swyxio-skills/schedule-design`](../extracted-skills/swyxio-skills/schedule-design)
 - `security-hardening`：[`extracted-skills/swyxio-skills/security-hardening`](../extracted-skills/swyxio-skills/security-hardening)
 - `slackbot-builder`：[`extracted-skills/swyxio-skills/slackbot-builder`](../extracted-skills/swyxio-skills/slackbot-builder)
@@ -436,6 +443,7 @@
 - `youtube-api`：[`extracted-skills/swyxio-skills/youtube-api`](../extracted-skills/swyxio-skills/youtube-api)
 - `youtube-publish`：[`extracted-skills/swyxio-skills/youtube-publish`](../extracted-skills/swyxio-skills/youtube-publish)
 - `youtube-studio-batch-upload`：[`extracted-skills/swyxio-skills/youtube-studio-batch-upload`](../extracted-skills/swyxio-skills/youtube-studio-batch-upload)
+- `youtube-studio-computer-use`：[`extracted-skills/swyxio-skills/youtube-studio-computer-use`](../extracted-skills/swyxio-skills/youtube-studio-computer-use)
 - `youtube-thumbnails`：[`extracted-skills/swyxio-skills/youtube-thumbnails`](../extracted-skills/swyxio-skills/youtube-thumbnails)
 - `zoom-download`：[`extracted-skills/swyxio-skills/zoom-download`](../extracted-skills/swyxio-skills/zoom-download)
 

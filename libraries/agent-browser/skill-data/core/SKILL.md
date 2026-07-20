@@ -58,7 +58,11 @@ agent-browser mcp --tools all
 agent-browser mcp --tools core,network,react
 ```
 
-Configure the MCP client to launch `agent-browser` with `["mcp"]`. The server defaults to MCP protocol 2025-11-25 and accepts older supported client protocol versions during initialization. The default tools profile is `core`, which keeps MCP context small for everyday browser automation. Use `--tools all` for the full typed CLI parity surface, or combine profiles with commas, such as `--tools core,network,react`. Profiles are `core`, `network`, `state`, `debug`, `tabs`, `react`, `mobile`, and `all`; the `debug` profile includes plugin registry and command.run tools. Each tool accepts typed arguments plus `extraArgs` for advanced CLI flags and exact CLI parity. Tool discovery is paginated and includes read-only/open-world annotations so modern MCP clients can load the large typed surface incrementally. Use the tool `session` argument or `AGENT_BROWSER_SESSION` to isolate browser sessions.
+Configure the MCP client to launch `agent-browser` with `["mcp"]`. The server defaults to MCP protocol 2025-11-25 and accepts older supported client protocol versions during initialization. The default tools profile is `core`, which keeps MCP context small for everyday browser automation. Use `--tools all` for the full typed CLI parity surface, or combine profiles with commas, such as `--tools core,network,react`. Profiles are `core`, `network`, `state`, `debug`, `tabs`, `react`, `mobile`, and `all`; the `debug` profile includes plugin registry and command.run tools. Each tool accepts typed arguments plus `extraArgs` for advanced CLI flags and exact CLI parity. The common `allowedDomains` array maps to `--allowed-domains` and activates the same WebRTC containment and launch-mode restrictions. Tool discovery is paginated and includes read-only/open-world annotations so modern MCP clients can load the large typed surface incrementally. Use the tool `session` argument or `AGENT_BROWSER_SESSION` to isolate browser sessions.
+
+## eve agent integration
+
+For eve agents, mount the `@agent-browser/eve` extension instead of hand-writing browser tools. It adds namespaced tools such as `browser__navigate`, `browser__snapshot`, `browser__click`, `browser__fill`, `browser__find`, and `browser__screenshot`, all backed by agent-browser running inside the eve sandbox. The sandbox bootstrap helpers (`installAgentBrowser`, `agentBrowserRevalidationKey`) ship with the same package under `@agent-browser/eve/sandbox`, so `agent/sandbox.ts` needs no extra dependency.
 
 ## Reading a page
 
@@ -104,6 +108,8 @@ agent-browser get count ".item"           # count matching elements
 ```
 
 Use `read [url]` when you need to consume documentation or other text pages rather than interact with a rendered UI. Omit the URL to read the rendered DOM of the active tab in the current browser session, including browser auth state and client-side updates. Explicit URL reads send `Accept: text/markdown`, try the same URL with `.md` appended when the first response is not markdown, walk ancestor paths toward `/` to find the nearest `llms.txt` for a matching docs link, print markdown/plain text when available, and fall back to readable text extracted from HTML without launching Chrome. Add `--filter <text>` to narrow a page to matching heading sections, `--outline` for compact headings on one page, `--llms index` for a compact nearest-ancestor `llms.txt` link list, and `--llms full` only when you explicitly need `llms-full.txt`. With `--llms` or `--require-md`, omitting the URL uses the active tab URL because those modes depend on HTTP resources. With `--llms` or `--outline`, `--filter <text>` narrows links, sections, or headings. Add `--require-md` when you specifically want to verify markdown negotiation, `--raw` when you need the response body unchanged, and `--json` when you need metadata such as `source` and `contentType`. Global safeguards such as `--allowed-domains`, `--content-boundaries`, and `--max-output` also apply to read fetches and output.
+
+For sessions that handle sensitive data, use `--allowed-domains` to restrict navigations and page-initiated network traffic. Supported Chromium sessions also disable `RTCPeerConnection` while the allowlist is active so WebRTC STUN, TURN, and related DNS traffic cannot bypass the HTTP filter. Dedicated and shared workers are guarded with a bootstrap wrapper; if a page CSP forbids that wrapper, the worker fails closed rather than running without the allowlist guard. Pre-existing CDP sessions, auto-connect, Chrome profiles, direct-page provider plugins, agent-browser restore or state-file replay, raw Chrome args that select profiles, restore sessions, or open startup pages, iOS, and Safari reject this option because agent-browser cannot install equivalent containment before page scripts run. This is browser-level containment, not an operating-system firewall; see [Trust boundaries](references/trust-boundaries.md) for deployment guidance.
 
 ## Interacting
 
@@ -221,18 +227,18 @@ agent-browser plugin run captcha captcha.solve --payload '{"siteKey":"...","url"
 ### Persist session across runs
 
 ```bash
-# Log in once, save cookies + localStorage
-agent-browser state save ./auth.json
+# Derive one stable id for this agent/worktree
+SESSION="$(agent-browser session id --scope worktree --prefix my-app)"
 
-# Later runs start already-logged-in
-agent-browser --state ./auth.json open https://app.example.com
+# Pass the same id and restore request on every command
+agent-browser --session "$SESSION" --restore open https://app.example.com
 ```
 
-Or use `--session-name` for auto-save/restore:
+`--restore` with no value uses the current `--session` as the persistence key. Agent skills should prefer this over hand-built state file paths. Use `--restore-save auto` by default so a failed restore does not overwrite the previous known-good state. State is saved on close and also periodically while the browser is open (at most once per `AGENT_BROWSER_AUTOSAVE_INTERVAL_MS`, default 30000), so state survives even if the user closes the browser window by hand.
 
 ```bash
-AGENT_BROWSER_SESSION_NAME=my-app agent-browser open https://app.example.com
-# State is auto-saved and restored on subsequent runs with the same name.
+agent-browser --session "$SESSION" --restore --restore-check-text Dashboard open https://app.example.com
+agent-browser --session "$SESSION" session info --json
 ```
 
 ### Extract data
@@ -284,7 +290,7 @@ Stable `tabId`s mean `t2` points at the same tab across commands even when other
 
 ### Run multiple browsers in parallel
 
-Each `--session <name>` is an isolated browser with its own cookies, tabs, and refs. Useful for testing multi-user flows or parallel scraping:
+Each `--session <name>` is an isolated browser with its own cookies, tabs, and refs. For agent skills, derive stable names with `agent-browser session id --scope worktree --prefix <skill>`. Useful for testing multi-user flows or parallel scraping:
 
 ```bash
 agent-browser --session a open https://app.example.com
@@ -400,7 +406,9 @@ EOF
 
 **Cross-origin iframe not accessible** Cross-origin iframes that block accessibility tree access are silently skipped. Use `frame "#iframe"` to switch into them explicitly if the parent opts in, otherwise the iframe's contents aren't available via snapshot — fall back to `eval` in the iframe's origin or use the `--headers` flag to satisfy CORS.
 
-**Authentication expires mid-workflow** Use `--session-name <name>` or `state save`/`state load` so your session survives browser restarts. See [references/session-management.md](references/session-management.md) and [references/authentication.md](references/authentication.md).
+**WebGPU page renders black in screenshots** Headless Chrome doesn't expose WebGPU by default; three.js `WebGPURenderer` then silently falls back or renders nothing. Relaunch with the `--webgpu` flag, wait for the app's first rendered frame, then screenshot. On Linux install `libvulkan1 mesa-vulkan-drivers` first. If it's still black on Windows/Linux, that's an upstream headless-capture limitation: add `--headed` (needs a logged-in desktop on Windows; on Linux agent-browser starts a private virtual display automatically when Xvfb is installed — never wrap in `xvfb-run`, which kills the display when the CLI exits while the browser lives on). Verify with `agent-browser doctor --webgpu`. See [references/webgpu.md](references/webgpu.md).
+
+**Authentication expires mid-workflow** Use `--session <id> --restore` so your session survives browser restarts. Check `agent-browser session info --json` if restore fails. See [references/session-management.md](references/session-management.md) and [references/authentication.md](references/authentication.md).
 
 ## Global flags worth knowing
 
@@ -408,13 +416,16 @@ EOF
 --session <name>        # isolated browser session
 --json                  # JSON output (for machine parsing)
 --headed                # show the window (default is headless)
+--webgpu                # enable WebGPU (software Vulkan on Linux, no GPU needed)
 --auto-connect          # connect to an already-running Chrome
 --cdp <port>            # connect to a specific CDP port
 --profile <name|path>   # use a Chrome profile (login state survives)
 --headers <json>        # HTTP headers scoped to the URL's origin
 --proxy <url>           # proxy server
 --state <path>          # load saved auth state from JSON
---session-name <name>   # auto-save/restore session state by name
+--restore [name]        # auto-save/restore session state, defaults to --session
+--restore-save <policy> # auto, always, or never
+--namespace <name>      # isolate daemon sockets and restore-state directories
 ```
 
 ## When to load another skill
@@ -464,4 +475,5 @@ That pulls in:
 - `references/profiling.md` — Chrome DevTools tracing and profiling
 - `references/video-recording.md` — video capture options
 - `references/proxy-support.md` — proxy configuration
+- `references/webgpu.md` — screenshots/video of WebGPU pages (three.js, Babylon.js), Linux/CI setup
 - `templates/*` — starter shell scripts for auth, capture, form automation

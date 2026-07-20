@@ -4,7 +4,7 @@
    Overrides sub-pages.css + docs-visuals.css for the long-form "Designing
    with Impeccable" walkthrough. The existing markup is unchanged; this file
    restyles every block to the kinpaku brand: dark lacquer surface, gold +
-   verdigris accents, Alumni Sans Pinstripe display, Albert Sans body.
+   verdigris accents, Alumni Sans display, Albert Sans body.
 
    Structure of this file mirrors the page itself:
      1. Page scope + base
@@ -33,6 +33,8 @@
      per-page remap. Only the --ks-muted alias (still read by name here) and
      the page shell remain. */
   --ks-muted: var(--ks-text-muted);
+  --designing-phase-nav-top: 95px;
+  --designing-phase-anchor-offset: 149px;
 
   background:
     linear-gradient(180deg, oklch(7% 0.006 95), oklch(4% 0.004 95));
@@ -198,7 +200,7 @@
   text-wrap: balance;
   max-width: none;
   /* "Impeccable" at the display token's 3.4rem minimum is 270px+ in the
-     narrow Pinstripe face and overflows a 360px viewport. Allow break-word
+     narrow Alumni Sans face and overflows a 360px viewport. Allow break-word
      as a safety net so the title never blows out of its container. */
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -287,8 +289,8 @@
 
 .designing-kinpaku .designing-loop-name {
   color: var(--ks-champagne);
-  /* Pinstripe is single-weight and reads broken at ~1.5–2rem; wordmark
-     carries real stroke weight at compass-label scale (cf. iterate-name). */
+  /* The thin display cut reads too light at compass-label scale (~1.5–2rem);
+     the wordmark token is the same face at weight 400+ (cf. iterate-name). */
   font-family: var(--ks-font-wordmark);
   font-weight: 600;
   font-size: clamp(1.5rem, 2.2vw, 2rem);
@@ -455,7 +457,7 @@
 
 .designing-kinpaku .designing-phasenav {
   position: sticky;
-  top: 95px; /* sits directly under the sticky .site-header (95px, z 100) */
+  top: var(--designing-phase-nav-top); /* sits directly under the sticky .site-header */
   z-index: 40; /* above page content, below the header */
   display: flex;
   justify-content: center;
@@ -495,8 +497,12 @@
 }
 
 @media (max-width: 600px) {
+  .designing-kinpaku {
+    --designing-phase-nav-top: 70px;
+    --designing-phase-anchor-offset: 116px;
+  }
+
   .designing-kinpaku .designing-phasenav {
-    top: 70px;
     gap: 0.7rem;
     padding: 12px 14px;
   }
@@ -513,9 +519,17 @@
 }
 
 /* Anchor jumps (compass nodes + phase nav) must clear the sticky header +
-   nav. The base .designing-phase scroll-margin (80px) is too short here. */
+   nav. The base .designing-phase scroll-margin (80px) is too short here.
+   Keep this tied to the sticky nav breakpoint values so #start lands after
+   the nav has pinned instead of stopping in the nav's in-flow position. */
 .designing-kinpaku .designing-loop-track .designing-phase {
-  scroll-margin-top: 152px;
+  scroll-margin-top: var(--designing-phase-anchor-offset);
+}
+
+@media (max-width: 600px) {
+  .designing-kinpaku .designing-loop-track .designing-phase {
+    scroll-margin-top: 116px;
+  }
 }
 
 /* One deliberate, consistent break between the loop spine and the context
@@ -806,9 +820,9 @@
   color: var(--ks-kinpaku);
 }
 
-/* Subsection h3s use Albert Sans, not the Pinstripe display face. DESIGN.md
+/* Subsection h3s use Albert Sans, not the Alumni Sans display face. DESIGN.md
    reserves the display face for the hero h1 and section h2s; at h3 sizes the
-   thin Pinstripe loses its identity and reads as a broken render. */
+   thin display cut loses presence and reads too light. */
 .designing-kinpaku .designing-iterate-name {
   color: var(--ks-champagne);
   font-family: var(--ks-font);
@@ -976,8 +990,13 @@
   cursor: pointer;
 }
 .designing-kinpaku .docs-viz-live-ctx-discard {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 28px;
   color: var(--ks-muted);
-  padding: 4px 6px;
+  padding: 0;
+  line-height: 1;
 }
 .designing-kinpaku .docs-viz-live-ctx-accept {
   background: var(--ks-kinpaku);
@@ -995,7 +1014,7 @@
   width: 1px;
   height: 14px;
   background: var(--ks-rule);
-  margin: 0 4px;
+  margin: 0 0 0 4px;
 }
 /* Global picker bar — mirrors the real Impeccable live bar: carved-tile mark,
    Pick/Insert/Detect/DESIGN.md controls, exit. Lacquer-deep fill + 1.5px gold
@@ -1427,8 +1446,8 @@
   font-weight: 600;
 }
 
-/* The brand mock title used the pinstripe display face at ~1.6rem, which reads
-   broken/washed at that size (Two-Face rule); use the clean body face. */
+/* The brand mock title used the Alumni Sans display face at ~1.6rem, where the
+   thin cut reads too light at that size (Two-Face rule); use the clean body face. */
 .designing-kinpaku .designing-lane-mock-title {
   font-family: var(--ks-font);
   font-weight: 500;
@@ -1527,8 +1546,8 @@
 }
 .designing-kinpaku .designing-avoid li {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 14px;
+  grid-template-columns: 20px 1fr;
+  gap: 12px;
   padding: 22px 0;
   background: transparent;
   border: 0;
@@ -1539,11 +1558,18 @@
   border-bottom: 0;
 }
 .designing-kinpaku .designing-avoid-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: oklch(58% 0.15 35 / 0.1);
+  border-radius: 50%;
   color: var(--ks-vermilion);
   font-family: var(--ks-mono);
-  font-size: 1.2rem;
-  line-height: 1.4;
-  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
 }
 .designing-kinpaku .designing-avoid-title {
   display: block;
@@ -1612,7 +1638,7 @@
 .designing-kinpaku .designing-cta-card-title {
   color: var(--ks-champagne);
   font-family: var(--ks-font-display);
-  font-weight: 300;
+  font-weight: 100;
   font-size: clamp(1.8rem, 3vw, 2.4rem);
   line-height: 1.1;
   margin: 0;

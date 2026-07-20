@@ -318,6 +318,65 @@ describe('live-browser.js regression guards', () => {
     );
   });
 
+  it('drives variant visibility and --p-* params through a stylesheet, not inline SSR element mutation', () => {
+    // Variant divs live in page source, so Next.js App Router server-renders
+    // them. Toggling hidden/style.display/--p-* on those nodes client-side
+    // makes React 19 report a hydration mismatch on the next Fast-Refresh
+    // re-render — the same failure mode as scroll-anchor (#276) and pick-cursor
+    // (#286). Visibility and range/toggle custom properties must go through an
+    // injected <style> rule instead.
+    assert.doesNotMatch(
+      SOURCE,
+      /function setVariantShown\(/,
+      'event=live_browser.variant_visibility_hydration actor=browser operation=show_variant_in_dom risk=react19_hydration_mismatch_on_next_app_router expected=stylesheet_rule actual=hidden_and_inline_display_on_variant_div',
+    );
+    assert.match(
+      SOURCE,
+      /if \(svelteComponentSession\?\.sessionId === currentSessionId\)[\s\S]{0,280}?variantEl\.style\.setProperty\('--p-'/,
+      'client-mounted Svelte component variants drive --p-* inline (no SSR div, no hydration), unlike server-rendered variant divs',
+    );
+    assert.match(
+      SOURCE,
+      /function applyParamValue\([\s\S]{0,1200}?svelteComponentSession\?\.sessionId === currentSessionId[\s\S]{0,400}?return;[\s\S]{0,400}?updateVariantStateStylesheet\(currentSessionId, visibleVariant\)/,
+      'applyParamValue must short-circuit the Svelte inline path before the SSR stylesheet path',
+    );
+    assert.match(
+      SOURCE,
+      /const VARIANT_STATE_STYLE_ID = 'impeccable-variant-state';/,
+      'the variant-state style needs a stable id constant so it can be created and removed by id',
+    );
+    assert.match(
+      SOURCE,
+      /const VARIANT_HIDE_DECL = 'display: none !important;';/,
+      'the hidden-variant rule should be a named constant for readability',
+    );
+    assert.match(
+      SOURCE,
+      /function updateVariantStateStylesheet\(sessionId, num\)[\s\S]{0,500}?createElement\('style'\)[\s\S]{0,500}?VARIANT_HIDE_DECL/,
+      'variant cycling must hide non-visible variants with an injected <style> rule keyed by VARIANT_STATE_STYLE_ID',
+    );
+    assert.match(
+      SOURCE,
+      /function removeVariantStateStylesheet\(\)[\s\S]{0,120}?document\.getElementById\(VARIANT_STATE_STYLE_ID\)\?\.remove\(\)/,
+      'leaving CYCLING or tearing down live mode must remove the injected variant-state <style>',
+    );
+    assert.doesNotMatch(
+      SOURCE,
+      /function refreshParamsPanel\(\)[\s\S]{0,220}?if \(state !== 'CYCLING'\)[\s\S]{0,220}?removeVariantStateStylesheet\(\)/,
+      'refreshParamsPanel must not strip the variant-state sheet during GENERATING first-reveal',
+    );
+    assert.match(
+      SOURCE,
+      /function refreshParamsPanel\(\)[\s\S]{0,600}?if \(!variantEl \|\| params\.length === 0\)[\s\S]{0,220}?updateVariantStateStylesheet\(currentSessionId, visibleVariant\)/,
+      'paramless variant switches must re-sync the variant-state sheet to clear stale --p-* params',
+    );
+    assert.match(
+      SOURCE,
+      /function isVariantShown\(el\)[\s\S]{0,120}?getComputedStyle\(el\)\.display/,
+      'visible-variant detection must read computed display, not el.hidden or el.style.display',
+    );
+  });
+
   it('global bar includes expandable page chat affordance', () => {
     assert.match(
       SOURCE,
@@ -528,6 +587,34 @@ describe('live-browser.js regression guards', () => {
     );
   });
 
+  it('toast enter and dismiss timers only touch the current toast element', () => {
+    assert.match(
+      SOURCE,
+      /function showToast\(message, duration\)[\s\S]{0,1200}?const currentToast = el\('div'/,
+      'showToast must capture the created toast in a local so delayed callbacks cannot dereference or remove a stale global toastEl',
+    );
+    assert.match(
+      SOURCE,
+      /requestAnimationFrame\(\(\) => \{[\s\S]{0,80}?if \(toastEl !== currentToast\) return;[\s\S]{0,120}?currentToast\.style\.opacity = '1';/,
+      'toast enter rAF must no-op when dismissToast or a newer toast replaced toastEl before the frame fires',
+    );
+    assert.match(
+      SOURCE,
+      /setTimeout\(\(\) => \{[\s\S]{0,80}?if \(toastEl !== currentToast\) return;[\s\S]{0,120}?currentToast\.style\.opacity = '0';/,
+      'toast auto-dismiss timer must not animate a newer toast created after this timer was scheduled',
+    );
+    assert.match(
+      SOURCE,
+      /setTimeout\(\(\) => \{[\s\S]{0,80}?if \(toastEl !== currentToast\) return;[\s\S]{0,80}?currentToast\.remove\(\);[\s\S]{0,80}?toastEl = null;/,
+      'toast removal timer must only remove and clear the same toast it scheduled',
+    );
+    assert.doesNotMatch(
+      SOURCE,
+      /requestAnimationFrame\(\(\) => \{\s*toastEl\.style/,
+      'toast enter rAF must not read toastEl.style directly after dismissToast can null it',
+    );
+  });
+
   it('insert mode UI and generate payload guards', () => {
     assert.match(SOURCE, /function toggleInsert\(\)/, 'global bar must expose insert toggle');
     assert.match(SOURCE, /PREFIX \+ '-insert-toggle'/, 'insert toggle needs stable id');
@@ -632,8 +719,8 @@ describe('live-browser.js regression guards', () => {
     );
     assert.match(
       SOURCE,
-      /function setVariantShown\(el, shown\)[\s\S]{0,200}?removeAttribute\('hidden'\)/,
-      'variant cycling must clear the hidden attribute, not only style.display',
+      /function updateVariantStateStylesheet\(sessionId, num\)[\s\S]{0,900}?VARIANT_HIDE_DECL/,
+      'variant cycling must hide non-visible variants via injected stylesheet, not hidden/style.display on SSR divs',
     );
     assert.match(
       SOURCE,

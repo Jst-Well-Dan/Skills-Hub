@@ -789,6 +789,10 @@ p    { widows: 2; orphans: 2; }
 
 CSS alone cannot prevent "the last two lines of a chapter pushed onto a fresh page". For long-doc / proposal output, follow up with a render-time density check (see production.md "Verify & Debug").
 
+Long-doc table-of-contents rows should link to stable chapter ids and use
+WeasyPrint `target-counter(attr(href), page)` for rendered page numbers. Do not
+hand-fill page numerals; any pagination-affecting edit will make them drift.
+
 **Cascading break-inside**: when two `break-inside: avoid` blocks sit next to each other and the first would split, both get pushed to the next page together. A chapter with more than two `break-inside: avoid` blocks (quote + table + callout, etc.) near a page boundary is at high risk of leaving 40-80mm of trailing whitespace on the previous page. Fix by splitting the chapter, or downgrade one block (allow the table to break with a repeating header `<thead>`).
 
 ### Force break
@@ -1231,6 +1235,18 @@ Blocks without `class="language-*"` stay monochrome.
 - Poetic subtitle: `<small>` below name, 13px olive, italic. One short line evoking the feature's character
 - Description: 15px dark-warm, line-height 1.55
 - Tables stay editorial: no framed box, no tinted header bar, no vertical rules, no empty right gap. Content-sized columns, hairline row rules, a muted `--latin-ui` uppercase header. On phone, `display: block; overflow-x: auto` rather than cramming columns. A framed, tinted table adds weight without adding information.
+
+### Feature rows (a visual beside the copy)
+
+The `.features` list above is the shipped default. A feature *row* (a visual on one side, the points on the other, repeated down the section) is a different component and no template ships it. It is also where a feature section most often goes wrong, because the instinct that produces it ("alternate the sides so it does not look like a product list") is the same thing that breaks it.
+
+- **Compute the slack before building the row.** `slack = content width - (visual + gutter + the copy's natural width)`. The copy almost never fills a `1fr` track, so that number is positive on every row. Sizing the two tracks independently (a fixed visual track against a `1fr` copy track) does not remove it; it only decides which side it lands on.
+- **Slack belongs on the outer trim, never in the gutter.** At the page edge it reads as a margin and disappears. Between the copy and the visual it reads as a hole, and it leaves the copy nearer the page edge than the thing it describes, which breaks the one association the row exists to make.
+- **Mirror a text mass, never a short list.** A paragraph block has edges that read as a shape, so flipping which side it sits on costs nothing; that is why magazine spreads mirror. Four one-line points are not a mass. Their left edges are the only structure holding them together, and alternating rows move that edge every other row. Left edges are the strongest alignment cue on a page. Do not spend them on rhythm.
+- **Three rescues that do not work.** Recorded so they are not retried. Pinning a fixed measure to the gutter: the slack turns into an unexplained indent on the mirrored rows. Right-aligning the mirrored copy so the bullet dots move to the right: flush against the visual, but the dots read as a mistake. Centering every seam on one shared axis: the visual leaves the page edge, the section loses its only anchor, and a third left edge appears.
+- **Run every row the same way.** One visual edge flush with the section's left margin, one copy left edge, slack always at the outer trim. Nothing jumps, and the row that already read as fine is the row you keep.
+- **Buy variety with weight, not with alternation.** A-B-A-B is still a pattern, and it produces a zigzagging list rather than editorial rhythm. Rhythm comes from unequal weight: a lead row with a larger visual or an opening sentence above its points, supporting rows with fewer and shorter points. If every row carries the same structure and near-identical copy length, no layout move will make the section feel unlike a list. The fix is in the content.
+- **Measure the copy in every locale before capping the column.** The longest point's natural width swings hard by language (a CJK line can run 30% past its English source), and a system-font stack widens it again wherever the primary face is missing and a broader fallback takes over. No measure prevents wrapping everywhere, so do not chase one: pick the measure the layout needs, let long locales wrap, and follow «Cross-lang typography hardening».
 
 ### FAQ
 

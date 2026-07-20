@@ -99,8 +99,7 @@ function createFakeUniversalBundle(root, providers = ['.claude', '.agents', '.cu
   if (providers.includes('.agents')) {
     mkdirSync(join(bundleRoot, '.codex'), { recursive: true });
     writeFileSync(join(bundleRoot, '.codex', 'hooks.json'), JSON.stringify({
-      description: 'fresh codex hook',
-      hooks: { PostToolUse: [{ matcher: 'apply_patch', hooks: [{ type: 'command', command: 'node "$(git rev-parse --show-toplevel)/.agents/skills/impeccable/scripts/hook.mjs"' }] }] },
+      hooks: { PostToolUse: [{ matcher: 'apply_patch', hooks: [{ type: 'command', command: 'node ".agents/skills/impeccable/scripts/hook.mjs"' }] }] },
     }, null, 2));
   }
   return bundleRoot;
@@ -133,6 +132,84 @@ if (WANT_CLI_REMOTE_E2E) {
   } catch {}
 }
 const describeRemote = (WANT_CLI_REMOTE_E2E && bundleReachable) ? describe : describe.skip;
+
+describe('copyProviderSkills: symlink handling', () => {
+  test('preserves an external shared-skills symlink and writes through it (#295)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'imp-295-ext-'));
+    const root = join(tmp, 'home');
+    const shared = join(tmp, 'shared');
+    mkdirSync(root, { recursive: true });
+    mkdirSync(join(shared, 'other-skill'), { recursive: true });
+    writeFileSync(join(shared, 'other-skill', 'SKILL.md'), '---\nname: other-skill\n---\n');
+    mkdirSync(join(root, '.claude'), { recursive: true });
+    symlinkSync(shared, join(root, '.claude', 'skills'), 'dir');
+
+    const bundle = createFakeUniversalBundle(tmp, ['.claude']);
+    copyProviderSkills(bundle, root, ['.claude']);
+
+    const skillsPath = join(root, '.claude', 'skills');
+    expect(lstatSync(skillsPath).isSymbolicLink()).toBe(true);
+    expect(realpathSync(skillsPath)).toBe(realpathSync(shared));
+    expect(existsSync(join(skillsPath, 'other-skill', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(shared, 'impeccable', 'SKILL.md'))).toBe(true);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('still converts an in-project cross-provider link to a real dir', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'imp-295-inproj-'));
+    mkdirSync(join(tmp, '.agents', 'skills'), { recursive: true });
+    mkdirSync(join(tmp, '.claude'), { recursive: true });
+    symlinkSync('../.agents/skills', join(tmp, '.claude', 'skills'), 'dir');
+
+    const bundle = createFakeUniversalBundle(tmp, ['.claude']);
+    copyProviderSkills(bundle, tmp, ['.claude']);
+
+    const skillsPath = join(tmp, '.claude', 'skills');
+    expect(lstatSync(skillsPath).isSymbolicLink()).toBe(false);
+    expect(existsSync(join(skillsPath, 'impeccable', 'SKILL.md'))).toBe(true);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('preserves external symlinks when two providers share one external dir (#295, multi-tool)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'imp-295-multi-'));
+    const root = join(tmp, 'home');
+    const shared = join(tmp, 'shared');
+    mkdirSync(root, { recursive: true });
+    mkdirSync(join(shared, 'other-skill'), { recursive: true });
+    writeFileSync(join(shared, 'other-skill', 'SKILL.md'), '---\nname: other-skill\n---\n');
+    for (const provider of ['.claude', '.agents']) {
+      mkdirSync(join(root, provider), { recursive: true });
+      symlinkSync(shared, join(root, provider, 'skills'), 'dir');
+    }
+
+    const bundle = createFakeUniversalBundle(tmp, ['.claude', '.agents']);
+    copyProviderSkills(bundle, root, ['.claude', '.agents']);
+
+    for (const provider of ['.claude', '.agents']) {
+      const skillsPath = join(root, provider, 'skills');
+      expect(lstatSync(skillsPath).isSymbolicLink()).toBe(true);
+      expect(realpathSync(skillsPath)).toBe(realpathSync(shared));
+    }
+    expect(existsSync(join(shared, 'other-skill', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(shared, 'impeccable', 'SKILL.md'))).toBe(true);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  test('replaces a dangling in-project cross-provider link with a real dir', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'imp-295-dangling-'));
+    // Link to another provider's in-project skills dir that does NOT exist yet.
+    mkdirSync(join(tmp, '.claude'), { recursive: true });
+    symlinkSync('../.agents/skills', join(tmp, '.claude', 'skills'), 'dir');
+
+    const bundle = createFakeUniversalBundle(tmp, ['.claude']);
+    copyProviderSkills(bundle, tmp, ['.claude']);
+
+    const skillsPath = join(tmp, '.claude', 'skills');
+    expect(lstatSync(skillsPath).isSymbolicLink()).toBe(false);
+    expect(existsSync(join(skillsPath, 'impeccable', 'SKILL.md'))).toBe(true);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+});
 
 describe('skills install: already-installed detection', () => {
   test('detects impeccable sentinel and bails', () => {
@@ -753,6 +830,63 @@ describe('skills install/update: local universal bundle e2e', () => {
     expect(readFileSync(join(tmp, '.cursor', 'hooks.json'), 'utf8')).toContain(join(home, '.cursor', 'skills', 'impeccable', 'scripts', 'hook-before-edit.mjs'));
 
     rmSync(tmp, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }, 15000);
+
+  // Pi discovers global skills from ~/.pi/agent/skills/, not ~/.pi/skills/ (#327).
+  // Also covers the GLOBAL_HARNESS_HINTS detection: no --providers is passed, so
+  // the ~/.pi dir alone must route the install to Pi's agent skills path.
+  test('global install detects ~/.pi and writes Pi skills to ~/.pi/agent/skills', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'imp-test-scope-user-pi-'));
+    const home = mkdtempSync(join(tmpdir(), 'imp-home-scope-user-pi-'));
+    execSync('git init', { cwd: tmp });
+    mkdirSync(join(home, '.pi'), { recursive: true });
+    const bundleRoot = createFakeUniversalBundle(tmp, ['.pi']);
+
+    const output = run('skills install -y --scope=global --no-hooks', {
+      cwd: tmp,
+      env: { ...process.env, HOME: home, IMPECCABLE_BUNDLE_PATH: bundleRoot },
+    });
+
+    expect(output).toContain('Installed impeccable into: .pi (global)');
+    expect(existsSync(join(home, '.pi', 'agent', 'skills', 'impeccable', 'SKILL.md'))).toBe(true);
+    expect(existsSync(join(home, '.pi', 'skills', 'impeccable'))).toBe(false);
+    expect(existsSync(join(tmp, '.pi', 'skills', 'impeccable', 'SKILL.md'))).toBe(false);
+
+    rmSync(tmp, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }, 15000);
+
+  // Project scope must stay at .pi/skills/ even when the git root IS the home
+  // dir (dotfiles repos), where scope can't be inferred from the path alone.
+  // An existing global install at ~/.pi/agent/skills must not swallow the
+  // project-scope request into its already-installed refresh path.
+  test('project-scope install keeps Pi skills in .pi/skills even for a home-rooted repo', () => {
+    const home = mkdtempSync(join(tmpdir(), 'imp-home-rooted-project-pi-'));
+    execSync('git init', { cwd: home });
+    writeSkill(join(home, '.pi'), 'agent', 'impeccable');
+    const bundleRoot = createFakeUniversalBundle(home, ['.pi']);
+
+    const output = run('skills install -y --providers=pi --no-hooks', {
+      cwd: home,
+      env: { ...process.env, HOME: home, IMPECCABLE_BUNDLE_PATH: bundleRoot },
+    });
+
+    expect(output).toContain('Installed impeccable into: .pi (project)');
+    expect(existsSync(join(home, '.pi', 'skills', 'impeccable', 'SKILL.md'))).toBe(true);
+    // The pre-existing global copy is untouched, not refreshed in place.
+    expect(readFileSync(join(home, '.pi', 'agent', 'skills', 'impeccable', 'SKILL.md'), 'utf8')).toContain('name: impeccable');
+    expect(readFileSync(join(home, '.pi', 'agent', 'skills', 'impeccable', 'SKILL.md'), 'utf8')).not.toContain('Local deterministic bundle');
+
+    // An unscoped update from the same root must refresh BOTH Pi trees, not
+    // just the first layout it finds.
+    run('skills update -y --no-hooks', {
+      cwd: home,
+      env: { ...process.env, HOME: home, IMPECCABLE_BUNDLE_PATH: bundleRoot },
+    });
+    expect(readFileSync(join(home, '.pi', 'skills', 'impeccable', 'SKILL.md'), 'utf8')).toContain('Local deterministic bundle');
+    expect(readFileSync(join(home, '.pi', 'agent', 'skills', 'impeccable', 'SKILL.md'), 'utf8')).toContain('Local deterministic bundle');
+
     rmSync(home, { recursive: true, force: true });
   }, 15000);
 

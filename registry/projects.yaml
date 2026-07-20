@@ -8,7 +8,7 @@
         "type": "github",
         "repo": "vercel-labs/agent-browser",
         "ref": "main",
-        "commit": "7379f7dbea76ad8dbf47f177349c4c3ce9263dcb"
+        "commit": "6ede7a9470ac4b681cabf838af8668b9aa99e957"
       },
       "tags": [
         "browser",
@@ -19,8 +19,8 @@
       ],
       "description": "agent-browser",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 7,
       "skills": [
         {
@@ -146,7 +146,7 @@
         "root": "extracted-skills/agent-browser",
         "source_library": "agent-browser",
         "source_path": "libraries/agent-browser",
-        "last_extracted_commit": "7379f7dbea76ad8dbf47f177349c4c3ce9263dcb",
+        "last_extracted_commit": "6ede7a9470ac4b681cabf838af8668b9aa99e957",
         "skill_count": 7
       },
       "category": "coding-tools"
@@ -159,7 +159,7 @@
         "type": "github",
         "repo": "supabase/agent-skills",
         "ref": "main",
-        "commit": "1356046015476711a769601079262b5635929427"
+        "commit": "1ad9aaeb49caafd9e95c0a91116f71890eebbc53"
       },
       "tags": [
         "automation",
@@ -171,8 +171,8 @@
       ],
       "description": "Supabase Agent Skills",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 2,
       "skills": [
         {
@@ -188,7 +188,6 @@
           ],
           "description": "Postgres performance optimization and best practices from Supabase. Use this skill when writing, reviewing, or optimizing Postgres queries, schema designs, or database configurations.",
           "added_at": "2026-05-17",
-          "version": "1.1.1",
           "extracted_path": "extracted-skills/agent-skills/supabase-postgres-best-practices"
         },
         {
@@ -203,9 +202,8 @@
             "mcp",
             "cli"
           ],
-          "description": "Use when doing ANY task involving Supabase. Triggers: Supabase products (Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues); client libraries and SSR integrations (supabase-js, @supabase/ssr) in Next.js, React, SvelteKit, Astro, Remix; auth issues (login, logout, sessions, JWT, cookies, getSession, getUser, getClaims, RLS); Supabase CLI or MCP server; schema changes, migrations, security audits, Postgres extensions (pg_graphql, pg_cron, pg_vector).",
+          "description": "Use when doing ANY task involving Supabase. Triggers: Supabase products (Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues); client libraries and SSR integrations (supabase-js, @supabase/ssr) in Next.js, React, SvelteKit, Astro, Remix; auth issues (login, logout, sessions, JWT, cookies, getSession, getUser, getClaims, RLS); Supabase CLI or MCP server; schema changes, migrations, declarative schemas, security audits, Postgres extensions (pg_graphql, pg_cron, pg_vector).",
           "added_at": "2026-05-17",
-          "version": "0.1.2",
           "extracted_path": "extracted-skills/agent-skills/supabase"
         }
       ],
@@ -219,7 +217,7 @@
         "root": "extracted-skills/agent-skills",
         "source_library": "agent-skills",
         "source_path": "libraries/agent-skills",
-        "last_extracted_commit": "1356046015476711a769601079262b5635929427",
+        "last_extracted_commit": "1ad9aaeb49caafd9e95c0a91116f71890eebbc53",
         "skill_count": 2
       },
       "category": "coding-tools"
@@ -232,7 +230,7 @@
         "type": "github",
         "repo": "anthropics/skills",
         "ref": "main",
-        "commit": "57546260929473d4e0d1c1bb75297be2fdfa1949"
+        "commit": "fa0fa64bdc967915dc8399e803be67759e1e62b8"
       },
       "tags": [
         "automation",
@@ -246,8 +244,8 @@
       ],
       "description": "ALGORITHMIC PHILOSOPHY CREATION",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 18,
       "skills": [
         {
@@ -336,7 +334,7 @@
             "data",
             "pdf"
           ],
-          "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.",
+          "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files) or Word templates (.dotx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', '.dotx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx or .dotx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.",
           "added_at": "2026-06-25",
           "extracted_path": "extracted-skills/anthropic/docx"
         },
@@ -407,7 +405,7 @@
             "docs",
             "coding"
           ],
-          "description": "Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \\\"deck,\\\" \\\"slides,\\\" \\\"presentation,\\\" or references a .pptx filename, regardless of what they plan to do with the content afterward. If a .pptx file needs to be opened, created, or touched, use this skill.",
+          "description": "Use this skill any time a .pptx or .potx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx or .potx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates (.potx), layouts, speaker notes, or comments. Trigger whenever the user mentions \\\"deck,\\\" \\\"slides,\\\" \\\"presentation,\\\" or references a .pptx or .potx filename, regardless of what they plan to do with the content afterward. If a .pptx or .potx file needs to be opened, created, or touched, use this skill.",
           "added_at": "2026-06-25",
           "extracted_path": "extracted-skills/anthropic/pptx"
         },
@@ -491,7 +489,7 @@
             "coding",
             "data"
           ],
-          "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \\\"the xlsx in my downloads\\\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved.",
+          "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .xltx, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \\\"the xlsx in my downloads\\\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved.",
           "added_at": "2026-06-25",
           "extracted_path": "extracted-skills/anthropic/xlsx"
         },
@@ -517,7 +515,7 @@
         "root": "extracted-skills/anthropic",
         "source_library": "anthropic",
         "source_path": "libraries/anthropic",
-        "last_extracted_commit": "57546260929473d4e0d1c1bb75297be2fdfa1949",
+        "last_extracted_commit": "fa0fa64bdc967915dc8399e803be67759e1e62b8",
         "skill_count": 18
       },
       "category": "personal-collection",
@@ -531,7 +529,7 @@
         "type": "github",
         "repo": "JimLiu/baoyu-skills",
         "ref": "main",
-        "commit": "348dc826123c306999b511d8c0417e4642ea82eb"
+        "commit": "6b7a2e417500561a5ecdd0b168332f4142584617"
       },
       "tags": [
         "browser",
@@ -545,8 +543,8 @@
       ],
       "description": "baoyu-skills",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 21,
       "skills": [
         {
@@ -840,7 +838,7 @@
           ],
           "description": "Summarizes WeChat group chat highlights into a structured digest using the local wx-cli binary (https://github.com/jackwener/wx-cli). Generates a normal digest by default; a roast (毒舌) version is opt-in. Maintains per-group history (history.json + history-digests.jsonl), per-user profiles, and per-group fact memory (memory.md) across runs, with privacy guardrails baked in. Use when the user asks to \"总结群聊\", \"群聊精华\", \"群聊摘要\", \"summarize group chat\", \"group chat digest\", mentions a WeChat group name with a time range, says \"帮我看看 XX 群最近聊了什么\", \"XX 群有什么值得看的\", or asks to \"回溯画像\" / \"初始化画像\" / \"backfill profiles\". Adds the roast version when the user says \"毒舌版\", \"roast 版\", \"再来个毒舌的\", or similar.",
           "added_at": "2026-05-17",
-          "version": "1.117.4",
+          "version": "1.119.0",
           "extracted_path": "extracted-skills/baoyu-skills/baoyu-wechat-summary"
         },
         {
@@ -885,7 +883,7 @@
         "root": "extracted-skills/baoyu-skills",
         "source_library": "baoyu-skills",
         "source_path": "libraries/baoyu-skills",
-        "last_extracted_commit": "348dc826123c306999b511d8c0417e4642ea82eb",
+        "last_extracted_commit": "6b7a2e417500561a5ecdd0b168332f4142584617",
         "skill_count": 21
       },
       "category": "content-creation"
@@ -906,7 +904,7 @@
       ],
       "description": "Codex Complexity Optimizer",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-05-17",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-05-17",
       "skill_count": 1,
       "skills": [
@@ -914,7 +912,7 @@
           "id": "complexity-optimizer",
           "name": "complexity-optimizer",
           "path": "libraries/codex-complexity-optimizer/complexity-optimizer",
-          "original_path": "complexity-optimizer",
+          "original_path": "libraries/codex-complexity-optimizer/complexity-optimizer",
           "tags": [
             "docs",
             "coding"
@@ -944,7 +942,7 @@
       "source": {
         "type": "github",
         "repo": "ComposioHQ/awesome-claude-skills",
-        "ref": "main",
+        "ref": "master",
         "commit": "92568c1edaff1bde5371154f036d959346c145a8",
         "original_path": "content-research-writer"
       },
@@ -955,7 +953,7 @@
       ],
       "description": "Content Research Writer",
       "added_at": "2026-06-25",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 1,
       "skills": [
@@ -963,7 +961,7 @@
           "id": "content-research-writer",
           "name": "content-research-writer",
           "path": "libraries/content-research-writer",
-          "original_path": ".",
+          "original_path": "libraries/content-research-writer",
           "tags": [
             "docs",
             "coding",
@@ -997,7 +995,7 @@
         "type": "github",
         "repo": "upstash/context7",
         "ref": "master",
-        "commit": "0647bb345173bee4eb48055b92f8439f48a06ebc",
+        "commit": "23843e9ce62908896cf2dcd32cc5c03c05047416",
         "original_path": "skills/context7-cli"
       },
       "tags": [
@@ -1009,15 +1007,15 @@
       ],
       "description": "ctx7 CLI",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 1,
       "skills": [
         {
           "id": "context7-cli",
           "name": "context7-cli",
           "path": "libraries/context7-cli",
-          "original_path": ".",
+          "original_path": "libraries/context7-cli",
           "tags": [
             "docs",
             "coding",
@@ -1038,7 +1036,7 @@
         "root": "extracted-skills/context7-cli",
         "source_library": "context7-cli",
         "source_path": "libraries/context7-cli",
-        "last_extracted_commit": "0647bb345173bee4eb48055b92f8439f48a06ebc",
+        "last_extracted_commit": "23843e9ce62908896cf2dcd32cc5c03c05047416",
         "skill_count": 1
       },
       "category": "coding-tools"
@@ -1062,7 +1060,7 @@
       ],
       "description": "EdgeOne Pages Skills",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-05-17",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-05-17",
       "skill_count": 2,
       "skills": [
@@ -1070,7 +1068,7 @@
           "id": "edgeone-pages-deploy",
           "name": "edgeone-pages-deploy",
           "path": "libraries/edgeone-pages-skills/skills/edgeone-pages-deploy",
-          "original_path": "skills/edgeone-pages-deploy",
+          "original_path": "libraries/edgeone-pages-skills/skills/edgeone-pages-deploy",
           "tags": [
             "docs",
             "coding",
@@ -1079,14 +1077,13 @@
           ],
           "description": "This skill deploys frontend and full-stack projects to EdgeOne Pages (Tencent EdgeOne). It should be used when the user's primary intent is to deploy, publish, ship, host, launch, go live, or release a new version — e.g. \"deploy my app\", \"publish this site\", \"push this live\", \"create a preview deployment\", \"deploy to EdgeOne\", \"ship to production\", \"上线\", \"发布\", \"发一版\", \"重新部署\". Do NOT trigger when deployment is only mentioned as a secondary step (e.g. \"write an API and deploy it\" — primary intent is writing code, use edgeone-pages-dev). Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy — use edgeone-pages-dev for troubleshooting).",
           "added_at": "2026-05-17",
-          "version": "2.0.0",
           "extracted_path": "extracted-skills/edgeone-pages-skills/edgeone-pages-deploy"
         },
         {
           "id": "edgeone-pages-dev",
           "name": "edgeone-pages-dev",
           "path": "libraries/edgeone-pages-skills/skills/edgeone-pages-dev",
-          "original_path": "skills/edgeone-pages-dev",
+          "original_path": "libraries/edgeone-pages-skills/skills/edgeone-pages-dev",
           "tags": [
             "docs",
             "coding",
@@ -1095,7 +1092,6 @@
           ],
           "description": "This skill guides development of full-stack features on EdgeOne Pages — Edge Functions, Cloud Functions (Node.js / Go / Python runtimes), Middleware, KV Storage, and local dev workflows. It should be used when the user wants to create APIs, serverless functions, middleware, WebSocket endpoints, or full-stack features specifically on EdgeOne Pages — e.g. \"create an API\", \"add a serverless function\", \"write middleware\", \"build a full-stack app\", \"add WebSocket support\", \"set up edge functions\", \"use KV storage\", \"create a Go API\", \"build a Python backend\", \"use Flask/FastAPI/Gin on EdgeOne Pages\". Do NOT trigger for framework-native features (Next.js API routes, Next.js middleware, Nuxt server routes) or generic Express/Koa development outside an EdgeOne Pages project. Do NOT trigger for deployment — use edgeone-pages-deploy instead. Do NOT trigger for other platforms (Cloudflare Workers, Vercel Functions, AWS Lambda).",
           "added_at": "2026-05-17",
-          "version": "4.0.0",
           "extracted_path": "extracted-skills/edgeone-pages-skills/edgeone-pages-dev"
         }
       ],
@@ -1131,7 +1127,7 @@
       ],
       "description": "Frontend Slides",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 2,
       "skills": [
@@ -1139,7 +1135,7 @@
           "id": "frontend-slides",
           "name": "frontend-slides",
           "path": "libraries/frontend-slides/plugins/frontend-slides/skills/frontend-slides",
-          "original_path": "plugins/frontend-slides/skills/frontend-slides",
+          "original_path": "libraries/frontend-slides/plugins/frontend-slides/skills/frontend-slides",
           "tags": [
             "docs",
             "coding",
@@ -1153,7 +1149,7 @@
           "id": "frontend-slides-2",
           "name": "frontend-slides",
           "path": "libraries/frontend-slides",
-          "original_path": ".",
+          "original_path": "libraries/frontend-slides",
           "tags": [
             "docs",
             "coding",
@@ -1195,7 +1191,7 @@
       ],
       "description": "GSAP Core",
       "added_at": "2026-06-26",
-      "last_checked_at": "2026-06-26",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-26",
       "skill_count": 8,
       "skills": [
@@ -1203,7 +1199,7 @@
           "id": "gsap-core",
           "name": "gsap-core",
           "path": "libraries/gsap-skills/gsap-core",
-          "original_path": "gsap-core",
+          "original_path": "libraries/gsap-skills/gsap-core",
           "tags": [
             "docs",
             "coding",
@@ -1218,7 +1214,7 @@
           "id": "gsap-frameworks",
           "name": "gsap-frameworks",
           "path": "libraries/gsap-skills/gsap-frameworks",
-          "original_path": "gsap-frameworks",
+          "original_path": "libraries/gsap-skills/gsap-frameworks",
           "tags": [
             "docs",
             "coding",
@@ -1232,7 +1228,7 @@
           "id": "gsap-performance",
           "name": "gsap-performance",
           "path": "libraries/gsap-skills/gsap-performance",
-          "original_path": "gsap-performance",
+          "original_path": "libraries/gsap-skills/gsap-performance",
           "tags": [
             "docs",
             "coding"
@@ -1245,7 +1241,7 @@
           "id": "gsap-plugins",
           "name": "gsap-plugins",
           "path": "libraries/gsap-skills/gsap-plugins",
-          "original_path": "gsap-plugins",
+          "original_path": "libraries/gsap-skills/gsap-plugins",
           "tags": [
             "image",
             "docs",
@@ -1259,7 +1255,7 @@
           "id": "gsap-react",
           "name": "gsap-react",
           "path": "libraries/gsap-skills/gsap-react",
-          "original_path": "gsap-react",
+          "original_path": "libraries/gsap-skills/gsap-react",
           "tags": [
             "docs",
             "coding",
@@ -1273,7 +1269,7 @@
           "id": "gsap-scrolltrigger",
           "name": "gsap-scrolltrigger",
           "path": "libraries/gsap-skills/gsap-scrolltrigger",
-          "original_path": "gsap-scrolltrigger",
+          "original_path": "libraries/gsap-skills/gsap-scrolltrigger",
           "tags": [
             "docs",
             "coding",
@@ -1287,7 +1283,7 @@
           "id": "gsap-timeline",
           "name": "gsap-timeline",
           "path": "libraries/gsap-skills/gsap-timeline",
-          "original_path": "gsap-timeline",
+          "original_path": "libraries/gsap-skills/gsap-timeline",
           "tags": [
             "docs",
             "coding"
@@ -1300,7 +1296,7 @@
           "id": "gsap-utils",
           "name": "gsap-utils",
           "path": "libraries/gsap-skills/gsap-utils",
-          "original_path": "gsap-utils",
+          "original_path": "libraries/gsap-skills/gsap-utils",
           "tags": [
             "docs",
             "coding"
@@ -1341,7 +1337,7 @@
       ],
       "description": "Guizang PPT Skill · 网页 PPT / 配图 / 封面",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 1,
       "skills": [
@@ -1349,7 +1345,7 @@
           "id": "guizang-ppt-skill",
           "name": "guizang-ppt-skill",
           "path": "libraries/guizang-ppt-skill",
-          "original_path": ".",
+          "original_path": "libraries/guizang-ppt-skill",
           "tags": [
             "docs",
             "coding",
@@ -1383,7 +1379,7 @@
         "type": "github",
         "repo": "op7418/guizang-social-card-skill",
         "ref": "main",
-        "commit": "032782ff67e0a20416bae8159f67000c1e4e7ae2",
+        "commit": "cf4b810fac1c73fb65a2bb31d8c9278d82cbc4c5",
         "original_path": "."
       },
       "tags": [
@@ -1394,22 +1390,22 @@
       ],
       "description": "Guizang Social Card Skill · 小红书图文 / 公众号封面对",
       "added_at": "2026-06-25",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 1,
       "skills": [
         {
           "id": "guizang-social-card-skill",
           "name": "guizang-social-card-skill",
           "path": "libraries/guizang-social-card-skill",
-          "original_path": ".",
+          "original_path": "libraries/guizang-social-card-skill",
           "tags": [
             "image",
             "docs",
             "coding",
             "frontend"
           ],
-          "description": "Generate Guizang-style social card image sets and WeChat official account cover pairs from articles, scripts, screenshots, product notes, subtitles, or photos. Use when the user asks for 小红书图文, Rednote/Xiaohongshu images, social cards, carousel images, 3:4 covers, 微信公众号封面, WeChat 21:9 + 1:1 covers, Swiss Style, or magazine-style social images.",
+          "description": "Generate Guizang-style social card image sets, Live Photo motion cards, material-first Live Photo puzzle layouts, triple Live Photo collages, long-video-to-Live-Photo treatments, and WeChat official account cover pairs from articles, scripts, screenshots, product notes, subtitles, photos, or user-supplied videos. Use when the user asks for 小红书图文, Rednote/Xiaohongshu images, social cards, carousel images, 3:4 covers, Live Photo, 实况照片, 单视频实况拼图, 二宫格实况拼图, 三连实况拼图, 四宫格实况拼图, 微信公众号封面, WeChat 21:9 + 1:1 covers, Swiss Style, or magazine-style social images.",
           "added_at": "2026-06-25",
           "extracted_path": "extracted-skills/guizang-social-card-skill/guizang-social-card-skill"
         }
@@ -1424,7 +1420,7 @@
         "root": "extracted-skills/guizang-social-card-skill",
         "source_library": "guizang-social-card-skill",
         "source_path": "libraries/guizang-social-card-skill",
-        "last_extracted_commit": "032782ff67e0a20416bae8159f67000c1e4e7ae2",
+        "last_extracted_commit": "cf4b810fac1c73fb65a2bb31d8c9278d82cbc4c5",
         "skill_count": 1
       },
       "category": "content-creation",
@@ -1438,7 +1434,7 @@
         "type": "github",
         "repo": "nexu-io/html-anything",
         "ref": "main",
-        "commit": "8fd5227d6e5d826f856029372ef84359d9374eb6",
+        "commit": "d0efb1eaa3b65c731709981718cd5a0a0d4e8f71",
         "original_path": "next/src/lib/templates/skills"
       },
       "tags": [
@@ -1450,15 +1446,15 @@
       ],
       "description": "",
       "added_at": "2026-06-25",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
-      "skill_count": 78,
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
+      "skill_count": 81,
       "skills": [
         {
           "id": "article-magazine",
           "name": "article-magazine",
           "path": "libraries/html-anything/article-magazine",
-          "original_path": "article-magazine",
+          "original_path": "libraries/html-anything/article-magazine",
           "tags": [
             "docs",
             "coding"
@@ -1468,10 +1464,23 @@
           "extracted_path": "extracted-skills/html-anything/article-magazine"
         },
         {
+          "id": "article-sketchnote-editorial",
+          "name": "article-sketchnote-editorial",
+          "path": "libraries/html-anything/article-sketchnote-editorial",
+          "original_path": "libraries/html-anything/article-sketchnote-editorial",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "把一个概念铸成杂志专题档案——真问题→失败→转折→顿悟→命名, 6 个 layout 模具 + 4 字族对比 + 探案档案细节",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/html-anything/article-sketchnote-editorial"
+        },
+        {
           "id": "blog-post",
           "name": "blog-post",
           "path": "libraries/html-anything/blog-post",
-          "original_path": "blog-post",
+          "original_path": "libraries/html-anything/blog-post",
           "tags": [
             "docs",
             "coding"
@@ -1484,7 +1493,7 @@
           "id": "card-twitter",
           "name": "card-twitter",
           "path": "libraries/html-anything/card-twitter",
-          "original_path": "card-twitter",
+          "original_path": "libraries/html-anything/card-twitter",
           "tags": [
             "docs",
             "coding"
@@ -1497,7 +1506,7 @@
           "id": "card-xiaohongshu",
           "name": "card-xiaohongshu",
           "path": "libraries/html-anything/card-xiaohongshu",
-          "original_path": "card-xiaohongshu",
+          "original_path": "libraries/html-anything/card-xiaohongshu",
           "tags": [
             "docs",
             "coding"
@@ -1510,7 +1519,7 @@
           "id": "competitive-teardown",
           "name": "competitive-teardown",
           "path": "libraries/html-anything/competitive-teardown",
-          "original_path": "competitive-teardown",
+          "original_path": "libraries/html-anything/competitive-teardown",
           "tags": [
             "docs",
             "coding"
@@ -1523,7 +1532,7 @@
           "id": "dashboard",
           "name": "dashboard",
           "path": "libraries/html-anything/dashboard",
-          "original_path": "dashboard",
+          "original_path": "libraries/html-anything/dashboard",
           "tags": [
             "docs",
             "coding"
@@ -1536,7 +1545,7 @@
           "id": "data-report",
           "name": "data-report",
           "path": "libraries/html-anything/data-report",
-          "original_path": "data-report",
+          "original_path": "libraries/html-anything/data-report",
           "tags": [
             "docs",
             "coding",
@@ -1550,7 +1559,7 @@
           "id": "dating-web",
           "name": "dating-web",
           "path": "libraries/html-anything/dating-web",
-          "original_path": "dating-web",
+          "original_path": "libraries/html-anything/dating-web",
           "tags": [
             "docs",
             "coding"
@@ -1563,7 +1572,7 @@
           "id": "deck-blueprint",
           "name": "deck-blueprint",
           "path": "libraries/html-anything/deck-blueprint",
-          "original_path": "deck-blueprint",
+          "original_path": "libraries/html-anything/deck-blueprint",
           "tags": [
             "docs",
             "coding"
@@ -1576,7 +1585,7 @@
           "id": "deck-course-module",
           "name": "deck-course-module",
           "path": "libraries/html-anything/deck-course-module",
-          "original_path": "deck-course-module",
+          "original_path": "libraries/html-anything/deck-course-module",
           "tags": [
             "docs",
             "coding"
@@ -1589,7 +1598,7 @@
           "id": "deck-dir-key-nav",
           "name": "deck-dir-key-nav",
           "path": "libraries/html-anything/deck-dir-key-nav",
-          "original_path": "deck-dir-key-nav",
+          "original_path": "libraries/html-anything/deck-dir-key-nav",
           "tags": [
             "docs",
             "coding"
@@ -1602,7 +1611,7 @@
           "id": "deck-graphify-dark",
           "name": "deck-graphify-dark",
           "path": "libraries/html-anything/deck-graphify-dark",
-          "original_path": "deck-graphify-dark",
+          "original_path": "libraries/html-anything/deck-graphify-dark",
           "tags": [
             "docs",
             "coding"
@@ -1615,7 +1624,7 @@
           "id": "deck-guizang-editorial",
           "name": "deck-guizang-editorial",
           "path": "libraries/html-anything/deck-guizang-editorial",
-          "original_path": "deck-guizang-editorial",
+          "original_path": "libraries/html-anything/deck-guizang-editorial",
           "tags": [
             "docs",
             "coding",
@@ -1629,7 +1638,7 @@
           "id": "deck-hermes-cyber",
           "name": "deck-hermes-cyber",
           "path": "libraries/html-anything/deck-hermes-cyber",
-          "original_path": "deck-hermes-cyber",
+          "original_path": "libraries/html-anything/deck-hermes-cyber",
           "tags": [
             "docs",
             "coding"
@@ -1639,10 +1648,23 @@
           "extracted_path": "extracted-skills/html-anything/deck-hermes-cyber"
         },
         {
+          "id": "deck-ljg-present",
+          "name": "deck-ljg-present",
+          "path": "libraries/html-anything/deck-ljg-present",
+          "original_path": "libraries/html-anything/deck-ljg-present",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "把 outline 1:1 铸成色块大字宣言 deck, 原文不动只做美化。三档主题 black / red / yellow",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/html-anything/deck-ljg-present"
+        },
+        {
           "id": "deck-magazine-web",
           "name": "deck-magazine-web",
           "path": "libraries/html-anything/deck-magazine-web",
-          "original_path": "deck-magazine-web",
+          "original_path": "libraries/html-anything/deck-magazine-web",
           "tags": [
             "docs",
             "coding"
@@ -1655,7 +1677,7 @@
           "id": "deck-obsidian-claude",
           "name": "deck-obsidian-claude",
           "path": "libraries/html-anything/deck-obsidian-claude",
-          "original_path": "deck-obsidian-claude",
+          "original_path": "libraries/html-anything/deck-obsidian-claude",
           "tags": [
             "docs",
             "coding",
@@ -1669,7 +1691,7 @@
           "id": "deck-open-slide-canvas",
           "name": "deck-open-slide-canvas",
           "path": "libraries/html-anything/deck-open-slide-canvas",
-          "original_path": "deck-open-slide-canvas",
+          "original_path": "libraries/html-anything/deck-open-slide-canvas",
           "tags": [
             "image",
             "docs",
@@ -1685,7 +1707,7 @@
           "id": "deck-pitch",
           "name": "deck-pitch",
           "path": "libraries/html-anything/deck-pitch",
-          "original_path": "deck-pitch",
+          "original_path": "libraries/html-anything/deck-pitch",
           "tags": [
             "docs",
             "coding"
@@ -1698,7 +1720,7 @@
           "id": "deck-presenter-mode",
           "name": "deck-presenter-mode",
           "path": "libraries/html-anything/deck-presenter-mode",
-          "original_path": "deck-presenter-mode",
+          "original_path": "libraries/html-anything/deck-presenter-mode",
           "tags": [
             "docs",
             "coding"
@@ -1711,7 +1733,7 @@
           "id": "deck-product-launch",
           "name": "deck-product-launch",
           "path": "libraries/html-anything/deck-product-launch",
-          "original_path": "deck-product-launch",
+          "original_path": "libraries/html-anything/deck-product-launch",
           "tags": [
             "docs",
             "coding"
@@ -1724,7 +1746,7 @@
           "id": "deck-replit",
           "name": "deck-replit",
           "path": "libraries/html-anything/deck-replit",
-          "original_path": "deck-replit",
+          "original_path": "libraries/html-anything/deck-replit",
           "tags": [
             "docs",
             "coding"
@@ -1737,7 +1759,7 @@
           "id": "deck-safety-alert",
           "name": "deck-safety-alert",
           "path": "libraries/html-anything/deck-safety-alert",
-          "original_path": "deck-safety-alert",
+          "original_path": "libraries/html-anything/deck-safety-alert",
           "tags": [
             "docs",
             "coding"
@@ -1750,7 +1772,7 @@
           "id": "deck-simple",
           "name": "deck-simple",
           "path": "libraries/html-anything/deck-simple",
-          "original_path": "deck-simple",
+          "original_path": "libraries/html-anything/deck-simple",
           "tags": [
             "docs",
             "coding"
@@ -1763,7 +1785,7 @@
           "id": "deck-swiss-international",
           "name": "deck-swiss-international",
           "path": "libraries/html-anything/deck-swiss-international",
-          "original_path": "deck-swiss-international",
+          "original_path": "libraries/html-anything/deck-swiss-international",
           "tags": [
             "docs",
             "coding"
@@ -1776,7 +1798,7 @@
           "id": "deck-tech-sharing",
           "name": "deck-tech-sharing",
           "path": "libraries/html-anything/deck-tech-sharing",
-          "original_path": "deck-tech-sharing",
+          "original_path": "libraries/html-anything/deck-tech-sharing",
           "tags": [
             "docs",
             "coding"
@@ -1789,7 +1811,7 @@
           "id": "deck-xhs-pastel",
           "name": "deck-xhs-pastel",
           "path": "libraries/html-anything/deck-xhs-pastel",
-          "original_path": "deck-xhs-pastel",
+          "original_path": "libraries/html-anything/deck-xhs-pastel",
           "tags": [
             "docs",
             "coding"
@@ -1802,7 +1824,7 @@
           "id": "deck-xhs-post",
           "name": "deck-xhs-post",
           "path": "libraries/html-anything/deck-xhs-post",
-          "original_path": "deck-xhs-post",
+          "original_path": "libraries/html-anything/deck-xhs-post",
           "tags": [
             "docs",
             "coding"
@@ -1815,7 +1837,7 @@
           "id": "deck-xhs-white",
           "name": "deck-xhs-white",
           "path": "libraries/html-anything/deck-xhs-white",
-          "original_path": "deck-xhs-white",
+          "original_path": "libraries/html-anything/deck-xhs-white",
           "tags": [
             "docs",
             "coding"
@@ -1828,7 +1850,7 @@
           "id": "digital-eguide",
           "name": "digital-eguide",
           "path": "libraries/html-anything/digital-eguide",
-          "original_path": "digital-eguide",
+          "original_path": "libraries/html-anything/digital-eguide",
           "tags": [
             "docs",
             "coding",
@@ -1842,7 +1864,7 @@
           "id": "doc-kami-parchment",
           "name": "doc-kami-parchment",
           "path": "libraries/html-anything/doc-kami-parchment",
-          "original_path": "doc-kami-parchment",
+          "original_path": "libraries/html-anything/doc-kami-parchment",
           "tags": [
             "docs",
             "coding"
@@ -1855,7 +1877,7 @@
           "id": "docs-page",
           "name": "docs-page",
           "path": "libraries/html-anything/docs-page",
-          "original_path": "docs-page",
+          "original_path": "libraries/html-anything/docs-page",
           "tags": [
             "docs",
             "coding"
@@ -1868,7 +1890,7 @@
           "id": "email-marketing",
           "name": "email-marketing",
           "path": "libraries/html-anything/email-marketing",
-          "original_path": "email-marketing",
+          "original_path": "libraries/html-anything/email-marketing",
           "tags": [
             "docs",
             "finance",
@@ -1883,7 +1905,7 @@
           "id": "eng-runbook",
           "name": "eng-runbook",
           "path": "libraries/html-anything/eng-runbook",
-          "original_path": "eng-runbook",
+          "original_path": "libraries/html-anything/eng-runbook",
           "tags": [
             "docs",
             "coding"
@@ -1896,7 +1918,7 @@
           "id": "exec-briefing-memo",
           "name": "exec-briefing-memo",
           "path": "libraries/html-anything/exec-briefing-memo",
-          "original_path": "exec-briefing-memo",
+          "original_path": "libraries/html-anything/exec-briefing-memo",
           "tags": [
             "docs",
             "coding"
@@ -1909,7 +1931,7 @@
           "id": "experiment-readout",
           "name": "experiment-readout",
           "path": "libraries/html-anything/experiment-readout",
-          "original_path": "experiment-readout",
+          "original_path": "libraries/html-anything/experiment-readout",
           "tags": [
             "docs",
             "coding"
@@ -1922,7 +1944,7 @@
           "id": "finance-report",
           "name": "finance-report",
           "path": "libraries/html-anything/finance-report",
-          "original_path": "finance-report",
+          "original_path": "libraries/html-anything/finance-report",
           "tags": [
             "docs",
             "finance",
@@ -1936,7 +1958,7 @@
           "id": "flowai-team-dashboard",
           "name": "flowai-team-dashboard",
           "path": "libraries/html-anything/flowai-team-dashboard",
-          "original_path": "flowai-team-dashboard",
+          "original_path": "libraries/html-anything/flowai-team-dashboard",
           "tags": [
             "docs",
             "coding",
@@ -1950,7 +1972,7 @@
           "id": "frame-data-chart-nyt",
           "name": "frame-data-chart-nyt",
           "path": "libraries/html-anything/frame-data-chart-nyt",
-          "original_path": "frame-data-chart-nyt",
+          "original_path": "libraries/html-anything/frame-data-chart-nyt",
           "tags": [
             "docs",
             "coding",
@@ -1964,7 +1986,7 @@
           "id": "frame-flowchart-sticky",
           "name": "frame-flowchart-sticky",
           "path": "libraries/html-anything/frame-flowchart-sticky",
-          "original_path": "frame-flowchart-sticky",
+          "original_path": "libraries/html-anything/frame-flowchart-sticky",
           "tags": [
             "docs",
             "coding",
@@ -1978,7 +2000,7 @@
           "id": "frame-glitch-title",
           "name": "frame-glitch-title",
           "path": "libraries/html-anything/frame-glitch-title",
-          "original_path": "frame-glitch-title",
+          "original_path": "libraries/html-anything/frame-glitch-title",
           "tags": [
             "docs",
             "coding"
@@ -1991,7 +2013,7 @@
           "id": "frame-light-leak-cinema",
           "name": "frame-light-leak-cinema",
           "path": "libraries/html-anything/frame-light-leak-cinema",
-          "original_path": "frame-light-leak-cinema",
+          "original_path": "libraries/html-anything/frame-light-leak-cinema",
           "tags": [
             "docs",
             "coding"
@@ -2004,7 +2026,7 @@
           "id": "frame-liquid-bg-hero",
           "name": "frame-liquid-bg-hero",
           "path": "libraries/html-anything/frame-liquid-bg-hero",
-          "original_path": "frame-liquid-bg-hero",
+          "original_path": "libraries/html-anything/frame-liquid-bg-hero",
           "tags": [
             "docs",
             "coding",
@@ -2018,7 +2040,7 @@
           "id": "frame-logo-outro",
           "name": "frame-logo-outro",
           "path": "libraries/html-anything/frame-logo-outro",
-          "original_path": "frame-logo-outro",
+          "original_path": "libraries/html-anything/frame-logo-outro",
           "tags": [
             "docs",
             "coding"
@@ -2031,7 +2053,7 @@
           "id": "frame-macos-notification",
           "name": "frame-macos-notification",
           "path": "libraries/html-anything/frame-macos-notification",
-          "original_path": "frame-macos-notification",
+          "original_path": "libraries/html-anything/frame-macos-notification",
           "tags": [
             "docs",
             "coding"
@@ -2044,7 +2066,7 @@
           "id": "gamified-app",
           "name": "gamified-app",
           "path": "libraries/html-anything/gamified-app",
-          "original_path": "gamified-app",
+          "original_path": "libraries/html-anything/gamified-app",
           "tags": [
             "docs",
             "coding"
@@ -2057,7 +2079,7 @@
           "id": "hr-onboarding",
           "name": "hr-onboarding",
           "path": "libraries/html-anything/hr-onboarding",
-          "original_path": "hr-onboarding",
+          "original_path": "libraries/html-anything/hr-onboarding",
           "tags": [
             "docs",
             "coding"
@@ -2067,10 +2089,23 @@
           "extracted_path": "extracted-skills/html-anything/hr-onboarding"
         },
         {
+          "id": "info-funnel",
+          "name": "info-funnel",
+          "path": "libraries/html-anything/info-funnel",
+          "original_path": "libraries/html-anything/info-funnel",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "3-6 阶递减漏斗, 突出转化率 / 筛选比例 / 流量损耗。竖图适合 IG Story / 小红书",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/html-anything/info-funnel"
+        },
+        {
           "id": "invoice",
           "name": "invoice",
           "path": "libraries/html-anything/invoice",
-          "original_path": "invoice",
+          "original_path": "libraries/html-anything/invoice",
           "tags": [
             "docs",
             "coding"
@@ -2083,7 +2118,7 @@
           "id": "kanban-board",
           "name": "kanban-board",
           "path": "libraries/html-anything/kanban-board",
-          "original_path": "kanban-board",
+          "original_path": "libraries/html-anything/kanban-board",
           "tags": [
             "docs",
             "coding"
@@ -2096,7 +2131,7 @@
           "id": "live-dashboard",
           "name": "live-dashboard",
           "path": "libraries/html-anything/live-dashboard",
-          "original_path": "live-dashboard",
+          "original_path": "libraries/html-anything/live-dashboard",
           "tags": [
             "docs",
             "coding"
@@ -2109,7 +2144,7 @@
           "id": "magazine-poster",
           "name": "magazine-poster",
           "path": "libraries/html-anything/magazine-poster",
-          "original_path": "magazine-poster",
+          "original_path": "libraries/html-anything/magazine-poster",
           "tags": [
             "docs",
             "coding",
@@ -2123,7 +2158,7 @@
           "id": "meeting-notes",
           "name": "meeting-notes",
           "path": "libraries/html-anything/meeting-notes",
-          "original_path": "meeting-notes",
+          "original_path": "libraries/html-anything/meeting-notes",
           "tags": [
             "docs",
             "coding"
@@ -2136,7 +2171,7 @@
           "id": "mobile-app",
           "name": "mobile-app",
           "path": "libraries/html-anything/mobile-app",
-          "original_path": "mobile-app",
+          "original_path": "libraries/html-anything/mobile-app",
           "tags": [
             "docs",
             "coding"
@@ -2149,7 +2184,7 @@
           "id": "mobile-onboarding",
           "name": "mobile-onboarding",
           "path": "libraries/html-anything/mobile-onboarding",
-          "original_path": "mobile-onboarding",
+          "original_path": "libraries/html-anything/mobile-onboarding",
           "tags": [
             "docs",
             "coding"
@@ -2162,7 +2197,7 @@
           "id": "mockup-device-3d",
           "name": "mockup-device-3d",
           "path": "libraries/html-anything/mockup-device-3d",
-          "original_path": "mockup-device-3d",
+          "original_path": "libraries/html-anything/mockup-device-3d",
           "tags": [
             "docs",
             "coding"
@@ -2175,7 +2210,7 @@
           "id": "motion-frames",
           "name": "motion-frames",
           "path": "libraries/html-anything/motion-frames",
-          "original_path": "motion-frames",
+          "original_path": "libraries/html-anything/motion-frames",
           "tags": [
             "docs",
             "coding",
@@ -2189,7 +2224,7 @@
           "id": "pm-spec",
           "name": "pm-spec",
           "path": "libraries/html-anything/pm-spec",
-          "original_path": "pm-spec",
+          "original_path": "libraries/html-anything/pm-spec",
           "tags": [
             "docs",
             "coding"
@@ -2202,7 +2237,7 @@
           "id": "poster-hero",
           "name": "poster-hero",
           "path": "libraries/html-anything/poster-hero",
-          "original_path": "poster-hero",
+          "original_path": "libraries/html-anything/poster-hero",
           "tags": [
             "docs",
             "coding"
@@ -2215,7 +2250,7 @@
           "id": "ppt-keynote",
           "name": "ppt-keynote",
           "path": "libraries/html-anything/ppt-keynote",
-          "original_path": "ppt-keynote",
+          "original_path": "libraries/html-anything/ppt-keynote",
           "tags": [
             "docs",
             "coding"
@@ -2228,7 +2263,7 @@
           "id": "pricing-page",
           "name": "pricing-page",
           "path": "libraries/html-anything/pricing-page",
-          "original_path": "pricing-page",
+          "original_path": "libraries/html-anything/pricing-page",
           "tags": [
             "docs",
             "coding"
@@ -2241,7 +2276,7 @@
           "id": "prototype-web",
           "name": "prototype-web",
           "path": "libraries/html-anything/prototype-web",
-          "original_path": "prototype-web",
+          "original_path": "libraries/html-anything/prototype-web",
           "tags": [
             "docs",
             "coding"
@@ -2254,7 +2289,7 @@
           "id": "resume-modern",
           "name": "resume-modern",
           "path": "libraries/html-anything/resume-modern",
-          "original_path": "resume-modern",
+          "original_path": "libraries/html-anything/resume-modern",
           "tags": [
             "docs",
             "coding",
@@ -2268,7 +2303,7 @@
           "id": "saas-landing",
           "name": "saas-landing",
           "path": "libraries/html-anything/saas-landing",
-          "original_path": "saas-landing",
+          "original_path": "libraries/html-anything/saas-landing",
           "tags": [
             "docs",
             "coding"
@@ -2281,7 +2316,7 @@
           "id": "social-carousel",
           "name": "social-carousel",
           "path": "libraries/html-anything/social-carousel",
-          "original_path": "social-carousel",
+          "original_path": "libraries/html-anything/social-carousel",
           "tags": [
             "docs",
             "coding"
@@ -2294,7 +2329,7 @@
           "id": "social-media-dashboard",
           "name": "social-media-dashboard",
           "path": "libraries/html-anything/social-media-dashboard",
-          "original_path": "social-media-dashboard",
+          "original_path": "libraries/html-anything/social-media-dashboard",
           "tags": [
             "docs",
             "coding"
@@ -2307,7 +2342,7 @@
           "id": "social-media-matrix",
           "name": "social-media-matrix",
           "path": "libraries/html-anything/social-media-matrix",
-          "original_path": "social-media-matrix",
+          "original_path": "libraries/html-anything/social-media-matrix",
           "tags": [
             "docs",
             "coding"
@@ -2320,7 +2355,7 @@
           "id": "social-reddit-card",
           "name": "social-reddit-card",
           "path": "libraries/html-anything/social-reddit-card",
-          "original_path": "social-reddit-card",
+          "original_path": "libraries/html-anything/social-reddit-card",
           "tags": [
             "docs",
             "coding"
@@ -2333,7 +2368,7 @@
           "id": "social-spotify-card",
           "name": "social-spotify-card",
           "path": "libraries/html-anything/social-spotify-card",
-          "original_path": "social-spotify-card",
+          "original_path": "libraries/html-anything/social-spotify-card",
           "tags": [
             "docs",
             "coding"
@@ -2346,7 +2381,7 @@
           "id": "social-x-post-card",
           "name": "social-x-post-card",
           "path": "libraries/html-anything/social-x-post-card",
-          "original_path": "social-x-post-card",
+          "original_path": "libraries/html-anything/social-x-post-card",
           "tags": [
             "docs",
             "coding"
@@ -2359,7 +2394,7 @@
           "id": "sprite-animation",
           "name": "sprite-animation",
           "path": "libraries/html-anything/sprite-animation",
-          "original_path": "sprite-animation",
+          "original_path": "libraries/html-anything/sprite-animation",
           "tags": [
             "docs",
             "coding",
@@ -2373,7 +2408,7 @@
           "id": "team-okrs",
           "name": "team-okrs",
           "path": "libraries/html-anything/team-okrs",
-          "original_path": "team-okrs",
+          "original_path": "libraries/html-anything/team-okrs",
           "tags": [
             "docs",
             "coding"
@@ -2386,7 +2421,7 @@
           "id": "vfx-text-cursor",
           "name": "vfx-text-cursor",
           "path": "libraries/html-anything/vfx-text-cursor",
-          "original_path": "vfx-text-cursor",
+          "original_path": "libraries/html-anything/vfx-text-cursor",
           "tags": [
             "docs",
             "coding"
@@ -2399,7 +2434,7 @@
           "id": "video-hyperframes",
           "name": "video-hyperframes",
           "path": "libraries/html-anything/video-hyperframes",
-          "original_path": "video-hyperframes",
+          "original_path": "libraries/html-anything/video-hyperframes",
           "tags": [
             "docs",
             "coding"
@@ -2412,7 +2447,7 @@
           "id": "waitlist-page",
           "name": "waitlist-page",
           "path": "libraries/html-anything/waitlist-page",
-          "original_path": "waitlist-page",
+          "original_path": "libraries/html-anything/waitlist-page",
           "tags": [
             "docs",
             "coding"
@@ -2425,7 +2460,7 @@
           "id": "web-proto-brutalist",
           "name": "web-proto-brutalist",
           "path": "libraries/html-anything/web-proto-brutalist",
-          "original_path": "web-proto-brutalist",
+          "original_path": "libraries/html-anything/web-proto-brutalist",
           "tags": [
             "docs",
             "coding"
@@ -2438,7 +2473,7 @@
           "id": "web-proto-editorial",
           "name": "web-proto-editorial",
           "path": "libraries/html-anything/web-proto-editorial",
-          "original_path": "web-proto-editorial",
+          "original_path": "libraries/html-anything/web-proto-editorial",
           "tags": [
             "image",
             "docs",
@@ -2453,7 +2488,7 @@
           "id": "web-proto-soft",
           "name": "web-proto-soft",
           "path": "libraries/html-anything/web-proto-soft",
-          "original_path": "web-proto-soft",
+          "original_path": "libraries/html-anything/web-proto-soft",
           "tags": [
             "image",
             "docs",
@@ -2468,7 +2503,7 @@
           "id": "weekly-update",
           "name": "weekly-update",
           "path": "libraries/html-anything/weekly-update",
-          "original_path": "weekly-update",
+          "original_path": "libraries/html-anything/weekly-update",
           "tags": [
             "docs",
             "coding"
@@ -2481,7 +2516,7 @@
           "id": "wireframe-sketch",
           "name": "wireframe-sketch",
           "path": "libraries/html-anything/wireframe-sketch",
-          "original_path": "wireframe-sketch",
+          "original_path": "libraries/html-anything/wireframe-sketch",
           "tags": [
             "docs",
             "coding"
@@ -2499,8 +2534,8 @@
         "root": "extracted-skills/html-anything",
         "source_library": "html-anything",
         "source_path": "libraries/html-anything",
-        "last_extracted_commit": "8fd5227d6e5d826f856029372ef84359d9374eb6",
-        "skill_count": 78
+        "last_extracted_commit": "d0efb1eaa3b65c731709981718cd5a0a0d4e8f71",
+        "skill_count": 81
       },
       "category": "frontend-presentation",
       "category_locked": true
@@ -2524,7 +2559,7 @@
       ],
       "description": "huashu-md-html",
       "added_at": "2026-06-26",
-      "last_checked_at": "2026-06-26",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-26",
       "skill_count": 1,
       "skills": [
@@ -2532,7 +2567,7 @@
           "id": "huashu-md-html",
           "name": "huashu-md-html",
           "path": "libraries/huashu-md-html",
-          "original_path": ".",
+          "original_path": "libraries/huashu-md-html",
           "tags": [
             "docs",
             "coding",
@@ -2580,7 +2615,7 @@
       ],
       "description": "huashu-skills",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-05-17",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-05-17",
       "skill_count": 21,
       "skills": [
@@ -2588,7 +2623,7 @@
           "id": "huashu-agent-swarm",
           "name": "huashu-agent-swarm",
           "path": "libraries/huashu-skills/huashu-agent-swarm",
-          "original_path": "huashu-agent-swarm",
+          "original_path": "libraries/huashu-skills/huashu-agent-swarm",
           "tags": [
             "docs",
             "coding",
@@ -2602,7 +2637,7 @@
           "id": "huashu-article-edit",
           "name": "huashu-article-edit",
           "path": "libraries/huashu-skills/huashu-article-edit",
-          "original_path": "huashu-article-edit",
+          "original_path": "libraries/huashu-skills/huashu-article-edit",
           "tags": [
             "docs",
             "coding"
@@ -2615,7 +2650,7 @@
           "id": "huashu-article-to-x",
           "name": "huashu-article-to-x",
           "path": "libraries/huashu-skills/huashu-article-to-x",
-          "original_path": "huashu-article-to-x",
+          "original_path": "libraries/huashu-skills/huashu-article-to-x",
           "tags": [
             "docs",
             "coding"
@@ -2628,7 +2663,7 @@
           "id": "huashu-data-pro",
           "name": "huashu-data-pro",
           "path": "libraries/huashu-skills/huashu-data-pro",
-          "original_path": "huashu-data-pro",
+          "original_path": "libraries/huashu-skills/huashu-data-pro",
           "tags": [
             "docs",
             "coding",
@@ -2642,7 +2677,7 @@
           "id": "huashu-design",
           "name": "huashu-design",
           "path": "libraries/huashu-skills/huashu-design",
-          "original_path": "huashu-design",
+          "original_path": "libraries/huashu-skills/huashu-design",
           "tags": [
             "docs",
             "coding"
@@ -2655,7 +2690,7 @@
           "id": "huashu-douyin-script",
           "name": "huashu-douyin-script",
           "path": "libraries/huashu-skills/huashu-douyin-script",
-          "original_path": "huashu-douyin-script",
+          "original_path": "libraries/huashu-skills/huashu-douyin-script",
           "tags": [
             "docs",
             "coding"
@@ -2668,7 +2703,7 @@
           "id": "huashu-image-upload",
           "name": "huashu-image-upload",
           "path": "libraries/huashu-skills/huashu-image-upload",
-          "original_path": "huashu-image-upload",
+          "original_path": "libraries/huashu-skills/huashu-image-upload",
           "tags": [
             "image",
             "docs",
@@ -2682,7 +2717,7 @@
           "id": "huashu-info-search",
           "name": "huashu-info-search",
           "path": "libraries/huashu-skills/huashu-info-search",
-          "original_path": "huashu-info-search",
+          "original_path": "libraries/huashu-skills/huashu-info-search",
           "tags": [
             "docs",
             "coding",
@@ -2696,7 +2731,7 @@
           "id": "huashu-material-search",
           "name": "huashu-material-search",
           "path": "libraries/huashu-skills/huashu-material-search",
-          "original_path": "huashu-material-search",
+          "original_path": "libraries/huashu-skills/huashu-material-search",
           "tags": [
             "docs",
             "coding",
@@ -2710,7 +2745,7 @@
           "id": "huashu-md-to-pdf",
           "name": "huashu-md-to-pdf",
           "path": "libraries/huashu-skills/huashu-md-to-pdf",
-          "original_path": "huashu-md-to-pdf",
+          "original_path": "libraries/huashu-skills/huashu-md-to-pdf",
           "tags": [
             "docs",
             "coding",
@@ -2724,7 +2759,7 @@
           "id": "huashu-prompt-save",
           "name": "huashu-prompt-save",
           "path": "libraries/huashu-skills/huashu-prompt-save",
-          "original_path": "huashu-prompt-save",
+          "original_path": "libraries/huashu-skills/huashu-prompt-save",
           "tags": [
             "docs",
             "coding"
@@ -2737,7 +2772,7 @@
           "id": "huashu-proofreading",
           "name": "huashu-proofreading",
           "path": "libraries/huashu-skills/huashu-proofreading",
-          "original_path": "huashu-proofreading",
+          "original_path": "libraries/huashu-skills/huashu-proofreading",
           "tags": [
             "docs",
             "coding"
@@ -2750,7 +2785,7 @@
           "id": "huashu-research",
           "name": "huashu-research",
           "path": "libraries/huashu-skills/huashu-research",
-          "original_path": "huashu-research",
+          "original_path": "libraries/huashu-skills/huashu-research",
           "tags": [
             "docs",
             "coding",
@@ -2764,7 +2799,7 @@
           "id": "huashu-script-polish",
           "name": "huashu-script-polish",
           "path": "libraries/huashu-skills/huashu-script-polish",
-          "original_path": "huashu-script-polish",
+          "original_path": "libraries/huashu-skills/huashu-script-polish",
           "tags": [
             "docs",
             "coding"
@@ -2777,7 +2812,7 @@
           "id": "huashu-slides",
           "name": "huashu-slides",
           "path": "libraries/huashu-skills/huashu-slides",
-          "original_path": "huashu-slides",
+          "original_path": "libraries/huashu-skills/huashu-slides",
           "tags": [
             "docs",
             "coding"
@@ -2790,7 +2825,7 @@
           "id": "huashu-speech-coach",
           "name": "huashu-speech-coach",
           "path": "libraries/huashu-skills/huashu-speech-coach",
-          "original_path": "huashu-speech-coach",
+          "original_path": "libraries/huashu-skills/huashu-speech-coach",
           "tags": [
             "docs",
             "coding"
@@ -2803,7 +2838,7 @@
           "id": "huashu-topic-gen",
           "name": "huashu-topic-gen",
           "path": "libraries/huashu-skills/huashu-topic-gen",
-          "original_path": "huashu-topic-gen",
+          "original_path": "libraries/huashu-skills/huashu-topic-gen",
           "tags": [
             "docs",
             "coding"
@@ -2816,7 +2851,7 @@
           "id": "huashu-video-check",
           "name": "huashu-video-check",
           "path": "libraries/huashu-skills/huashu-video-check",
-          "original_path": "huashu-video-check",
+          "original_path": "libraries/huashu-skills/huashu-video-check",
           "tags": [
             "docs",
             "coding"
@@ -2829,7 +2864,7 @@
           "id": "huashu-video-outline",
           "name": "huashu-video-outline",
           "path": "libraries/huashu-skills/huashu-video-outline",
-          "original_path": "huashu-video-outline",
+          "original_path": "libraries/huashu-skills/huashu-video-outline",
           "tags": [
             "docs",
             "coding"
@@ -2842,7 +2877,7 @@
           "id": "huashu-wechat-image",
           "name": "huashu-wechat-image",
           "path": "libraries/huashu-skills/huashu-wechat-image",
-          "original_path": "huashu-wechat-image",
+          "original_path": "libraries/huashu-skills/huashu-wechat-image",
           "tags": [
             "image",
             "docs",
@@ -2856,7 +2891,7 @@
           "id": "huashu-xhs-image",
           "name": "huashu-xhs-image",
           "path": "libraries/huashu-skills/huashu-xhs-image",
-          "original_path": "huashu-xhs-image",
+          "original_path": "libraries/huashu-skills/huashu-xhs-image",
           "tags": [
             "image",
             "docs",
@@ -2888,7 +2923,7 @@
         "type": "github",
         "repo": "pbakaus/impeccable",
         "ref": "main",
-        "commit": "d2ab4ddee6fa63002fae680652b5fbd31735e280"
+        "commit": "8967edc988ee146823bca3c51fcf51296e9dec18"
       },
       "tags": [
         "automation",
@@ -2900,8 +2935,8 @@
       ],
       "description": "Impeccable",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 1,
       "skills": [
         {
@@ -2917,7 +2952,7 @@
           ],
           "description": "Use when the user wants to design, redesign, shape, critique, audit, polish, clarify, distill, harden, optimize, adapt, animate, colorize, extract, or otherwise improve a frontend interface. Covers websites, landing pages, dashboards, product UI, app shells, components, forms, settings, onboarding, and empty states. Handles UX review, visual hierarchy, information architecture, cognitive load, accessibility, performance, responsive behavior, theming, anti-patterns, typography, fonts, spacing, layout, alignment, color, motion, micro-interactions, UX copy, error states, edge cases, i18n, and reusable design systems or tokens. Also use for bland designs that need to become bolder or more delightful, loud designs that should become quieter, live browser iteration on UI elements, or ambitious visual effects that should feel technically extraordinary. Not for backend-only or non-UI tasks.",
           "added_at": "2026-05-17",
-          "version": "3.8.0",
+          "version": "3.9.1",
           "extracted_path": "extracted-skills/impeccable/impeccable"
         }
       ],
@@ -2931,7 +2966,7 @@
         "root": "extracted-skills/impeccable",
         "source_library": "impeccable",
         "source_path": "libraries/impeccable",
-        "last_extracted_commit": "d2ab4ddee6fa63002fae680652b5fbd31735e280",
+        "last_extracted_commit": "8967edc988ee146823bca3c51fcf51296e9dec18",
         "skill_count": 1
       },
       "category": "frontend-presentation"
@@ -2944,7 +2979,7 @@
         "type": "github",
         "repo": "tw93/Kami",
         "ref": "main",
-        "commit": "594bfb8f2c62f26102a377c2e6cdb8cafa7d61f1"
+        "commit": "f97bfc9ef83626edb863f6e42632067047a23601"
       },
       "tags": [
         "coding",
@@ -2955,8 +2990,8 @@
       ],
       "description": "Why",
       "added_at": "2026-07-02",
-      "last_checked_at": "2026-07-02",
-      "last_synced_at": "2026-07-02",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 2,
       "skills": [
         {
@@ -2995,14 +3030,14 @@
       "install": {
         "method": "npx",
         "extracted_root": "extracted-skills/kami",
-        "command": "npx skills add tw93/kami/plugins/kami/skills/kami -a '*' -g -y",
+        "command": "npx skills add tw93/kami/plugins/kami -a universal -g -y",
         "fallback": "extracted"
       },
       "extracted": {
         "root": "extracted-skills/kami",
         "source_library": "kami",
         "source_path": "libraries/kami",
-        "last_extracted_commit": "594bfb8f2c62f26102a377c2e6cdb8cafa7d61f1",
+        "last_extracted_commit": "f97bfc9ef83626edb863f6e42632067047a23601",
         "skill_count": 2
       },
       "category": "document-data",
@@ -3016,7 +3051,7 @@
         "type": "github",
         "repo": "lijigang/ljg-skills",
         "ref": "master",
-        "commit": "52d8ac25f243221c7cdfc99d04a3b1ad479497d1"
+        "commit": "df4e2ff2afaf6e56c7d2751571cd821f94392ece"
       },
       "tags": [
         "automation",
@@ -3030,10 +3065,23 @@
       ],
       "description": "ljg-skills",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
-      "skill_count": 23,
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
+      "skill_count": 21,
       "skills": [
+        {
+          "id": "ljg-blind",
+          "name": "ljg-blind",
+          "path": "libraries/ljg-skills/skills/ljg-blind",
+          "original_path": "skills/ljg-blind",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "盲区扫描——读昨天你与 AI 的全部对话，照出暴露的思维盲区（不是不懂的知识，是让某类真相一直看不见的思维习惯），再从微信读书挑一本书的一章精准补上，落成一篇完整分析笔记。Use when user says '扫盲区', '盲区', '照盲区', '看看我的思维盲区', '我昨天想漏了什么', 'blind spot', 'ljg-blind', '/ljg-blind', or wants yesterday's AI conversations analyzed for cognitive blind spots plus a targeted weread chapter to fill them. 可选参数：传一个日期(YYYY-MM-DD)扫那天而非昨天。NOT FOR 纵向深钻一个观点（用 ljg-think）、一个领域降秩（用 ljg-rank）、陪读一篇文本（用 ljg-read）、找一个领域的约束（用 ljg-constraint）。",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/ljg-skills/ljg-blind"
+        },
         {
           "id": "ljg-book",
           "name": "ljg-book",
@@ -3044,7 +3092,7 @@
             "coding",
             "research"
           ],
-          "description": "拆一本书，以「问题」为轴心走一条线。五件事：作者在答什么问题（问题），这个问题之前各流派/社会共识怎么答（零点），作者带来什么独特洞见——公式/理论框架/模型/概念四选一——相对共识挪动了什么（位移/delta），落成哪句结论（落点），最后萃一个 takeaway 作为精神内核（行囊）。收尾画一张 ASCII 参考系图（千脑智能式）：各流派、旧共识、作者钉到同一张图的位置上，delta 是图上一段看得见的距离，再走两步做预测——看懂这本书在认知史里挪动了哪一步，还能拿它预测书外的新事。Use when user says '拆书', '拆这本', '分析这本书', '这本书在讲什么', '上帝之眼看这本书', '压缩一本书', 'book', or shares a book name wanting structural analysis. NOT FOR 章节摘要（用 Fabric extract_wisdom）、论文（用 ljg-paper）、单一观点深钻（用 ljg-think）、一个领域降秩（用 ljg-rank）.",
+          "description": "Book reader that reconstructs a book as x -> f -> f(x): the problem it addresses, the author's central answer, and how that answer changes judgment or action. USE WHEN the user gives a book title, PDF, excerpt, or asks 拆书, 分析这本书, 这本书在讲什么, 压缩一本书, or book. Defaults to a saved org note. NOT FOR chapter summaries, framework audits, papers, single-idea deep dives, or field ranking.",
           "added_at": "2026-06-25",
           "extracted_path": "extracted-skills/ljg-skills/ljg-book"
         },
@@ -3059,8 +3107,22 @@
           ],
           "description": "Content caster (铸). Transforms content into PNG visuals. Seven molds: -l (default) long reading card, -i infograph, -m multi-card reading cards (1080x1440), -v editorial sketchnote (problem→failure→pivot→insight→naming, magazine + archive layout), -c comic (manga-style B&W), -w whiteboard (marker-style board layout), -b big-fonts attachment card (1080x1440, weathered 碑刻 style for 小红书). Output to ~/Downloads/. Use when user says '铸', 'cast', '做成图', '做成卡片', '做成信息图', '做成海报', '视觉笔记', 'sketchnote', '杂志', 'editorial', '漫画', 'comic', 'manga', '白板', 'whiteboard', '大字', '附件图', 'big fonts', '小红书卡片'. Replaces ljg-cards and ljg-infograph.",
           "added_at": "2026-05-17",
-          "version": "2.3.0",
+          "version": "3.0.0",
           "extracted_path": "extracted-skills/ljg-skills/ljg-card"
+        },
+        {
+          "id": "ljg-constraint",
+          "name": "ljg-constraint",
+          "path": "libraries/ljg-skills/skills/ljg-constraint",
+          "original_path": "skills/ljg-constraint",
+          "tags": [
+            "docs",
+            "coding",
+            "research"
+          ],
+          "description": "给一个领域、专业、角色、产品或争论找出真正框住它的几条约束，判明它们属于世界/规则/解释（硬/软/自设），看这组约束如何定义身份、补全问题、框出解空间并解释实际行为；尤其用于区分目标相同但约束不同导致的方案分歧，识别被误当硬事实的旧解释。USE WHEN 用户说 '约束', '找约束', '这个领域的约束是什么', '本质约束', '什么框住了它', '硬约束还是自设约束', '边界在哪', '这行为什么这么做', 'constraint', '/ljg-constraint', or gives any domain/profession/role/product/debate and wants its defining constraints and solution space mapped. NOT FOR 往下挖生成器（用 ljg-rank，找的是生成力不是边界）、纵向深钻一个观点到底（用 ljg-think）、拆一本书（用 ljg-book）、一个概念解剖（用 ljg-learn）。",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/ljg-skills/ljg-constraint"
         },
         {
           "id": "ljg-invest",
@@ -3072,7 +3134,7 @@
             "finance",
             "coding"
           ],
-          "description": "投资分析, 生成一份深度投资分析报告。不做传统投资分析——核心判断是项目是否是一台「秩序创造机器」。Use when user says '投资报告', '投资分析', '分析这个项目', '写投资报告', 'investment report', 'invest analysis', or provides entrepreneur conversation records wanting investment evaluation. Also trigger when user pastes or references meeting notes, pitch decks, or founder interviews and asks for analysis.",
+          "description": "投资分析。给一个项目（公司名、BP、创始人对话记录），写一份深度投资分析报告。不走传统投资分析的路——核心判断只有一个：这个项目是不是一台「秩序创造机器」。Use when user says '投资报告', '投资分析', '分析这个项目', '写投资报告', 'investment report', 'invest analysis', or provides entrepreneur conversation records wanting investment evaluation. Also trigger when user pastes or references meeting notes, pitch decks, or founder interviews and asks for analysis.",
           "added_at": "2026-05-17",
           "extracted_path": "extracted-skills/ljg-skills/ljg-invest"
         },
@@ -3100,9 +3162,9 @@
             "docs",
             "coding"
           ],
-          "description": "一本书 → 一幅清晰的「取景框」意向画面 → 一张 2050 图书馆借书卡（PNG）。取景框 = 作者从哪个角度看什么问题、看到了哪幅画面；卡上有真实封面、作者头像、书目信息。取景框 block 用费曼式讲解把这幅意向画面讲得通俗又准确；图解 block 用 AI 生图把这幅画面画出来，继刚是固定主角（从其墨像参考生成、认得出的他）。两种风格 mold：默认 -a 动物森友会（暖萌治愈），可选 -c pixel+cyber-hacker（暗黑霓虹）。浅色光学玻璃卡身、强调色从封面动态提取、宽高自适应。合上书记住这幅画面，就没白读。Use when user says '取景框卡', '图书馆卡', 'library card', '书卡', '铸书卡', '一本书一句话一张卡', '/ljg-library', or provides a book name and wants it distilled into one collectible card. 风格：默认 -a 动森，加 -c 走 cyber。NOT FOR 拆书结构分析（用 ljg-book）、纯文字金句（用 ljg-card -b）、信息图（用 ljg-card -i）、视觉笔记（用 ljg-card -v）。",
+          "description": "一本书 → 一幅清晰的「取景框」意向画面 → 一张 2050 图书馆借书卡（PNG）。取景框 = 作者从哪个角度看什么问题、看到了哪幅画面；卡上有真实封面、作者头像、书目信息。取景框 block 用费曼式讲解把这幅意向画面讲得通俗又准确；图解 block 用 AI 生图把这幅画面画出来，继刚是固定主角（从其墨像参考生成、认得出的他）。图解风格：吉田诚治式绘本感（异世界日常空间、暖光斜射、治愈又精致）。浅色光学玻璃卡身、强调色从封面动态提取、宽高自适应。合上书记住这幅画面，就没白读。Use when user says '取景框卡', '图书馆卡', 'library card', '书卡', '铸书卡', '一本书一句话一张卡', '/ljg-library', or provides a book name and wants it distilled into one collectible card. NOT FOR 拆书结构分析（用 ljg-book）、纯文字金句（用 ljg-card -b）、信息图（用 ljg-card -i）、视觉笔记（用 ljg-card -v）。",
           "added_at": "2026-06-25",
-          "version": "3.0.0",
+          "version": "3.3.0",
           "extracted_path": "extracted-skills/ljg-skills/ljg-library"
         },
         {
@@ -3116,42 +3178,10 @@
             "coding",
             "research"
           ],
-          "description": "一个行业 → 一张生态地形图卡（PNG）。以《千脑智能》参考系理论为地基：把行业摊成一张可俯瞰的「生态地形」——价值像河一样流过地貌，再在地形上标出两处——「瓶颈」（流量/产能在此收窄的隘口/水坝）和「价值捕获点」（利润在此沉淀的宝藏堆）。地形让权力结构一眼可见：卡流量的地方常常不是钱沉淀的地方。配三个关键指标的 base rate（刻度）+ 三个「大问题」（前沿）。deep research 真联网，图用 AI 生图（默认 -a 动物森友会暖萌风，可选 -c pixel+cyber），继刚作小测量员立在地形上俯瞰。Use when user says '行业地图', '产业地图', '生态地形图', '画一下这个行业', 'industry map', 'map this industry', '行业版图', '产业链地图', '/ljg-map', or gives an industry/领域 name wanting its terrain mapped. 风格：默认 -a 动森，加 -c 走 cyber。NOT FOR 一个领域降秩找生成器（用 ljg-rank）、拆一本书（用 ljg-book）、单个项目投资分析（用 ljg-invest）、一个概念深钻（用 ljg-think）。",
+          "description": "一个行业 → 一张生态地形图卡（PNG）。以《千脑智能》参考系理论为地基：把行业摊成一张可俯瞰的「生态地形」——价值像河一样流过地貌，再在地形上标出两处——「瓶颈」（流量/产能在此收窄的隘口/水坝）和「价值捕获点」（利润在此沉淀的宝藏堆）。地形让权力结构一眼可见：卡流量的地方常常不是钱沉淀的地方。配三个关键指标的 base rate（刻度）+ 三个「大问题」（前沿）。deep research 真联网，图用 AI 生图（默认 -a 吉田诚治式绘本画风，与 ljg-library 同源；可选 -c pixel+cyber），继刚作小测量员立在地形上俯瞰。Use when user says '行业地图', '产业地图', '生态地形图', '画一下这个行业', 'industry map', 'map this industry', '行业版图', '产业链地图', '/ljg-map', or gives an industry/领域 name wanting its terrain mapped. 风格：默认 -a 绘本（同 ljg-library），加 -c 走 cyber。NOT FOR 一个领域降秩找生成器（用 ljg-rank）、拆一本书（用 ljg-book）、单个项目投资分析（用 ljg-invest）、一个概念深钻（用 ljg-think）。",
           "added_at": "2026-06-25",
-          "version": "2.0.0",
+          "version": "2.1.0",
           "extracted_path": "extracted-skills/ljg-skills/ljg-map"
-        },
-        {
-          "id": "ljg-paper-flow",
-          "name": "ljg-paper-flow",
-          "path": "libraries/ljg-skills/skills/ljg-paper-flow",
-          "original_path": "skills/ljg-paper-flow",
-          "tags": [
-            "docs",
-            "coding",
-            "workflow",
-            "pdf",
-            "research"
-          ],
-          "description": "Paper workflow: read papers + cast 取景框 library cards in one go. Takes one or more arxiv links, paper URLs, PDFs, or paper names. For each paper, runs ljg-paper (generates org analysis) then ljg-library (distills the paper's 取景框 into a 2050 library card PNG). Use when user says '论文流', 'paper flow', '读论文并做卡片', '论文卡片', or provides multiple papers wanting both analysis and cards.",
-          "added_at": "2026-05-17",
-          "version": "1.1.0",
-          "extracted_path": "extracted-skills/ljg-skills/ljg-paper-flow"
-        },
-        {
-          "id": "ljg-paper-river",
-          "name": "ljg-paper-river",
-          "path": "libraries/ljg-skills/skills/ljg-paper-river",
-          "original_path": "skills/ljg-paper-river",
-          "tags": [
-            "docs",
-            "coding",
-            "research"
-          ],
-          "description": "论文倒读法：给一篇论文，递归找出它批判和改进的前序论文（最多5层），再找它之后的最新进展，从源头正向讲述问题演化史。以问题为轴，费曼式讲解每篇论文看到的问题和解法创新。Use when user shares a paper and wants to understand its intellectual lineage, citation chain, problem evolution, or says '倒读', '论文溯源', '论文脉络', 'paper river', 'paper connects', 'trace back', '这篇论文的来龙去脉', '论文演化'. Also trigger when user wants to understand how a research problem evolved across multiple papers.",
-          "added_at": "2026-05-17",
-          "version": "1.0.0",
-          "extracted_path": "extracted-skills/ljg-skills/ljg-paper-river"
         },
         {
           "id": "ljg-paper",
@@ -3164,9 +3194,8 @@
             "pdf",
             "research"
           ],
-          "description": "Paper reader for non-academics. Reads a paper and tells it back as one continuous story — the life of the paper's core proposition (命题), told on a seven-beat spine (主角 / 困境 / 旧路 / 转折 / 解法 / 结局 / 内核): born in a bind on a base-rate ruler, crystallized as a bold conjecture, argued through mechanism and evidence, distilled into a new way of seeing, then walked out of the paper — life-tested and cashed into falsifiable predictions (检验). Output opens with a scannable 速读 card (一句话 / 大想法 / 只记三件事) that compresses the whole story three ways for the time-poor reader and the six-months-later self, then tells the full story. The job is storytelling that makes the paper land, not academic critique. Use when user shares an arxiv link, paper URL, PDF, or asks to analyze a research paper. Trigger words: '读论文', '讲论文', '把这篇讲给我听', '分析论文', 'paper', or when user shares an academic paper.",
+          "description": "Paper reader for non-academics. Turns one paper into one clear proposition: the problem, the paper's insight, and the judgment or action the reader can carry away. USE WHEN the user shares an arXiv link OR paper URL OR PDF OR local paper file OR paper title, or asks to read, explain, analyze, or understand a paper. Defaults to a saved org note. NOT FOR experiment reproduction, exhaustive method summaries, formal peer review, benchmark tables, or literature surveys.",
           "added_at": "2026-05-17",
-          "version": "6.1.0",
           "extracted_path": "extracted-skills/ljg-skills/ljg-paper"
         },
         {
@@ -3192,9 +3221,9 @@
             "docs",
             "coding"
           ],
-          "description": "演讲铸造器（Outline-Faithful）。基于 orgmode/markdown outline 层级 1:1 视觉化呈现——色块大字、ultra-bold 错位，原文不动只做美化。三档主题色 black/red/yellow（默认 black 或按 filetags 推断），可用 -r/-b/-y 显式覆盖；可用 --cyber 走黑底绿字 cyber-hacker 风。使用时用户会说：'讲这个'、'present'、'做成演讲'、'呈现一下'、'铸成演示'、'做个 slides'、'标语流'、'宣言体'、'slogan'、'manifesto'、'按 outline 美化'。输出单文件 HTML 到 ~/Downloads/。",
+          "description": "演讲铸造器（Outline-Faithful）。把 orgmode/markdown outline 1:1 铸成单文件离线 HTML；支持 black/red/yellow、浅色 hacker 与暗色 hacker-dark，自动处理标题封面、多行密度布局、表格、ASCII、LaTeX、自适应与翻页笔。USE WHEN 用户要求讲这个、present、做成演讲、slides、标语流、宣言体、slogan、manifesto、按 outline 美化。NOT FOR 内容提炼、改写或企业 PPT。",
           "added_at": "2026-05-17",
-          "version": "3.0.0",
+          "version": "4.4.0",
           "extracted_path": "extracted-skills/ljg-skills/ljg-present"
         },
         {
@@ -3206,7 +3235,7 @@
             "docs",
             "coding"
           ],
-          "description": "把 ~/.claude/skills/ljg-* 里所有更新过的 skills 同步到 github repo (ljg-skills)，先推 master 分支（org-mode 输出风格），再切 md 分支（markdown 输出风格）做基础 markdown 化后推。Use when user says '/ljg-push', 'push skills', '推送 skills', '同步 skills', 'sync ljg', or whenever ljg-* skills get updated and need shipping. NOT FOR pushing non-ljg skills or arbitrary git repos.",
+          "description": "把 ~/.agents/skills/ljg-* 里所有更新过的 skills 同步到 github repo (ljg-skills)，先推 master 分支（org-mode 输出风格），再切 md 分支（markdown 输出风格）做基础 markdown 化后推。Use when user says '/ljg-push', 'push skills', '推送 skills', '同步 skills', 'sync ljg', or whenever ljg-* skills get updated and need shipping. NOT FOR pushing non-ljg skills or arbitrary git repos.",
           "added_at": "2026-05-17",
           "extracted_path": "extracted-skills/ljg-skills/ljg-push"
         },
@@ -3278,23 +3307,22 @@
             "coding",
             "data"
           ],
-          "description": "Structured roundtable discussion framework with a truth-seeking moderator who invites representative figures for dialectical debate on any topic. Use when user says \"圆桌讨论\", \"圆桌\", \"roundtable\", \"辩论\", or wants to explore a topic through multi-perspective structured debate.",
+          "description": "一个议题，一场圆桌：主持人请来 3-5 位真实人物，定义开场，逐轮交锋， 每轮收一张 ASCII 结构图，用户用指令控节奏（可/止/深入此节/引入新人物）， 散场后全文存入 org 笔记。Use when user says \"圆桌讨论\", \"圆桌\", \"roundtable\", \"辩论\", or wants to explore a topic through multi-perspective structured debate.",
           "added_at": "2026-05-17",
           "extracted_path": "extracted-skills/ljg-skills/ljg-roundtable"
         },
         {
-          "id": "ljg-skill-map",
-          "name": "ljg-skill-map",
-          "path": "libraries/ljg-skills/skills/ljg-skill-map",
-          "original_path": "skills/ljg-skill-map",
+          "id": "ljg-structure",
+          "name": "ljg-structure",
+          "path": "libraries/ljg-skills/skills/ljg-structure",
+          "original_path": "skills/ljg-structure",
           "tags": [
             "docs",
             "coding"
           ],
-          "description": "Skill map viewer. Scans all installed skills and renders a visual overview — name, version, description, category at a glance. Use when user says 'skills', '技能', '技能地图', 'skill map', '我有哪些技能', '看看技能', '列出技能', 'list skills'. Also trigger when user asks what skills are available or installed.",
-          "added_at": "2026-05-17",
-          "version": "1.0.0",
-          "extracted_path": "extracted-skills/ljg-skills/ljg-skill-map"
+          "description": "找出一段信息中母题级别的结构，用简洁因果骨架说明结构关系，再通过风洞推演缺失后果与最小可逆实验。USE WHEN user says '找结构', '母题是什么', '结构风洞', '背后的结构', '不要只做AB测试', or wants the generative mechanism beneath a problem. 仅当用户明确要求时展开跨域来源或多母题组合。NOT FOR 普通摘要、单个类比、事实查询或已有明确唯一解的执行题。",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/ljg-skills/ljg-structure"
         },
         {
           "id": "ljg-think",
@@ -3308,38 +3336,6 @@
           "description": "追本之箭——纵向深钻思维工具。给一个观点、现象或问题，像箭一样一路向下钻到不可再分的本质。Use when user says '想透', '追本', '本质是什么', '为什么会这样', '深挖', '钻到底', 'think deep', 'drill down', or wants to trace any idea/phenomenon vertically to its irreducible root. Also trigger when user provides a statement and wants depth analysis, not breadth survey.",
           "added_at": "2026-05-17",
           "extracted_path": "extracted-skills/ljg-skills/ljg-think"
-        },
-        {
-          "id": "ljg-travel",
-          "name": "ljg-travel",
-          "path": "libraries/ljg-skills/skills/ljg-travel",
-          "original_path": "skills/ljg-travel",
-          "tags": [
-            "docs",
-            "coding",
-            "data",
-            "workflow",
-            "research"
-          ],
-          "description": "Deep travel research workflow for museums and ancient architecture. Input a city name, auto-generates structured knowledge document (org-mode) + portable reference cards (PNG). Covers historical background, museum highlights, archaeological significance, and architectural heritage. Use when user says '旅行研究', '博物馆功课', '古建功课', 'travel research', '出发前功课', or provides a city name with intent to do deep cultural travel preparation.",
-          "added_at": "2026-05-17",
-          "version": "1.0.0",
-          "extracted_path": "extracted-skills/ljg-skills/ljg-travel"
-        },
-        {
-          "id": "ljg-word-flow",
-          "name": "ljg-word-flow",
-          "path": "libraries/ljg-skills/skills/ljg-word-flow",
-          "original_path": "skills/ljg-word-flow",
-          "tags": [
-            "docs",
-            "coding",
-            "workflow"
-          ],
-          "description": "Word flow: deep-dive word analysis + infograph card in one go. Takes one or more English words, runs ljg-word (generates deep semantics analysis) then ljg-card -i (generates infograph PNG). Use when user says '词卡', 'word card', 'word flow', or provides English words wanting both analysis and visual card.",
-          "added_at": "2026-05-17",
-          "version": "1.0.1",
-          "extracted_path": "extracted-skills/ljg-skills/ljg-word-flow"
         },
         {
           "id": "ljg-word",
@@ -3371,17 +3367,15 @@
         }
       ],
       "install": {
-        "method": "npx",
-        "extracted_root": "extracted-skills/ljg-skills",
-        "command": "npx skills add lijigang/ljg-skills -g --all",
-        "fallback": "extracted"
+        "method": "extracted",
+        "extracted_root": "extracted-skills/ljg-skills"
       },
       "extracted": {
         "root": "extracted-skills/ljg-skills",
         "source_library": "ljg-skills",
         "source_path": "libraries/ljg-skills",
-        "last_extracted_commit": "52d8ac25f243221c7cdfc99d04a3b1ad479497d1",
-        "skill_count": 23
+        "last_extracted_commit": "df4e2ff2afaf6e56c7d2751571cd821f94392ece",
+        "skill_count": 21
       },
       "category": "content-creation"
     },
@@ -3393,7 +3387,7 @@
         "type": "github",
         "repo": "diffusionstudio/lottie",
         "ref": "main",
-        "commit": "a4e20b894d6335b02a29e4bcdec864bab5104675",
+        "commit": "d8973f96fb4553c3dbe6d118b20b83f0f98196dd",
         "original_path": "skills"
       },
       "tags": [
@@ -3404,21 +3398,21 @@
       ],
       "description": "Authoring Renderable Lottie Files",
       "added_at": "2026-06-26",
-      "last_checked_at": "2026-06-26",
-      "last_synced_at": "2026-06-26",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 1,
       "skills": [
         {
           "id": "text-to-lottie",
           "name": "text-to-lottie",
           "path": "libraries/lottie/text-to-lottie",
-          "original_path": "text-to-lottie",
+          "original_path": "libraries/lottie/text-to-lottie",
           "tags": [
             "docs",
             "coding",
             "data"
           ],
-          "description": "Author a Lottie (Bodymovin) JSON animation that renders in a local skia player. Use whenever the user asks to create, generate, edit, or fix a Lottie animation, or asks for \"an animation\" to load.",
+          "description": "Create, edit, or fix Lottie/Bodymovin JSON animations for the local Skia Skottie player. Use for text-to-Lottie, SVG/logo/type animation, loaders/icons, state feedback, UI microinteractions, lower thirds, diagrams, data/stat/chart animations, product promos, scene/camera motion, visual effects, scene edits, slots/controls, and Skottie debugging.",
           "added_at": "2026-06-26",
           "extracted_path": "extracted-skills/lottie/text-to-lottie"
         }
@@ -3431,7 +3425,7 @@
         "root": "extracted-skills/lottie",
         "source_library": "lottie",
         "source_path": "libraries/lottie",
-        "last_extracted_commit": "a4e20b894d6335b02a29e4bcdec864bab5104675",
+        "last_extracted_commit": "d8973f96fb4553c3dbe6d118b20b83f0f98196dd",
         "skill_count": 1
       },
       "category": "animation-motion",
@@ -3445,7 +3439,7 @@
         "type": "github",
         "repo": "mattpocock/skills",
         "ref": "main",
-        "commit": "7a83a3a682adf699f24dbc06613de87f4e52a0a0"
+        "commit": "9603c1cc8118d08bc1b3bf34cf714f62178dea3b"
       },
       "tags": [
         "automation",
@@ -3459,9 +3453,9 @@
       ],
       "description": "Skills For Real Engineers",
       "added_at": "2026-07-02",
-      "last_checked_at": "2026-07-02",
-      "last_synced_at": "2026-07-02",
-      "skill_count": 36,
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
+      "skill_count": 41,
       "skills": [
         {
           "id": "design-an-interface",
@@ -3609,7 +3603,7 @@
             "docs",
             "coding"
           ],
-          "description": "Implement a piece of work based on a PRD or set of issues.",
+          "description": "Implement a piece of work based on a spec or set of tickets.",
           "added_at": "2026-07-02",
           "extracted_path": "extracted-skills/mattpocock-skills/implement"
         },
@@ -3639,6 +3633,22 @@
           "description": "Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like.",
           "added_at": "2026-07-02",
           "extracted_path": "extracted-skills/mattpocock-skills/prototype"
+        },
+        {
+          "id": "research",
+          "name": "research",
+          "path": "libraries/mattpocock-skills/skills/engineering/research",
+          "original_path": "skills/engineering/research",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "automation",
+            "research"
+          ],
+          "description": "Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/research"
         },
         {
           "id": "resolving-merge-conflicts",
@@ -3681,30 +3691,30 @@
           "extracted_path": "extracted-skills/mattpocock-skills/tdd"
         },
         {
-          "id": "to-issues",
-          "name": "to-issues",
-          "path": "libraries/mattpocock-skills/skills/engineering/to-issues",
-          "original_path": "skills/engineering/to-issues",
+          "id": "to-spec",
+          "name": "to-spec",
+          "path": "libraries/mattpocock-skills/skills/engineering/to-spec",
+          "original_path": "skills/engineering/to-spec",
           "tags": [
             "docs",
             "coding"
           ],
-          "description": "Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices.",
-          "added_at": "2026-07-02",
-          "extracted_path": "extracted-skills/mattpocock-skills/to-issues"
+          "description": "Turn the current conversation into a spec and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/to-spec"
         },
         {
-          "id": "to-prd",
-          "name": "to-prd",
-          "path": "libraries/mattpocock-skills/skills/engineering/to-prd",
-          "original_path": "skills/engineering/to-prd",
+          "id": "to-tickets",
+          "name": "to-tickets",
+          "path": "libraries/mattpocock-skills/skills/engineering/to-tickets",
+          "original_path": "skills/engineering/to-tickets",
           "tags": [
             "docs",
             "coding"
           ],
-          "description": "Turn the current conversation into a PRD and publish it to the project issue tracker — no interview, just synthesis of what you've already discussed.",
-          "added_at": "2026-07-02",
-          "extracted_path": "extracted-skills/mattpocock-skills/to-prd"
+          "description": "Break a plan, spec, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker — edges as text in one file per ticket locally, or native blocking links on a real tracker.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/to-tickets"
         },
         {
           "id": "triage",
@@ -3719,6 +3729,47 @@
           "description": "Move issues and external PRs through a state machine of triage roles — categorise, verify, grill if needed, and write agent-ready briefs.",
           "added_at": "2026-07-02",
           "extracted_path": "extracted-skills/mattpocock-skills/triage"
+        },
+        {
+          "id": "wayfinder",
+          "name": "wayfinder",
+          "path": "libraries/mattpocock-skills/skills/engineering/wayfinder",
+          "original_path": "skills/engineering/wayfinder",
+          "tags": [
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "Plan a huge chunk of work — more than one agent session can hold — as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/wayfinder"
+        },
+        {
+          "id": "batch-grill-me",
+          "name": "batch-grill-me",
+          "path": "libraries/mattpocock-skills/skills/in-progress/batch-grill-me",
+          "original_path": "skills/in-progress/batch-grill-me",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "A relentless interview that asks every frontier question at once, round by round.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/batch-grill-me"
+        },
+        {
+          "id": "claude-handoff",
+          "name": "claude-handoff",
+          "path": "libraries/mattpocock-skills/skills/in-progress/claude-handoff",
+          "original_path": "skills/in-progress/claude-handoff",
+          "tags": [
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "Hand the current conversation off to a fresh background agent that picks up the work immediately.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/claude-handoff"
         },
         {
           "id": "loop-me",
@@ -3736,18 +3787,31 @@
           "extracted_path": "extracted-skills/mattpocock-skills/loop-me"
         },
         {
-          "id": "wayfinder",
-          "name": "wayfinder",
-          "path": "libraries/mattpocock-skills/skills/in-progress/wayfinder",
-          "original_path": "skills/in-progress/wayfinder",
+          "id": "setup-ts-deep-modules",
+          "name": "setup-ts-deep-modules",
+          "path": "libraries/mattpocock-skills/skills/in-progress/setup-ts-deep-modules",
+          "original_path": "skills/in-progress/setup-ts-deep-modules",
           "tags": [
             "docs",
-            "finance",
+            "coding",
+            "frontend"
+          ],
+          "description": "Wire dependency-cruiser into a TypeScript repo so each package is a deep module — implementation hidden in subfolders, reachable only through its entry-point files. User-invoked.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/setup-ts-deep-modules"
+        },
+        {
+          "id": "to-questionnaire",
+          "name": "to-questionnaire",
+          "path": "libraries/mattpocock-skills/skills/in-progress/to-questionnaire",
+          "original_path": "skills/in-progress/to-questionnaire",
+          "tags": [
+            "docs",
             "coding"
           ],
-          "description": "Chart a route through a foggy problem — turn a loose idea into a map of investigation tickets and resolve them one at a time until the way to the goal is clear.",
-          "added_at": "2026-07-02",
-          "extracted_path": "extracted-skills/mattpocock-skills/wayfinder"
+          "description": "Turn a decision you can't fully answer into a questionnaire for someone else to fill in.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/mattpocock-skills/to-questionnaire"
         },
         {
           "id": "wizard",
@@ -3907,7 +3971,7 @@
             "coding",
             "frontend"
           ],
-          "description": "Interview the user relentlessly about a plan or design. Use when the user wants to stress-test a plan before building, or uses any 'grill' trigger phrases.",
+          "description": "Grill the user relentlessly about a plan, decision, or idea. Use when the user wants to stress-test their thinking, or uses any 'grill' trigger phrases.",
           "added_at": "2026-07-02",
           "extracted_path": "extracted-skills/mattpocock-skills/grilling"
         },
@@ -3961,8 +4025,8 @@
         "root": "extracted-skills/mattpocock-skills",
         "source_library": "mattpocock-skills",
         "source_path": "libraries/mattpocock-skills",
-        "last_extracted_commit": "7a83a3a682adf699f24dbc06613de87f4e52a0a0",
-        "skill_count": 36
+        "last_extracted_commit": "9603c1cc8118d08bc1b3bf34cf714f62178dea3b",
+        "skill_count": 41
       },
       "category": "personal-collection",
       "category_locked": true
@@ -3987,7 +4051,7 @@
       ],
       "description": "Document Extraction with mineru-open-api",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-05-17",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-05-17",
       "skill_count": 1,
       "skills": [
@@ -3995,7 +4059,7 @@
           "id": "mineru-document-extractor",
           "name": "MinerU Document Extractor",
           "path": "libraries/mineru",
-          "original_path": ".",
+          "original_path": "libraries/mineru",
           "tags": [
             "image",
             "docs",
@@ -4030,7 +4094,7 @@
         "type": "github",
         "repo": "teng-lin/notebooklm-py",
         "ref": "main",
-        "commit": "5b4c57e3bf2cc98cfad1eaccce5ece7cad719776",
+        "commit": "45fd4258e608fbb9685496f26cfcea48810c44ee",
         "original_path": "SKILL.md"
       },
       "tags": [
@@ -4040,15 +4104,15 @@
       ],
       "description": "NotebookLM Automation",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 1,
       "skills": [
         {
           "id": "notebooklm",
           "name": "notebooklm",
           "path": "libraries/notebooklm",
-          "original_path": ".",
+          "original_path": "libraries/notebooklm",
           "tags": [
             "docs",
             "coding",
@@ -4069,7 +4133,7 @@
         "root": "extracted-skills/notebooklm",
         "source_library": "notebooklm",
         "source_path": "libraries/notebooklm",
-        "last_extracted_commit": "5b4c57e3bf2cc98cfad1eaccce5ece7cad719776",
+        "last_extracted_commit": "8f3cd95a3f4b14f4e536e56c36b37f12c13327d9",
         "skill_count": 1
       },
       "category": "daily-tools"
@@ -4095,7 +4159,7 @@
       ],
       "description": "Installation",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 5,
       "skills": [
@@ -4103,7 +4167,7 @@
           "id": "defuddle",
           "name": "defuddle",
           "path": "libraries/obsidian-skills/skills/defuddle",
-          "original_path": "skills/defuddle",
+          "original_path": "libraries/obsidian-skills/skills/defuddle",
           "tags": [
             "docs",
             "coding",
@@ -4118,7 +4182,7 @@
           "id": "json-canvas",
           "name": "json-canvas",
           "path": "libraries/obsidian-skills/skills/json-canvas",
-          "original_path": "skills/json-canvas",
+          "original_path": "libraries/obsidian-skills/skills/json-canvas",
           "tags": [
             "image",
             "docs",
@@ -4134,7 +4198,7 @@
           "id": "obsidian-bases",
           "name": "obsidian-bases",
           "path": "libraries/obsidian-skills/skills/obsidian-bases",
-          "original_path": "skills/obsidian-bases",
+          "original_path": "libraries/obsidian-skills/skills/obsidian-bases",
           "tags": [
             "docs",
             "coding",
@@ -4149,7 +4213,7 @@
           "id": "obsidian-cli",
           "name": "obsidian-cli",
           "path": "libraries/obsidian-skills/skills/obsidian-cli",
-          "original_path": "skills/obsidian-cli",
+          "original_path": "libraries/obsidian-skills/skills/obsidian-cli",
           "tags": [
             "docs",
             "coding",
@@ -4165,7 +4229,7 @@
           "id": "obsidian-markdown",
           "name": "obsidian-markdown",
           "path": "libraries/obsidian-skills/skills/obsidian-markdown",
-          "original_path": "skills/obsidian-markdown",
+          "original_path": "libraries/obsidian-skills/skills/obsidian-markdown",
           "tags": [
             "docs",
             "coding",
@@ -4199,7 +4263,7 @@
         "type": "github",
         "repo": "DietrichGebert/ponytail",
         "ref": "main",
-        "commit": "14a0d79548d4de8fc2de95c1b94bb0de63a739d3",
+        "commit": "16f29800fd2681bdf24f3eb4ccffe38be3baec6b",
         "original_path": "skills"
       },
       "tags": [
@@ -4208,7 +4272,7 @@
       ],
       "description": "Tags",
       "added_at": "2026-07-15",
-      "last_checked_at": "2026-07-15",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-07-15",
       "skill_count": 6,
       "skills": [
@@ -4294,7 +4358,6 @@
           "extracted_path": "extracted-skills/ponytail/ponytail"
         }
       ],
-      "category": "coding-tools",
       "install": {
         "method": "extracted",
         "extracted_root": "extracted-skills/ponytail"
@@ -4305,7 +4368,8 @@
         "source_path": "libraries/ponytail",
         "last_extracted_commit": "14a0d79548d4de8fc2de95c1b94bb0de63a739d3",
         "skill_count": 6
-      }
+      },
+      "category": "coding-tools"
     },
     {
       "id": "punk-skill",
@@ -4315,7 +4379,7 @@
         "type": "github",
         "repo": "adrianpunk/Punk-Skill",
         "ref": "main",
-        "commit": "08d4226c9440846d6edb2fde10a879ef87f48f57",
+        "commit": "288376c9d47e1567e8b1fffe50ac7c1143f477df",
         "original_path": "skills"
       },
       "tags": [
@@ -4324,15 +4388,15 @@
       ],
       "description": "Punk Avatar",
       "added_at": "2026-06-25",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
       "skill_count": 2,
       "skills": [
         {
           "id": "punk-avatar",
           "name": "punk-avatar",
           "path": "libraries/punk-skill/punk-avatar",
-          "original_path": "punk-avatar",
+          "original_path": "libraries/punk-skill/punk-avatar",
           "tags": [
             "image",
             "docs",
@@ -4346,7 +4410,7 @@
           "id": "punk-cover",
           "name": "punk-cover",
           "path": "libraries/punk-skill/punk-cover",
-          "original_path": "punk-cover",
+          "original_path": "libraries/punk-skill/punk-cover",
           "tags": [
             "image",
             "docs",
@@ -4365,7 +4429,7 @@
         "root": "extracted-skills/punk-skill",
         "source_library": "punk-skill",
         "source_path": "libraries/punk-skill",
-        "last_extracted_commit": "08d4226c9440846d6edb2fde10a879ef87f48f57",
+        "last_extracted_commit": "288376c9d47e1567e8b1fffe50ac7c1143f477df",
         "skill_count": 2
       },
       "category": "content-creation",
@@ -4393,7 +4457,7 @@
           "id": "skillhub-ingest",
           "name": "skillhub-ingest",
           "path": "libraries/skillhub-ingest",
-          "original_path": ".",
+          "original_path": "libraries/skillhub-ingest",
           "tags": [
             "docs",
             "coding",
@@ -4434,7 +4498,7 @@
       ],
       "description": "Software Copyright Materials Skill",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 1,
       "skills": [
@@ -4442,14 +4506,13 @@
           "id": "software-copyright-materials",
           "name": "software-copyright-materials",
           "path": "libraries/SoftwareCopyright-Skill/software-copyright-materials",
-          "original_path": "software-copyright-materials",
+          "original_path": "libraries/SoftwareCopyright-Skill/software-copyright-materials",
           "tags": [
             "docs",
             "coding"
           ],
           "description": "Generate guided Chinese software copyright application materials from a real project. Use this skill when the user asks for 软件著作权, 软著申请资料, 软著代码材料, 操作手册, 申请表信息, or wants Word/TXT materials for software copyright registration. The workflow analyzes the imported project, extracts real source code, creates Markdown drafts for user confirmation, then uses bundled DOCX tooling to produce final Word documents and TXT.",
           "added_at": "2026-05-17",
-          "version": "1.2",
           "extracted_path": "extracted-skills/softwarecopyright-skill/software-copyright-materials"
         }
       ],
@@ -4483,7 +4546,7 @@
       ],
       "description": "Stop Slop",
       "added_at": "2026-06-25",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 1,
       "skills": [
@@ -4491,7 +4554,7 @@
           "id": "stop-slop",
           "name": "stop-slop",
           "path": "libraries/stop-slop",
-          "original_path": ".",
+          "original_path": "libraries/stop-slop",
           "tags": [
             "docs",
             "coding",
@@ -4524,7 +4587,7 @@
         "type": "github",
         "repo": "swyxio/skills",
         "ref": "main",
-        "commit": "b5bf58cc53aa8f837c203e392022507b1d7b0cca",
+        "commit": "0ab390e1d0b3a44c2a15a13539f1879ee5ecb66b",
         "original_path": "."
       },
       "tags": [
@@ -4539,15 +4602,15 @@
       ],
       "description": "swyxio Skills",
       "added_at": "2026-06-25",
-      "last_checked_at": "2026-06-25",
-      "last_synced_at": "2026-06-25",
-      "skill_count": 39,
+      "last_checked_at": "2026-07-18",
+      "last_synced_at": "2026-07-18",
+      "skill_count": 41,
       "skills": [
         {
           "id": "accelevents-api",
           "name": "accelevents-api",
           "path": "libraries/swyxio-skills/accelevents-api",
-          "original_path": "accelevents-api",
+          "original_path": "libraries/swyxio-skills/accelevents-api",
           "tags": [
             "docs",
             "coding",
@@ -4561,7 +4624,7 @@
           "id": "accelevents-speaker-sync",
           "name": "accelevents-speaker-sync",
           "path": "libraries/swyxio-skills/accelevents-speaker-sync",
-          "original_path": "accelevents-speaker-sync",
+          "original_path": "libraries/swyxio-skills/accelevents-speaker-sync",
           "tags": [
             "docs",
             "coding"
@@ -4574,7 +4637,7 @@
           "id": "antislop-codebase",
           "name": "antislop-codebase",
           "path": "libraries/swyxio-skills/antislop-codebase",
-          "original_path": "antislop-codebase",
+          "original_path": "libraries/swyxio-skills/antislop-codebase",
           "tags": [
             "docs",
             "coding",
@@ -4588,7 +4651,7 @@
           "id": "app-ux-paradigms",
           "name": "app-ux-paradigms",
           "path": "libraries/swyxio-skills/app-ux-paradigms",
-          "original_path": "app-ux-paradigms",
+          "original_path": "libraries/swyxio-skills/app-ux-paradigms",
           "tags": [
             "browser",
             "docs",
@@ -4604,7 +4667,7 @@
           "id": "autoreview",
           "name": "autoreview",
           "path": "libraries/swyxio-skills/autoreview",
-          "original_path": "autoreview",
+          "original_path": "libraries/swyxio-skills/autoreview",
           "tags": [
             "docs",
             "coding"
@@ -4617,7 +4680,7 @@
           "id": "claude-session-introspect",
           "name": "claude-session-introspect",
           "path": "libraries/swyxio-skills/claude-session-introspect",
-          "original_path": "claude-session-introspect",
+          "original_path": "libraries/swyxio-skills/claude-session-introspect",
           "tags": [
             "docs",
             "coding",
@@ -4625,14 +4688,13 @@
           ],
           "description": "Inspect Claude Code session JSONL files at ~/.claude/projects/ to extract real conversation telemetry: token counts (input/output/cache reads/cache writes), assistant turn counts, human prompt counts, tool-use counts, compaction boundaries, and the contents of compaction summaries. Use this skill when the user asks \"how many tokens did this session use\", \"how many prompts have I sent\", \"show me the stats for this conversation\", \"what got compacted\", \"where are the compaction boundaries\", \"introspect the session\", \"do brain surgery on the JSONL\", or wants any data point that lives inside the on-disk session log rather than the live context window. Inspired by Tal Raviv's \"I wanted to know how compaction works\" article.",
           "added_at": "2026-06-25",
-          "version": "1.0",
           "extracted_path": "extracted-skills/swyxio-skills/claude-session-introspect"
         },
         {
           "id": "codebase-maintainability-guardrails",
           "name": "codebase-maintainability-guardrails",
           "path": "libraries/swyxio-skills/codebase-maintainability-guardrails",
-          "original_path": "codebase-maintainability-guardrails",
+          "original_path": "libraries/swyxio-skills/codebase-maintainability-guardrails",
           "tags": [
             "docs",
             "coding",
@@ -4646,7 +4708,7 @@
           "id": "conference-developer-endpoints",
           "name": "conference-developer-endpoints",
           "path": "libraries/swyxio-skills/conference-developer-endpoints",
-          "original_path": "conference-developer-endpoints",
+          "original_path": "libraries/swyxio-skills/conference-developer-endpoints",
           "tags": [
             "docs",
             "coding",
@@ -4661,21 +4723,20 @@
           "id": "conference-transcribe",
           "name": "conference-transcribe",
           "path": "libraries/swyxio-skills/conference-transcribe",
-          "original_path": "conference-transcribe",
+          "original_path": "libraries/swyxio-skills/conference-transcribe",
           "tags": [
             "docs",
             "coding"
           ],
           "description": "Transcribe a multi-talk conference livestream or long YouTube video into separate per-talk transcripts. Parses timestamps from the video description to split talks, downloads audio/video, transcribes each segment, then uses an LLM to clean up and format the transcripts with key takeaways and frequent timestamps. Use when user says \"transcribe this conference\", \"split this livestream into talks\", \"transcribe each talk separately\", or provides a YouTube URL of a multi-hour event stream with chapter timestamps.",
           "added_at": "2026-06-25",
-          "version": "1.0",
           "extracted_path": "extracted-skills/swyxio-skills/conference-transcribe"
         },
         {
           "id": "data-chatbots",
           "name": "data-chatbots",
           "path": "libraries/swyxio-skills/data-chatbots",
-          "original_path": "data-chatbots",
+          "original_path": "libraries/swyxio-skills/data-chatbots",
           "tags": [
             "docs",
             "coding",
@@ -4691,7 +4752,7 @@
           "id": "download-video",
           "name": "download-video",
           "path": "libraries/swyxio-skills/download-video",
-          "original_path": "download-video",
+          "original_path": "libraries/swyxio-skills/download-video",
           "tags": [
             "docs",
             "coding",
@@ -4699,14 +4760,13 @@
           ],
           "description": "Downloads embedded videos from web pages. Fetches the page, identifies the video hosting service (Vimeo, YouTube, etc.), resolves the correct embed/player URL, and downloads using yt-dlp. Handles private/unlisted videos that require referer headers or embed URLs. Use this skill when someone says \"download this video\", \"save this video\", \"grab the video from this page\", \"rip this video\", or provides a URL and asks to download media from it. Also trigger when someone pastes a URL to a page with an embedded video and wants the video file locally.",
           "added_at": "2026-06-25",
-          "version": "1.1",
           "extracted_path": "extracted-skills/swyxio-skills/download-video"
         },
         {
           "id": "download-x-video",
           "name": "download-x-video",
           "path": "libraries/swyxio-skills/download-x-video",
-          "original_path": "download-x-video",
+          "original_path": "libraries/swyxio-skills/download-x-video",
           "tags": [
             "docs",
             "coding"
@@ -4719,7 +4779,7 @@
           "id": "europe-developer-api",
           "name": "europe-developer-api",
           "path": "libraries/swyxio-skills/europe-developer-api",
-          "original_path": "europe-developer-api",
+          "original_path": "libraries/swyxio-skills/europe-developer-api",
           "tags": [
             "docs",
             "coding",
@@ -4735,7 +4795,7 @@
           "id": "media-transform",
           "name": "media-transform",
           "path": "libraries/swyxio-skills/media-transform",
-          "original_path": "media-transform",
+          "original_path": "libraries/swyxio-skills/media-transform",
           "tags": [
             "image",
             "docs",
@@ -4750,7 +4810,7 @@
           "id": "multimodal-extraction",
           "name": "multimodal-extraction",
           "path": "libraries/swyxio-skills/multimodal-extraction",
-          "original_path": "multimodal-extraction",
+          "original_path": "libraries/swyxio-skills/multimodal-extraction",
           "tags": [
             "image",
             "docs",
@@ -4765,7 +4825,7 @@
           "id": "new-mac-setup",
           "name": "new-mac-setup",
           "path": "libraries/swyxio-skills/new-mac-setup",
-          "original_path": "new-mac-setup",
+          "original_path": "libraries/swyxio-skills/new-mac-setup",
           "tags": [
             "docs",
             "coding",
@@ -4774,14 +4834,13 @@
           ],
           "description": "Fully automated new Mac setup for fullstack web developers and AI engineers. Generates and executes idempotent shell scripts to install dev tools, CLI utilities, GUI apps, AI/ML tooling, shell config, and macOS preferences — all via Homebrew, fnm, uv, and defaults commands. Use this skill whenever someone says \"set up my Mac\", \"new Mac setup\", \"configure my dev machine\", \"install my dev tools\", \"fresh Mac install\", \"developer environment setup\", or anything about bootstrapping a macOS machine for development. Also trigger when someone mentions setting up Homebrew, Oh-My-ZSH, Node.js, Python, Docker, or terminal configuration on a new Mac — even if they don't call it a \"setup\". This skill is opinionated and based on real-world experience setting up M-series Macs for fullstack JS/TS + Python + AI development.",
           "added_at": "2026-06-25",
-          "version": "2.0",
           "extracted_path": "extracted-skills/swyxio-skills/new-mac-setup"
         },
         {
           "id": "observability-hardening",
           "name": "observability-hardening",
           "path": "libraries/swyxio-skills/observability-hardening",
-          "original_path": "observability-hardening",
+          "original_path": "libraries/swyxio-skills/observability-hardening",
           "tags": [
             "docs",
             "coding"
@@ -4794,7 +4853,7 @@
           "id": "podcast-publishing-assistant",
           "name": "podcast-publishing-assistant",
           "path": "libraries/swyxio-skills/podcast-publishing-assistant",
-          "original_path": "podcast-publishing-assistant",
+          "original_path": "libraries/swyxio-skills/podcast-publishing-assistant",
           "tags": [
             "docs",
             "coding",
@@ -4808,7 +4867,7 @@
           "id": "productionize-app-with-services",
           "name": "productionize-app-with-services",
           "path": "libraries/swyxio-skills/productionize-app-with-services",
-          "original_path": "productionize-app-with-services",
+          "original_path": "libraries/swyxio-skills/productionize-app-with-services",
           "tags": [
             "docs",
             "coding",
@@ -4824,7 +4883,7 @@
           "id": "public-qa-chatbot",
           "name": "public-qa-chatbot",
           "path": "libraries/swyxio-skills/public-qa-chatbot",
-          "original_path": "public-qa-chatbot",
+          "original_path": "libraries/swyxio-skills/public-qa-chatbot",
           "tags": [
             "docs",
             "coding",
@@ -4832,14 +4891,13 @@
           ],
           "description": "Best practices for building an unauthenticated public Q&A chatbot widget. Covers rate limiting, security hardening, cost optimization, semantic caching, observability, UX patterns, chat scroll behavior, and architecture. Tech-agnostic with concrete examples from a production implementation.",
           "added_at": "2026-06-25",
-          "version": "1.1",
           "extracted_path": "extracted-skills/swyxio-skills/public-qa-chatbot"
         },
         {
           "id": "release-readiness-hardening",
           "name": "release-readiness-hardening",
           "path": "libraries/swyxio-skills/release-readiness-hardening",
-          "original_path": "release-readiness-hardening",
+          "original_path": "libraries/swyxio-skills/release-readiness-hardening",
           "tags": [
             "docs",
             "coding",
@@ -4850,10 +4908,24 @@
           "extracted_path": "extracted-skills/swyxio-skills/release-readiness-hardening"
         },
         {
+          "id": "reserved-handle-policy",
+          "name": "reserved-handle-policy",
+          "path": "libraries/swyxio-skills/reserved-handle-policy",
+          "original_path": "libraries/swyxio-skills/reserved-handle-policy",
+          "tags": [
+            "docs",
+            "coding",
+            "data"
+          ],
+          "description": "Design, implement, audit, or refresh protected username and handle namespaces for public products. Use whenever a product has open signup, mutable handles, profile URLs, impersonation or squatting risk, reserved route names, short usernames, common-word or common-name claims, developer/AI terminology, notable social identities, or administrator-approved handle assignment—even if the user only asks for a username denylist.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/swyxio-skills/reserved-handle-policy"
+        },
+        {
           "id": "schedule-design",
           "name": "schedule-design",
           "path": "libraries/swyxio-skills/schedule-design",
-          "original_path": "schedule-design",
+          "original_path": "libraries/swyxio-skills/schedule-design",
           "tags": [
             "docs",
             "coding",
@@ -4868,7 +4940,7 @@
           "id": "security-hardening",
           "name": "security-hardening",
           "path": "libraries/swyxio-skills/security-hardening",
-          "original_path": "security-hardening",
+          "original_path": "libraries/swyxio-skills/security-hardening",
           "tags": [
             "docs",
             "coding"
@@ -4881,7 +4953,7 @@
           "id": "slackbot-builder",
           "name": "slackbot-builder",
           "path": "libraries/swyxio-skills/slackbot-builder",
-          "original_path": "slackbot-builder",
+          "original_path": "libraries/swyxio-skills/slackbot-builder",
           "tags": [
             "docs",
             "coding",
@@ -4891,14 +4963,13 @@
           ],
           "description": "Build production Slack bots as a maturity ladder (L0–L6): signature verification, fast acks + event idempotency, threads-as-sessions, responsive feedback (reactions, status, live streaming), Block Kit interactions + human-in-the-loop approvals, the native Agents & AI Apps surface, file/media outputs + settings modals, durable long-running work, rate-limit + security hardening, model-call tracing, and multi-surface/multi-tenant scale. Use when building or hardening any Slack app, bot, agent-in-Slack workflow, or Slack Events API / Block Kit / slash-command integration.",
           "added_at": "2026-06-25",
-          "version": "2.2",
           "extracted_path": "extracted-skills/swyxio-skills/slackbot-builder"
         },
         {
           "id": "smart-entity-resolution",
           "name": "smart-entity-resolution",
           "path": "libraries/swyxio-skills/smart-entity-resolution",
-          "original_path": "smart-entity-resolution",
+          "original_path": "libraries/swyxio-skills/smart-entity-resolution",
           "tags": [
             "docs",
             "coding",
@@ -4913,21 +4984,20 @@
           "id": "summarize-anything",
           "name": "summarize-anything",
           "path": "libraries/swyxio-skills/summarize-anything",
-          "original_path": "summarize-anything",
+          "original_path": "libraries/swyxio-skills/summarize-anything",
           "tags": [
             "docs",
             "coding"
           ],
           "description": "Summarizes arbitrarily long text (1k-1M words) using recursive map-reduce with any LLM backend. Accepts raw text, markdown, transcripts, articles, codebases, or any plaintext input. Produces one or more output formats: executive summary, section headings with timestamps, YouTube description, Twitter/X posts, title options, thumbnail prompts, blog outlines, pull quotes, and more. Supports focus directives (\"focus on the AI parts\", \"emphasize the business angle\") to steer the summary. Pluggable backends: OpenRouter, Ollama, OpenAI, Anthropic, Gemini, or any OpenAI-compatible endpoint. Use this skill when someone says \"summarize this\", \"give me a summary\", \"TL;DR\", \"make this shorter\", \"create a YouTube description\", \"write a tweet about this\", \"generate titles\", \"thumbnail ideas\", or provides long text and wants any condensed output.",
           "added_at": "2026-06-25",
-          "version": "1.0",
           "extracted_path": "extracted-skills/swyxio-skills/summarize-anything"
         },
         {
           "id": "sync-accelevents",
           "name": "sync-accelevents",
           "path": "libraries/swyxio-skills/sync-accelevents",
-          "original_path": "sync-accelevents",
+          "original_path": "libraries/swyxio-skills/sync-accelevents",
           "tags": [
             "image",
             "docs",
@@ -4942,7 +5012,7 @@
           "id": "sync-url-navigation",
           "name": "sync-url-navigation",
           "path": "libraries/swyxio-skills/sync-url-navigation",
-          "original_path": "sync-url-navigation",
+          "original_path": "libraries/swyxio-skills/sync-url-navigation",
           "tags": [
             "browser",
             "docs",
@@ -4957,7 +5027,7 @@
           "id": "test-strategy-hardening",
           "name": "test-strategy-hardening",
           "path": "libraries/swyxio-skills/test-strategy-hardening",
-          "original_path": "test-strategy-hardening",
+          "original_path": "libraries/swyxio-skills/test-strategy-hardening",
           "tags": [
             "docs",
             "coding",
@@ -4971,7 +5041,7 @@
           "id": "testing-schedule-preview",
           "name": "testing-schedule-preview",
           "path": "libraries/swyxio-skills/testing-schedule-preview",
-          "original_path": "testing-schedule-preview",
+          "original_path": "libraries/swyxio-skills/testing-schedule-preview",
           "tags": [
             "docs",
             "coding",
@@ -4987,7 +5057,7 @@
           "id": "thumbnail-extraction",
           "name": "thumbnail-extraction",
           "path": "libraries/swyxio-skills/thumbnail-extraction",
-          "original_path": "thumbnail-extraction",
+          "original_path": "libraries/swyxio-skills/thumbnail-extraction",
           "tags": [
             "docs",
             "coding"
@@ -5001,7 +5071,7 @@
           "id": "transcribe-anything",
           "name": "transcribe-anything",
           "path": "libraries/swyxio-skills/transcribe-anything",
-          "original_path": "transcribe-anything",
+          "original_path": "libraries/swyxio-skills/transcribe-anything",
           "tags": [
             "docs",
             "coding",
@@ -5010,14 +5080,13 @@
           ],
           "description": "Transcribes audio and video files to text using pluggable ASR backends. Default backend is local whisper CLI (openai-whisper). Supports whisperX (with diarization), insanely-fast-whisper, faster-whisper, whisper.cpp, OpenAI Whisper API, Groq Whisper API, Deepgram, AssemblyAI, Gemini, and Hugging Face models. Handles very long files (1-8+ hours) by preprocessing with ffmpeg: extracts audio from video, converts to optimal ASR format, detects and skips silence, and chunks for API size limits. Supports speaker diarization, word-level timestamps, custom vocabulary, and multiple output formats. Use this skill when someone says \"transcribe this\", \"convert to text\", \"speech to text\", \"get the transcript\", \"transcribe this video/audio/podcast/recording\", or provides a media file and wants text output.",
           "added_at": "2026-06-25",
-          "version": "1.0",
           "extracted_path": "extracted-skills/swyxio-skills/transcribe-anything"
         },
         {
           "id": "twitter-x-scraping",
           "name": "twitter-x-scraping",
           "path": "libraries/swyxio-skills/twitter-x-scraping",
-          "original_path": "twitter-x-scraping",
+          "original_path": "libraries/swyxio-skills/twitter-x-scraping",
           "tags": [
             "browser",
             "docs",
@@ -5031,7 +5100,7 @@
           "id": "web-animation-perf",
           "name": "web-animation-perf",
           "path": "libraries/swyxio-skills/web-animation-perf",
-          "original_path": "web-animation-perf",
+          "original_path": "libraries/swyxio-skills/web-animation-perf",
           "tags": [
             "image",
             "docs",
@@ -5047,7 +5116,7 @@
           "id": "youtube-api",
           "name": "youtube-api",
           "path": "libraries/swyxio-skills/youtube-api",
-          "original_path": "youtube-api",
+          "original_path": "libraries/swyxio-skills/youtube-api",
           "tags": [
             "browser",
             "image",
@@ -5057,14 +5126,13 @@
           ],
           "description": "Manage YouTube videos programmatically via the YouTube Data API v3 — upload video files, upload custom thumbnails, update video metadata (titles, descriptions, tags), and query video/channel info without touching YouTube Studio's browser UI. Use this skill whenever the user wants to: upload a local video file to YouTube; set, update, or change a YouTube video's thumbnail from a local image file; batch-set thumbnails across multiple videos; update video titles, descriptions, or tags programmatically; query their channel's video list; or do anything involving the YouTube Data API. Triggers: \"upload to youtube\", \"upload video\", \"set thumbnail\", \"upload thumbnail\", \"change thumbnail\", \"YouTube API\", \"batch thumbnails\", \"update video title\", \"update video description\", \"youtube metadata\", or any reference to programmatically managing YouTube videos. Also use when the browser-based YouTube Studio upload is unreliable or slow.",
           "added_at": "2026-06-25",
-          "version": "1.0",
           "extracted_path": "extracted-skills/swyxio-skills/youtube-api"
         },
         {
           "id": "youtube-publish",
           "name": "youtube-publish",
           "path": "libraries/swyxio-skills/youtube-publish",
-          "original_path": "youtube-publish",
+          "original_path": "libraries/swyxio-skills/youtube-publish",
           "tags": [
             "docs",
             "coding",
@@ -5079,7 +5147,7 @@
           "id": "youtube-studio-batch-upload",
           "name": "youtube-studio-batch-upload",
           "path": "libraries/swyxio-skills/youtube-studio-batch-upload",
-          "original_path": "youtube-studio-batch-upload",
+          "original_path": "libraries/swyxio-skills/youtube-studio-batch-upload",
           "tags": [
             "browser",
             "docs",
@@ -5092,10 +5160,26 @@
           "extracted_path": "extracted-skills/swyxio-skills/youtube-studio-batch-upload"
         },
         {
+          "id": "youtube-studio-computer-use",
+          "name": "youtube-studio-computer-use",
+          "path": "libraries/swyxio-skills/youtube-studio-computer-use",
+          "original_path": "libraries/swyxio-skills/youtube-studio-computer-use",
+          "tags": [
+            "browser",
+            "docs",
+            "coding",
+            "data",
+            "workflow"
+          ],
+          "description": "Automate YouTube Studio through Chrome and Computer Use when API access is unavailable, insufficient, or slower for Studio-only edits. Use for browser-driven YouTube Studio work such as editing existing videos, adding custom thumbnails, changing visibility, scheduling publish times, selecting playlists, saving/verifying Studio state, recovering from disabled buttons, and coordinating DOM injection with Computer Use clicks. Prefer API or the youtube-studio-batch-upload skill for pure upload/download/metadata preparation when stable API credentials or batch upload workflows are available.",
+          "added_at": "2026-07-18",
+          "extracted_path": "extracted-skills/swyxio-skills/youtube-studio-computer-use"
+        },
+        {
           "id": "youtube-thumbnails",
           "name": "youtube-thumbnails",
           "path": "libraries/swyxio-skills/youtube-thumbnails",
-          "original_path": "youtube-thumbnails",
+          "original_path": "libraries/swyxio-skills/youtube-thumbnails",
           "tags": [
             "image",
             "docs",
@@ -5110,7 +5194,7 @@
           "id": "zoom-download",
           "name": "zoom-download",
           "path": "libraries/swyxio-skills/zoom-download",
-          "original_path": "zoom-download",
+          "original_path": "libraries/swyxio-skills/zoom-download",
           "tags": [
             "docs",
             "coding"
@@ -5129,8 +5213,8 @@
         "root": "extracted-skills/swyxio-skills",
         "source_library": "swyxio-skills",
         "source_path": "libraries/swyxio-skills",
-        "last_extracted_commit": "b5bf58cc53aa8f837c203e392022507b1d7b0cca",
-        "skill_count": 39
+        "last_extracted_commit": "0ab390e1d0b3a44c2a15a13539f1879ee5ecb66b",
+        "skill_count": 41
       },
       "category": "personal-collection",
       "category_locked": true
@@ -5143,7 +5227,7 @@
         "type": "github",
         "repo": "Leonxlnx/taste-skill",
         "ref": "main",
-        "commit": "b17742737e796305d829b3ad39eda3add0d79060",
+        "commit": "7c397f22d3af6f2b3f1925eb147d8e8801086151",
         "original_path": "skills"
       },
       "tags": [
@@ -5153,7 +5237,7 @@
       ],
       "description": "BRANDKIT IMAGE GENERATION SKILL",
       "added_at": "2026-07-15",
-      "last_checked_at": "2026-07-15",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-07-15",
       "skill_count": 13,
       "skills": [
@@ -5354,7 +5438,6 @@
           "extracted_path": "extracted-skills/taste-skill/design-taste-frontend"
         }
       ],
-      "category": "frontend-presentation",
       "install": {
         "method": "extracted",
         "extracted_root": "extracted-skills/taste-skill"
@@ -5365,7 +5448,8 @@
         "source_path": "libraries/taste-skill",
         "last_extracted_commit": "b17742737e796305d829b3ad39eda3add0d79060",
         "skill_count": 13
-      }
+      },
+      "category": "frontend-presentation"
     },
     {
       "id": "vercel-labsagent-skills",
@@ -5387,7 +5471,7 @@
       ],
       "description": "Agent Skills",
       "added_at": "2026-05-17",
-      "last_checked_at": "2026-06-25",
+      "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
       "skill_count": 9,
       "skills": [
@@ -5395,23 +5479,22 @@
           "id": "vercel-composition-patterns",
           "name": "vercel-composition-patterns",
           "path": "libraries/vercel-labsagent-skills/skills/composition-patterns",
-          "original_path": "skills/composition-patterns",
+          "original_path": "libraries/vercel-labsagent-skills/skills/composition-patterns",
           "tags": [
             "docs",
             "coding",
             "frontend",
             "automation"
           ],
-          "description": "React Composition Patterns",
+          "description": "React composition patterns that scale. Use when refactoring components with boolean prop proliferation, building flexible component libraries, or designing reusable APIs. Triggers on tasks involving compound components, render props, context providers, or component architecture. Includes React 19 API changes.",
           "added_at": "2026-05-17",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/vercel-composition-patterns"
         },
         {
           "id": "deploy-to-vercel",
           "name": "deploy-to-vercel",
           "path": "libraries/vercel-labsagent-skills/skills/deploy-to-vercel",
-          "original_path": "skills/deploy-to-vercel",
+          "original_path": "libraries/vercel-labsagent-skills/skills/deploy-to-vercel",
           "tags": [
             "docs",
             "coding",
@@ -5419,14 +5502,13 @@
           ],
           "description": "Deploy applications and websites to Vercel. Use when the user requests deployment actions like \"deploy my app\", \"deploy and give me the link\", \"push this live\", or \"create a preview deployment\".",
           "added_at": "2026-05-17",
-          "version": "3.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/deploy-to-vercel"
         },
         {
           "id": "vercel-react-best-practices",
           "name": "vercel-react-best-practices",
           "path": "libraries/vercel-labsagent-skills/skills/react-best-practices",
-          "original_path": "skills/react-best-practices",
+          "original_path": "libraries/vercel-labsagent-skills/skills/react-best-practices",
           "tags": [
             "docs",
             "coding",
@@ -5436,30 +5518,28 @@
           ],
           "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements.",
           "added_at": "2026-05-17",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/vercel-react-best-practices"
         },
         {
           "id": "vercel-react-native-skills",
           "name": "vercel-react-native-skills",
           "path": "libraries/vercel-labsagent-skills/skills/react-native-skills",
-          "original_path": "skills/react-native-skills",
+          "original_path": "libraries/vercel-labsagent-skills/skills/react-native-skills",
           "tags": [
             "docs",
             "coding",
             "frontend",
             "automation"
           ],
-          "description": "React Native Skills",
+          "description": "React Native and Expo best practices for building performant mobile apps. Use when building React Native components, optimizing list performance, implementing animations, or working with native modules. Triggers on tasks involving React Native, Expo, mobile performance, or native platform APIs.",
           "added_at": "2026-05-17",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/vercel-react-native-skills"
         },
         {
           "id": "vercel-react-view-transitions",
           "name": "vercel-react-view-transitions",
           "path": "libraries/vercel-labsagent-skills/skills/react-view-transitions",
-          "original_path": "skills/react-view-transitions",
+          "original_path": "libraries/vercel-labsagent-skills/skills/react-view-transitions",
           "tags": [
             "docs",
             "coding",
@@ -5468,14 +5548,13 @@
           ],
           "description": "Guide for implementing smooth, native-feeling animations using React's View Transition API (`<ViewTransition>` component, `addTransitionType`, and CSS view transition pseudo-elements). Use this skill whenever the user wants to add page transitions, animate route changes, create shared element animations, animate enter/exit of components, animate list reorder, implement directional (forward/back) navigation animations, or integrate view transitions in Next.js. Also use when the user mentions view transitions, `startViewTransition`, `ViewTransition`, transition types, or asks about animating between UI states in React without third-party animation libraries.",
           "added_at": "2026-05-17",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/vercel-react-view-transitions"
         },
         {
           "id": "vercel-cli-with-tokens",
           "name": "vercel-cli-with-tokens",
           "path": "libraries/vercel-labsagent-skills/skills/vercel-cli-with-tokens",
-          "original_path": "skills/vercel-cli-with-tokens",
+          "original_path": "libraries/vercel-labsagent-skills/skills/vercel-cli-with-tokens",
           "tags": [
             "docs",
             "coding",
@@ -5484,14 +5563,13 @@
           ],
           "description": "Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. \"deploy to vercel\", \"set up vercel\", \"add environment variables to vercel\".",
           "added_at": "2026-05-17",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/vercel-cli-with-tokens"
         },
         {
           "id": "vercel-optimize",
           "name": "vercel-optimize",
           "path": "libraries/vercel-labsagent-skills/skills/vercel-optimize",
-          "original_path": "skills/vercel-optimize",
+          "original_path": "libraries/vercel-labsagent-skills/skills/vercel-optimize",
           "tags": [
             "docs",
             "finance",
@@ -5501,14 +5579,13 @@
           ],
           "description": "Use for Vercel cost and performance optimization on deployed projects, especially Next.js, SvelteKit, Nuxt, and limited Astro apps. Collect Vercel metrics, usage, project config, and code scan results first; investigate only metric-backed candidates; produce ranked recommendations grounded in verified files and version-aware Vercel/framework docs. Trigger for Vercel bill reduction, slow or expensive routes, caching opportunities, Function Invocations, Build Minutes, Fast Data Transfer, Core Web Vitals, Bot Management, Fluid compute, or cost breakdown requests.",
           "added_at": "2026-06-25",
-          "version": "1.2.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/vercel-optimize"
         },
         {
           "id": "web-design-guidelines",
           "name": "web-design-guidelines",
           "path": "libraries/vercel-labsagent-skills/skills/web-design-guidelines",
-          "original_path": "skills/web-design-guidelines",
+          "original_path": "libraries/vercel-labsagent-skills/skills/web-design-guidelines",
           "tags": [
             "docs",
             "coding",
@@ -5517,14 +5594,13 @@
           ],
           "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
           "added_at": "2026-05-17",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/web-design-guidelines"
         },
         {
           "id": "writing-guidelines",
           "name": "writing-guidelines",
           "path": "libraries/vercel-labsagent-skills/skills/writing-guidelines",
-          "original_path": "skills/writing-guidelines",
+          "original_path": "libraries/vercel-labsagent-skills/skills/writing-guidelines",
           "tags": [
             "docs",
             "coding",
@@ -5533,7 +5609,6 @@
           ],
           "description": "Review docs/prose for Writing Guidelines compliance. Use when asked to \"review my docs\", \"check writing style\", \"audit prose\", \"review docs voice and tone\", or \"check this page against the writing handbook\".",
           "added_at": "2026-06-25",
-          "version": "1.0.0",
           "extracted_path": "extracted-skills/vercel-labsagent-skills/writing-guidelines"
         }
       ],

@@ -17,9 +17,11 @@ mod upgrade;
 mod validation;
 
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
-use std::process::exit;
+use std::path::PathBuf;
+use std::process::{exit, Command};
 
 #[cfg(windows)]
 use windows_sys::Win32::Foundation::CloseHandle;
@@ -80,8 +82,147 @@ fn apply_hide_scrollbars_launch_option(
     }
 }
 
+fn attach_script_launch_options(launch_cmd: &mut serde_json::Value, flags: &Flags) {
+    if !flags.init_scripts.is_empty() {
+        launch_cmd["initScripts"] = json!(&flags.init_scripts);
+    }
+    if !flags.enable.is_empty() {
+        launch_cmd["enable"] = json!(&flags.enable);
+    }
+}
+
+fn attach_allowed_domains_to_launch_command(launch_cmd: &mut serde_json::Value, flags: &Flags) {
+    if let Some(ref domains) = flags.allowed_domains {
+        launch_cmd["allowedDomains"] = json!(domains);
+    }
+}
+
 fn attach_plugins_to_command(cmd: &mut serde_json::Value, plugins: &[plugins::PluginConfig]) {
     cmd["plugins"] = json!(plugins);
+}
+
+fn restore_key_from_flags(flags: &Flags) -> Option<&str> {
+    flags.restore.as_deref().or(flags.session_name.as_deref())
+}
+
+fn is_valid_restore_save_policy(policy: &str) -> bool {
+    matches!(policy, "auto" | "always" | "never")
+}
+
+fn incompatible_launch_mode_error(flags: &Flags) -> Option<&'static str> {
+    if flags.cdp.is_some() && flags.provider.is_some() {
+        return Some("Cannot use --cdp and -p/--provider together");
+    }
+
+    if flags.auto_connect && flags.cdp.is_some() {
+        return Some("Cannot use --auto-connect and --cdp together");
+    }
+
+    if flags.auto_connect && flags.provider.is_some() {
+        return Some("Cannot use --auto-connect and -p/--provider together");
+    }
+
+    if flags.provider.is_some() && !flags.extensions.is_empty() {
+        return Some(
+            "Cannot use --extension with -p/--provider (extensions require local browser)",
+        );
+    }
+
+    if flags.cdp.is_some() && !flags.extensions.is_empty() {
+        return Some("Cannot use --extension with --cdp (extensions require local browser)");
+    }
+
+    // The WebGPU preset is Chrome launch flags; it cannot be applied to a
+    // browser agent-browser did not launch. Rejecting (rather than silently
+    // ignoring) matches the --extension handling above. `--webgpu false`
+    // overrides an env/config-enabled preset for these modes.
+    if flags.webgpu && flags.cdp.is_some() {
+        return Some(
+            "Cannot use --webgpu with --cdp (the WebGPU preset requires a local browser launch; pass --webgpu false to override env/config)",
+        );
+    }
+    if flags.webgpu && flags.provider.is_some() {
+        return Some(
+            "Cannot use --webgpu with -p/--provider (the WebGPU preset requires a local browser launch; pass --webgpu false to override env/config)",
+        );
+    }
+    if flags.webgpu && flags.auto_connect {
+        return Some(
+            "Cannot use --webgpu with --auto-connect (the WebGPU preset requires a local browser launch; pass --webgpu false to override env/config)",
+        );
+    }
+
+    None
+}
+
+fn should_send_local_launch_config(flags: &Flags) -> bool {
+    (flags.headed
+        || flags.cli_headed
+        || flags.executable_path.is_some()
+        || flags.profile.is_some()
+        || flags.state.is_some()
+        || flags.proxy.is_some()
+        || flags.args.is_some()
+        || flags.user_agent.is_some()
+        || flags.allow_file_access
+        || should_send_hide_scrollbars_launch_option(
+            flags.cli_hide_scrollbars,
+            flags.hide_scrollbars,
+        )
+        || flags.webgpu
+        || flags.cli_webgpu
+        || flags.color_scheme.is_some()
+        || flags.download_path.is_some()
+        || flags.engine.is_some()
+        || flags.allowed_domains.is_some()
+        || !flags.init_scripts.is_empty()
+        || !flags.enable.is_empty()
+        || !flags.extensions.is_empty())
+        && flags.cdp.is_none()
+        && flags.provider.is_none()
+        && !flags.auto_connect
+}
+
+fn attach_restore_config_to_command(cmd: &mut serde_json::Value, flags: &Flags) {
+    if let Some(restore_key) = restore_key_from_flags(flags) {
+        cmd["restoreKey"] = json!(restore_key);
+        cmd["restoreSave"] = json!(flags.restore_save.as_deref().unwrap_or("auto"));
+        cmd["restoreCheckUrl"] = flags
+            .restore_check_url
+            .as_ref()
+            .map(|check| json!(check))
+            .unwrap_or(serde_json::Value::Null);
+        cmd["restoreCheckText"] = flags
+            .restore_check_text
+            .as_ref()
+            .map(|check| json!(check))
+            .unwrap_or(serde_json::Value::Null);
+        cmd["restoreCheckFn"] = flags
+            .restore_check_fn
+            .as_ref()
+            .map(|check| json!(check))
+            .unwrap_or(serde_json::Value::Null);
+    }
+}
+
+fn mark_restarted_background(resp: &mut Response) {
+    if !resp.success {
+        return;
+    }
+
+    let Some(data) = resp.data.as_mut().and_then(|v| v.as_object_mut()) else {
+        return;
+    };
+
+    let lifecycle = data
+        .entry("lifecycle".to_string())
+        .or_insert_with(|| json!({}));
+    if !lifecycle.is_object() {
+        *lifecycle = json!({});
+    }
+    if let Some(obj) = lifecycle.as_object_mut() {
+        obj.insert("restartedBackground".to_string(), json!(true));
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -309,10 +450,194 @@ fn run_profiles(json_mode: bool) {
     }
 }
 
+fn canonical_path(path: PathBuf) -> PathBuf {
+    path.canonicalize().unwrap_or(path)
+}
+
+fn git_toplevel() -> Option<PathBuf> {
+    let output = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let raw = String::from_utf8(output.stdout).ok()?;
+    let path = raw.trim();
+    if path.is_empty() {
+        None
+    } else {
+        Some(canonical_path(PathBuf::from(path)))
+    }
+}
+
+fn resolve_session_id_scope(scope: &str) -> Result<(String, PathBuf), String> {
+    match scope {
+        "worktree" => {
+            let path = git_toplevel().unwrap_or_else(|| {
+                canonical_path(env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+            });
+            Ok(("worktree".to_string(), path))
+        }
+        "cwd" => {
+            let path = canonical_path(env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+            Ok(("cwd".to_string(), path))
+        }
+        "git-root" => git_toplevel()
+            .map(|path| ("git-root".to_string(), path))
+            .ok_or_else(|| "Not inside a Git working tree".to_string()),
+        other => Err(format!(
+            "Unknown session id scope '{}'. Use worktree, cwd, or git-root.",
+            other
+        )),
+    }
+}
+
+fn run_session_id(args: &[String], json_mode: bool) {
+    let mut scope = "worktree".to_string();
+    let mut prefix: Option<String> = None;
+    let mut json_output = json_mode;
+
+    let mut i = 2;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--scope" => {
+                if let Some(value) = args.get(i + 1) {
+                    scope = value.clone();
+                    i += 1;
+                }
+            }
+            "--prefix" => {
+                if let Some(value) = args.get(i + 1) {
+                    prefix = Some(value.clone());
+                    i += 1;
+                }
+            }
+            "--json" => json_output = true,
+            _ => {}
+        }
+        i += 1;
+    }
+
+    let (resolved_scope, path) = match resolve_session_id_scope(&scope) {
+        Ok(result) => result,
+        Err(e) => {
+            if json_output {
+                print_json_error(e);
+            } else {
+                eprintln!("{} {}", color::error_indicator(), e);
+            }
+            exit(1);
+        }
+    };
+
+    let path_str = path.to_string_lossy().to_string();
+    let mut hasher = Sha256::new();
+    hasher.update(path_str.as_bytes());
+    let hash = format!("{:x}", hasher.finalize());
+    let suffix = &hash[..12];
+
+    let prefix = prefix
+        .as_deref()
+        .map(validation::sanitize_session_component)
+        .filter(|s| !s.is_empty());
+    let session = match prefix {
+        Some(prefix) => format!("{}-{}", prefix, suffix),
+        None => suffix.to_string(),
+    };
+
+    if json_output {
+        print_json_value(json!({
+            "success": true,
+            "data": {
+                "session": session,
+                "scope": resolved_scope,
+                "path": path_str,
+                "hash": suffix
+            }
+        }));
+    } else {
+        println!("{}", session);
+    }
+}
+
+fn run_session_info(session: &str, json_mode: bool) {
+    let inventory = walk_daemons();
+    let active = inventory.sessions.iter().find(|s| s.name == session);
+    let runtime = active.and_then(|_| {
+        send_command(
+            json!({
+                "id": gen_id(),
+                "action": "session_info"
+            }),
+            session,
+        )
+        .ok()
+    });
+
+    let runtime_data = runtime.as_ref().and_then(|resp| resp.data.clone());
+    let runtime_error = runtime.as_ref().and_then(|resp| {
+        if resp.success {
+            None
+        } else {
+            resp.error.clone()
+        }
+    });
+
+    if json_mode {
+        print_json_value(json!({
+            "success": true,
+            "data": {
+                "session": session,
+                "namespace": env::var("AGENT_BROWSER_NAMESPACE").ok(),
+                "socketDir": get_socket_dir().to_string_lossy(),
+                "active": active.is_some(),
+                "pid": active.map(|s| s.pid),
+                "version": active.and_then(|s| s.version.clone()),
+                "runtime": runtime_data,
+                "runtimeError": runtime_error,
+            }
+        }));
+        return;
+    }
+
+    println!("Session: {}", session);
+    println!("Socket dir: {}", get_socket_dir().to_string_lossy());
+    if let Ok(namespace) = env::var("AGENT_BROWSER_NAMESPACE") {
+        println!("Namespace: {}", namespace);
+    }
+    if let Some(active) = active {
+        println!("Daemon: running (pid {})", active.pid);
+        if let Some(ref version) = active.version {
+            println!("Version: {}", version);
+        }
+    } else {
+        println!("Daemon: not running");
+    }
+    if let Some(data) = runtime_data {
+        if let Some(restore_status) = data.get("restoreStatus").and_then(|v| v.as_str()) {
+            println!("Restore status: {}", restore_status);
+        }
+        if let Some(save_status) = data.get("saveStatus").and_then(|v| v.as_str()) {
+            println!("Save status: {}", save_status);
+        }
+        if let Some(engine) = data.get("engine").and_then(|v| v.as_str()) {
+            println!("Engine: {}", engine);
+        }
+        if let Some(launched) = data.get("browserLaunched").and_then(|v| v.as_bool()) {
+            println!("Browser launched: {}", launched);
+        }
+    } else if let Some(err) = runtime_error {
+        println!("Runtime info unavailable: {}", err);
+    }
+}
+
 fn run_session(args: &[String], session: &str, json_mode: bool) {
     let subcommand = args.get(1).map(|s| s.as_str());
 
     match subcommand {
+        Some("id") => run_session_id(args, json_mode),
+        Some("info") => run_session_info(session, json_mode),
         Some("list") => {
             let sessions: Vec<String> = walk_daemons()
                 .sessions
@@ -639,7 +964,13 @@ fn main() {
     }
 
     let args: Vec<String> = env::args().skip(1).collect();
-    let flags = parse_flags(&args);
+    let mut flags = parse_flags(&args);
+    if flags.restore_uses_session {
+        flags.restore = Some(flags.session.clone());
+    }
+    if let Some(ref namespace) = flags.namespace {
+        env::set_var("AGENT_BROWSER_NAMESPACE", namespace);
+    }
     let clean = clean_args(&args);
 
     let has_help = args.iter().any(|a| a == "--help" || a == "-h");
@@ -686,6 +1017,14 @@ fn main() {
             quick: args.iter().any(|a| a == "--quick"),
             fix: args.iter().any(|a| a == "--fix"),
             json: flags.json,
+            // Explicit CLI opt-in only: a global AGENT_BROWSER_WEBGPU/config
+            // "webgpu": true must not make every doctor run launch the extra
+            // Chrome probe (and fail on hosts missing Vulkan deps).
+            webgpu: flags.cli_webgpu && flags.webgpu,
+            debug: flags.debug,
+            // Merged (env/config included) so the probe reflects how the
+            // user's sessions actually launch.
+            headed: flags.headed,
         };
         exit(doctor::run_doctor(opts));
     }
@@ -830,13 +1169,31 @@ fn main() {
     // current config without a restart. The daemon strips this from stream
     // broadcasts before observers see the command payload.
     attach_plugins_to_command(&mut cmd, &flags.plugins);
+    attach_restore_config_to_command(&mut cmd, &flags);
 
-    // Validate session name before starting daemon
-    if let Some(ref name) = flags.session_name {
+    let restore_key = restore_key_from_flags(&flags);
+
+    // Validate restore/session persistence name before starting daemon
+    if let Some(name) = restore_key {
         if !validation::is_valid_session_name(name) {
             let msg = validation::session_name_error(name);
             if flags.json {
                 print_json_error_with_type(msg, "invalid_session_name");
+            } else {
+                eprintln!("{} {}", color::error_indicator(), msg);
+            }
+            exit(1);
+        }
+    }
+
+    if let Some(ref policy) = flags.restore_save {
+        if !is_valid_restore_save_policy(policy) {
+            let msg = format!(
+                "Invalid --restore-save value '{}'. Use auto, always, or never.",
+                policy
+            );
+            if flags.json {
+                print_json_error_with_type(msg, "invalid_value");
             } else {
                 eprintln!("{} {}", color::error_indicator(), msg);
             }
@@ -871,6 +1228,15 @@ fn main() {
         return;
     }
 
+    if let Some(msg) = incompatible_launch_mode_error(&flags) {
+        if flags.json {
+            print_json_error(msg);
+        } else {
+            eprintln!("{} {}", color::error_indicator(), msg);
+        }
+        exit(1);
+    }
+
     // Parse proxy URL to separate server from credentials for the daemon.
     let (proxy_server, proxy_username, proxy_password) = if let Some(ref proxy_str) = flags.proxy {
         let parsed = parse_proxy(proxy_str);
@@ -896,11 +1262,16 @@ fn main() {
         ignore_https_errors: flags.ignore_https_errors,
         allow_file_access: flags.allow_file_access,
         hide_scrollbars: flags.hide_scrollbars,
+        webgpu: flags.webgpu,
         profile: flags.profile.as_deref(),
         state: flags.state.as_deref(),
         provider: flags.provider.as_deref(),
         device: flags.device.as_deref(),
-        session_name: flags.session_name.as_deref(),
+        session_name: restore_key,
+        restore_save: flags.restore_save.as_deref(),
+        restore_check_url: flags.restore_check_url.as_deref(),
+        restore_check_text: flags.restore_check_text.as_deref(),
+        restore_check_fn: flags.restore_check_fn.as_deref(),
         download_path: flags.download_path.as_deref(),
         allowed_domains: flags.allowed_domains.as_deref(),
         action_policy: flags.action_policy.as_deref(),
@@ -925,128 +1296,20 @@ fn main() {
             exit(1);
         }
     };
+    let _daemon_was_already_running = daemon_result.already_running;
+    let daemon_restarted = daemon_result.restarted;
 
-    // Warn if launch-time options were explicitly passed via CLI but daemon was already running
-    // Only warn about flags that were passed on the command line, not those set via environment
-    // variables (since the daemon already uses the env vars when it starts).
-    if daemon_result.already_running {
-        let ignored_flags: Vec<&str> = [
-            if flags.cli_executable_path {
-                Some("--executable-path")
-            } else {
-                None
-            },
-            if flags.cli_extensions {
-                Some("--extension")
-            } else {
-                None
-            },
-            if flags.cli_profile {
-                Some("--profile")
-            } else {
-                None
-            },
-            if flags.cli_state {
-                Some("--state")
-            } else {
-                None
-            },
-            if flags.cli_args { Some("--args") } else { None },
-            if flags.cli_user_agent {
-                Some("--user-agent")
-            } else {
-                None
-            },
-            if flags.cli_proxy {
-                Some("--proxy")
-            } else {
-                None
-            },
-            if flags.cli_proxy_bypass {
-                Some("--proxy-bypass")
-            } else {
-                None
-            },
-            flags.ignore_https_errors.then_some("--ignore-https-errors"),
-            flags.cli_allow_file_access.then_some("--allow-file-access"),
-            flags.cli_hide_scrollbars.then_some("--hide-scrollbars"),
-            flags.cli_download_path.then_some("--download-path"),
-            flags.cli_headed.then_some("--headed"),
-        ]
-        .into_iter()
-        .flatten()
-        .collect();
-
-        if !ignored_flags.is_empty() && !flags.json {
-            eprintln!(
-                "{} {} ignored: daemon already running. Use 'agent-browser close' first to restart with new options.",
-                color::warning_indicator(),
-                ignored_flags.join(", ")
-            );
-        }
-    }
-
-    // Validate mutually exclusive options
-    if flags.cdp.is_some() && flags.provider.is_some() {
-        let msg = "Cannot use --cdp and -p/--provider together";
-        if flags.json {
-            print_json_error(msg);
-        } else {
-            eprintln!("{} {}", color::error_indicator(), msg);
-        }
-        exit(1);
-    }
-
-    if flags.auto_connect && flags.cdp.is_some() {
-        let msg = "Cannot use --auto-connect and --cdp together";
-        if flags.json {
-            print_json_error(msg);
-        } else {
-            eprintln!("{} {}", color::error_indicator(), msg);
-        }
-        exit(1);
-    }
-
-    if flags.auto_connect && flags.provider.is_some() {
-        let msg = "Cannot use --auto-connect and -p/--provider together";
-        if flags.json {
-            print_json_error(msg);
-        } else {
-            eprintln!("{} {}", color::error_indicator(), msg);
-        }
-        exit(1);
-    }
-
-    if flags.provider.is_some() && !flags.extensions.is_empty() {
-        let msg = "Cannot use --extension with -p/--provider (extensions require local browser)";
-        if flags.json {
-            print_json_error(msg);
-        } else {
-            eprintln!("{} {}", color::error_indicator(), msg);
-        }
-        exit(1);
-    }
-
-    if flags.cdp.is_some() && !flags.extensions.is_empty() {
-        let msg = "Cannot use --extension with --cdp (extensions require local browser)";
-        if flags.json {
-            print_json_error(msg);
-        } else {
-            eprintln!("{} {}", color::error_indicator(), msg);
-        }
-        exit(1);
-    }
-
-    // Auto-connect to existing browser.
-    // Skip when the daemon was already running — it already holds the connection
-    // from a previous auto-connect launch, so re-sending the launch command would
-    // redundantly probe Chrome and may trigger repeated permission prompts (#962).
-    if flags.auto_connect && !daemon_result.already_running {
+    // Auto-connect to existing browser. This is sent even when the daemon is
+    // already running so launch compatibility stays idempotent.
+    if flags.auto_connect {
         let mut launch_cmd = json!({
             "id": gen_id(),
             "action": "launch",
             "autoConnect": true
         });
+        attach_script_launch_options(&mut launch_cmd, &flags);
+        attach_allowed_domains_to_launch_command(&mut launch_cmd, &flags);
+        attach_restore_config_to_command(&mut launch_cmd, &flags);
 
         if flags.ignore_https_errors {
             launch_cmd["ignoreHTTPSErrors"] = json!(true);
@@ -1081,7 +1344,6 @@ fn main() {
 
     // Connect via CDP if --cdp flag is set
     // Accepts either a port number (e.g., "9222") or a full URL (e.g., "ws://..." or "wss://...")
-    // Skip when daemon already running — it already holds the CDP connection.
     if let Some(ref cdp_value) = flags.cdp {
         // Validate CDP value eagerly (even when daemon is already running) so
         // the user gets an immediate error for bad input instead of a silent no-op.
@@ -1141,104 +1403,94 @@ fn main() {
             })
         };
 
-        if !daemon_result.already_running {
-            let mut launch_cmd = launch_cmd;
+        let mut launch_cmd = launch_cmd;
+        attach_script_launch_options(&mut launch_cmd, &flags);
+        attach_allowed_domains_to_launch_command(&mut launch_cmd, &flags);
+        attach_restore_config_to_command(&mut launch_cmd, &flags);
 
-            if flags.ignore_https_errors {
-                launch_cmd["ignoreHTTPSErrors"] = json!(true);
+        if flags.ignore_https_errors {
+            launch_cmd["ignoreHTTPSErrors"] = json!(true);
+        }
+
+        if let Some(ref cs) = flags.color_scheme {
+            launch_cmd["colorScheme"] = json!(cs);
+        }
+
+        if let Some(ref dp) = flags.download_path {
+            launch_cmd["downloadPath"] = json!(dp);
+        }
+
+        let err = match send_command(launch_cmd, &flags.session) {
+            Ok(resp) if resp.success => None,
+            Ok(resp) => Some(
+                resp.error
+                    .unwrap_or_else(|| "CDP connection failed".to_string()),
+            ),
+            Err(e) => Some(e.to_string()),
+        };
+
+        if let Some(msg) = err {
+            if flags.json {
+                print_json_error(msg);
+            } else {
+                eprintln!("{} {}", color::error_indicator(), msg);
             }
-
-            if let Some(ref cs) = flags.color_scheme {
-                launch_cmd["colorScheme"] = json!(cs);
-            }
-
-            if let Some(ref dp) = flags.download_path {
-                launch_cmd["downloadPath"] = json!(dp);
-            }
-
-            let err = match send_command(launch_cmd, &flags.session) {
-                Ok(resp) if resp.success => None,
-                Ok(resp) => Some(
-                    resp.error
-                        .unwrap_or_else(|| "CDP connection failed".to_string()),
-                ),
-                Err(e) => Some(e.to_string()),
-            };
-
-            if let Some(msg) = err {
-                if flags.json {
-                    print_json_error(msg);
-                } else {
-                    eprintln!("{} {}", color::error_indicator(), msg);
-                }
-                exit(1);
-            }
+            exit(1);
         }
     }
 
-    // Launch with cloud provider if -p flag is set
-    // Skip when daemon already running — it already holds the provider connection.
+    // Launch with cloud provider if -p flag is set.
     if let Some(ref provider) = flags.provider {
-        if !daemon_result.already_running {
-            let mut launch_cmd = json!({
-                "id": gen_id(),
-                "action": "launch",
-                "provider": provider
-            });
-            launch_cmd["plugins"] = json!(flags.plugins.clone());
+        let mut launch_cmd = json!({
+            "id": gen_id(),
+            "action": "launch",
+            "provider": provider
+        });
+        launch_cmd["plugins"] = json!(flags.plugins.clone());
+        attach_script_launch_options(&mut launch_cmd, &flags);
+        attach_allowed_domains_to_launch_command(&mut launch_cmd, &flags);
+        attach_restore_config_to_command(&mut launch_cmd, &flags);
 
-            if let Some(ref cs) = flags.color_scheme {
-                launch_cmd["colorScheme"] = json!(cs);
+        if let Some(ref cs) = flags.color_scheme {
+            launch_cmd["colorScheme"] = json!(cs);
+        }
+
+        let err = match send_command(launch_cmd, &flags.session) {
+            Ok(resp) if resp.success => None,
+            Ok(resp) => Some(
+                resp.error
+                    .unwrap_or_else(|| "Provider connection failed".to_string()),
+            ),
+            Err(e) => Some(e.to_string()),
+        };
+
+        if let Some(msg) = err {
+            if flags.json {
+                print_json_error(msg);
+            } else {
+                eprintln!("{} {}", color::error_indicator(), msg);
             }
-
-            let err = match send_command(launch_cmd, &flags.session) {
-                Ok(resp) if resp.success => None,
-                Ok(resp) => Some(
-                    resp.error
-                        .unwrap_or_else(|| "Provider connection failed".to_string()),
-                ),
-                Err(e) => Some(e.to_string()),
-            };
-
-            if let Some(msg) = err {
-                if flags.json {
-                    print_json_error(msg);
-                } else {
-                    eprintln!("{} {}", color::error_indicator(), msg);
-                }
-                exit(1);
-            }
+            exit(1);
         }
     }
 
     // Launch headed browser or configure browser options (without CDP or provider)
-    if (flags.headed
-        || flags.cli_headed  // User explicitly set --headed (even if false)
-        || flags.executable_path.is_some()
-        || flags.profile.is_some()
-        || flags.state.is_some()
-        || flags.proxy.is_some()
-        || flags.args.is_some()
-        || flags.user_agent.is_some()
-        || flags.allow_file_access
-        || should_send_hide_scrollbars_launch_option(
-            flags.cli_hide_scrollbars,
-            flags.hide_scrollbars,
-        )
-        || flags.color_scheme.is_some()
-        || flags.download_path.is_some()
-        || flags.engine.is_some()
-        || !flags.extensions.is_empty())
-        && flags.cdp.is_none()
-        && flags.provider.is_none()
-        && !flags.auto_connect
-    {
+    if should_send_local_launch_config(&flags) {
         let mut launch_cmd = json!({
             "id": gen_id(),
             "action": "launch",
-            "headless": !flags.headed
         });
+        // Only send headless when the user set it on this invocation. When
+        // absent, the daemon falls back to its spawn-time AGENT_BROWSER_HEADED
+        // env, so a follow-up command without --headed (common when env vars
+        // like AGENT_BROWSER_ARGS force a launch command on every call) does
+        // not flip a headed session back to headless and relaunch the browser
+        // onto about:blank.
+        if flags.headed || flags.cli_headed {
+            launch_cmd["headless"] = json!(!flags.headed);
+        }
         launch_cmd["plugins"] = json!(flags.plugins.clone());
+        attach_restore_config_to_command(&mut launch_cmd, &flags);
 
         let cmd_obj = launch_cmd
             .as_object_mut()
@@ -1292,6 +1544,14 @@ fn main() {
             cmd_obj.insert("extensions".to_string(), json!(&flags.extensions));
         }
 
+        if !flags.init_scripts.is_empty() {
+            cmd_obj.insert("initScripts".to_string(), json!(&flags.init_scripts));
+        }
+
+        if !flags.enable.is_empty() {
+            cmd_obj.insert("enable".to_string(), json!(&flags.enable));
+        }
+
         if flags.ignore_https_errors {
             launch_cmd["ignoreHTTPSErrors"] = json!(true);
         }
@@ -1306,6 +1566,15 @@ fn main() {
             flags.hide_scrollbars,
         );
 
+        if flags.webgpu || flags.cli_webgpu {
+            launch_cmd["webgpu"] = json!(flags.webgpu);
+        }
+
+        // Env-only opt-out for automatic Xvfb; always stamped from the CLI's
+        // fresh environment so both setting and unsetting the var take effect
+        // on daemons spawned before the change.
+        launch_cmd["noXvfb"] = json!(flags.no_xvfb);
+
         if let Some(ref cs) = flags.color_scheme {
             launch_cmd["colorScheme"] = json!(cs);
         }
@@ -1314,9 +1583,7 @@ fn main() {
             launch_cmd["downloadPath"] = json!(dp);
         }
 
-        if let Some(ref domains) = flags.allowed_domains {
-            launch_cmd["allowedDomains"] = json!(domains);
-        }
+        attach_allowed_domains_to_launch_command(&mut launch_cmd, &flags);
 
         if let Some(ref engine) = flags.engine {
             launch_cmd["engine"] = json!(engine);
@@ -1370,8 +1637,14 @@ fn main() {
 
     match send_command_with_respawn(cmd.clone(), &flags.session, &daemon_opts) {
         Ok(mut resp) => {
+            if daemon_restarted {
+                mark_restarted_background(&mut resp);
+            }
             if flags.confirm_interactive && confirmation_prompt_from_response(&resp).is_some() {
                 resp = run_interactive_confirmations(resp, &flags, &output_opts);
+                if daemon_restarted {
+                    mark_restarted_background(&mut resp);
+                }
                 if !resp.success {
                     exit(1);
                 }
@@ -1506,6 +1779,7 @@ fn run_batch(
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
         attach_plugins_to_command(&mut parsed, &flags.plugins);
+        attach_restore_config_to_command(&mut parsed, flags);
 
         match send_command_with_respawn(parsed, &flags.session, daemon_opts) {
             Ok(resp) => {
@@ -1657,6 +1931,60 @@ mod tests {
         assert_eq!(cli_true_cmd["hideScrollbars"], true);
     }
 
+    fn neutral_launch_config_flags() -> Flags {
+        let mut flags = parse_flags(&[]);
+        flags.headed = false;
+        flags.cli_headed = false;
+        flags.executable_path = None;
+        flags.profile = None;
+        flags.state = None;
+        flags.proxy = None;
+        flags.args = None;
+        flags.user_agent = None;
+        flags.allow_file_access = false;
+        flags.hide_scrollbars = true;
+        flags.cli_hide_scrollbars = false;
+        flags.webgpu = false;
+        flags.cli_webgpu = false;
+        flags.color_scheme = None;
+        flags.download_path = None;
+        flags.engine = None;
+        flags.allowed_domains = None;
+        flags.init_scripts.clear();
+        flags.enable.clear();
+        flags.extensions.clear();
+        flags.cdp = None;
+        flags.provider = None;
+        flags.auto_connect = false;
+        flags
+    }
+
+    #[test]
+    fn test_attach_allowed_domains_to_launch_command() {
+        let mut flags = neutral_launch_config_flags();
+        flags.allowed_domains = Some(vec!["example.com".to_string(), "*.example.org".to_string()]);
+        let mut cmd = json!({ "action": "launch" });
+
+        attach_allowed_domains_to_launch_command(&mut cmd, &flags);
+
+        assert_eq!(
+            cmd["allowedDomains"],
+            json!(["example.com", "*.example.org"])
+        );
+    }
+
+    #[test]
+    fn test_allowed_domains_requests_local_launch_configuration() {
+        let mut flags = neutral_launch_config_flags();
+        assert!(!should_send_local_launch_config(&flags));
+
+        flags.allowed_domains = Some(vec!["example.com".to_string()]);
+        assert!(should_send_local_launch_config(&flags));
+
+        flags.cdp = Some("9222".to_string());
+        assert!(!should_send_local_launch_config(&flags));
+    }
+
     #[test]
     fn test_attach_plugins_to_command_adds_registry_payload() {
         let plugins = vec![crate::plugins::PluginConfig {
@@ -1680,6 +2008,170 @@ mod tests {
         attach_plugins_to_command(&mut cmd, &[]);
 
         assert_eq!(cmd["plugins"], json!([]));
+    }
+
+    #[test]
+    fn test_attach_restore_config_to_command_uses_session_for_bare_restore() {
+        let args = vec![
+            "--session".to_string(),
+            "next-loop".to_string(),
+            "--restore".to_string(),
+            "--restore-save".to_string(),
+            "always".to_string(),
+            "--restore-check-url".to_string(),
+            "**/dashboard".to_string(),
+            "--restore-check-text".to_string(),
+            "Dashboard".to_string(),
+            "--restore-check-fn".to_string(),
+            "!!localStorage.getItem('session')".to_string(),
+            "open".to_string(),
+            "http://localhost:3000".to_string(),
+        ];
+        let mut flags = parse_flags(&args);
+        if flags.restore_uses_session {
+            flags.restore = Some(flags.session.clone());
+        }
+        let mut cmd = json!({ "action": "launch" });
+
+        attach_restore_config_to_command(&mut cmd, &flags);
+
+        assert_eq!(cmd["restoreKey"], "next-loop");
+        assert_eq!(cmd["restoreSave"], "always");
+        assert_eq!(cmd["restoreCheckUrl"], "**/dashboard");
+        assert_eq!(cmd["restoreCheckText"], "Dashboard");
+        assert_eq!(cmd["restoreCheckFn"], "!!localStorage.getItem('session')");
+    }
+
+    #[test]
+    fn test_attach_restore_config_to_command_sends_defaults_and_clears_checks() {
+        let args = vec![
+            "--session".to_string(),
+            "next-loop".to_string(),
+            "--restore".to_string(),
+            "open".to_string(),
+            "http://localhost:3000".to_string(),
+        ];
+        let mut flags = parse_flags(&args);
+        if flags.restore_uses_session {
+            flags.restore = Some(flags.session.clone());
+        }
+        let mut cmd = json!({ "action": "navigate" });
+
+        attach_restore_config_to_command(&mut cmd, &flags);
+
+        assert_eq!(cmd["restoreKey"], "next-loop");
+        assert_eq!(cmd["restoreSave"], "auto");
+        assert!(cmd["restoreCheckUrl"].is_null());
+        assert!(cmd["restoreCheckText"].is_null());
+        assert!(cmd["restoreCheckFn"].is_null());
+    }
+
+    fn launch_mode_flags(auto_connect: bool, cdp: bool, provider: bool, extensions: bool) -> Flags {
+        let mut flags = parse_flags(&[]);
+        // Deterministic regardless of ambient AGENT_BROWSER_WEBGPU.
+        flags.webgpu = false;
+        flags.auto_connect = auto_connect;
+        flags.cdp = cdp.then(|| "9222".to_string());
+        flags.provider = provider.then(|| "ios".to_string());
+        flags.extensions = if extensions {
+            vec!["/tmp/ext".to_string()]
+        } else {
+            Vec::new()
+        };
+        flags
+    }
+
+    #[test]
+    fn test_incompatible_launch_mode_error_matches_existing_messages() {
+        let cases = [
+            (
+                launch_mode_flags(false, true, true, false),
+                "Cannot use --cdp and -p/--provider together",
+            ),
+            (
+                launch_mode_flags(true, true, false, false),
+                "Cannot use --auto-connect and --cdp together",
+            ),
+            (
+                launch_mode_flags(true, false, true, false),
+                "Cannot use --auto-connect and -p/--provider together",
+            ),
+            (
+                launch_mode_flags(false, false, true, true),
+                "Cannot use --extension with -p/--provider (extensions require local browser)",
+            ),
+            (
+                launch_mode_flags(false, true, false, true),
+                "Cannot use --extension with --cdp (extensions require local browser)",
+            ),
+        ];
+
+        for (flags, expected) in cases {
+            assert_eq!(incompatible_launch_mode_error(&flags), Some(expected));
+        }
+    }
+
+    #[test]
+    fn test_incompatible_launch_mode_error_rejects_webgpu_attach_modes() {
+        let with_webgpu = |mut flags: Flags| {
+            flags.webgpu = true;
+            flags
+        };
+        let cases = [
+            (
+                with_webgpu(launch_mode_flags(false, true, false, false)),
+                "Cannot use --webgpu with --cdp (the WebGPU preset requires a local browser launch; pass --webgpu false to override env/config)",
+            ),
+            (
+                with_webgpu(launch_mode_flags(false, false, true, false)),
+                "Cannot use --webgpu with -p/--provider (the WebGPU preset requires a local browser launch; pass --webgpu false to override env/config)",
+            ),
+            (
+                with_webgpu(launch_mode_flags(true, false, false, false)),
+                "Cannot use --webgpu with --auto-connect (the WebGPU preset requires a local browser launch; pass --webgpu false to override env/config)",
+            ),
+        ];
+        for (flags, expected) in cases {
+            assert_eq!(incompatible_launch_mode_error(&flags), Some(expected));
+        }
+
+        // webgpu alone (local launch) is fine.
+        assert_eq!(
+            incompatible_launch_mode_error(&with_webgpu(launch_mode_flags(
+                false, false, false, false
+            ))),
+            None
+        );
+        // Attach modes without webgpu stay allowed.
+        assert_eq!(
+            incompatible_launch_mode_error(&launch_mode_flags(false, true, false, false)),
+            None
+        );
+    }
+
+    #[test]
+    fn test_incompatible_launch_mode_error_allows_compatible_flags() {
+        assert_eq!(
+            incompatible_launch_mode_error(&launch_mode_flags(true, false, false, false)),
+            None
+        );
+        assert_eq!(
+            incompatible_launch_mode_error(&launch_mode_flags(false, true, false, false)),
+            None
+        );
+        assert_eq!(
+            incompatible_launch_mode_error(&launch_mode_flags(false, false, true, false)),
+            None
+        );
+    }
+
+    #[test]
+    fn test_resolve_session_id_scope_accepts_cwd_and_rejects_unknown() {
+        let (scope, path) = resolve_session_id_scope("cwd").unwrap();
+
+        assert_eq!(scope, "cwd");
+        assert!(path.is_absolute());
+        assert!(resolve_session_id_scope("branch").is_err());
     }
 
     #[test]

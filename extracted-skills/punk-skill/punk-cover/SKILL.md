@@ -28,7 +28,7 @@ The style file defines the reusable visual language. The cover blueprint defines
   - `../../styles/{style-id}/STYLE.md`
 - Only expose styles whose `META.md` metadata has `outputs` containing `cover` or `poster`.
 - Do not expose photo, avatar, portrait, pet-only, polaroid-only, or image-remix styles in the `punk-cover` menu unless their metadata explicitly includes `cover` or `poster`.
-- Do not read the deprecated `references/templates/` directory for new runs. It is retained only for compatibility with old external references.
+- Do not use legacy cover templates. Use only the selected style's `META.md`, `STYLE.md`, and `references/cover-prompt-blueprint.md`.
 
 ## Workflow
 
