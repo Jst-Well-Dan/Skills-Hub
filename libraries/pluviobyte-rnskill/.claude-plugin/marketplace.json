@@ -1,0 +1,80 @@
+{
+  "name": "rnskill",
+  "version": "1.1.0",
+  "owner": "Pluviobyte",
+  "description": "雪踏乌云的 AI Agent Skills 集合 — 写作精修 + 动效制作 + 参考复刻 + 全帧质检",
+  "repository": "https://github.com/Pluviobyte/rnskill",
+  "license": "CC-BY-NC-4.0",
+  "plugins": [
+    {
+      "name": "rn-renhua",
+      "description": "中文 AI/技术写作去 AI 味精修。去除二元对比壳、伪洞察标记、冒号讲义腔等 AI 写作模式。\nChinese AI/tech writing de-AI editor. Removes AI-flavored structure while preserving author voice.\nTrigger: /rn-renhua, 去AI味, 精修中文AI技术文章",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "writing",
+      "keywords": ["去AI味", "精修", "中文写作", "de-AI", "writing", "renhua"],
+      "skills": ["./skills/rn-renhua"]
+    },
+    {
+      "name": "rn-motion-director",
+      "description": "AI 动效导演元 Skill。把选题/脚本转化为动效视频概念：视觉隐喻、运动语法、场景节拍图、Anti-PPT 质量门。\nMotion-first AI video director. Turns topics into motion video concepts with anti-PPT QC.\nTrigger: /rn-motion-director, 帮我做动效规划, 这个选题怎么做成视频",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "video-production",
+      "keywords": ["视频", "动效", "导演", "motion", "director", "video"],
+      "skills": ["./skills/rn-motion-director"]
+    },
+    {
+      "name": "rn-motion-replica",
+      "description": "把获授权的参考片段拆成视觉证据，并制作成原创、可编辑、可验证的 HyperFrames 动效工程。\nOriginal editable motion study from an authorized reference range, with analysis evidence and final-MP4 QC.\nTrigger: /rn-motion-replica, 参考这个视频做同款动效, 复刻前N秒方框连线动画",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "video-production",
+      "keywords": ["参考视频", "动效复刻", "HyperFrames", "motion", "replica", "editable"],
+      "skills": ["./skills/rn-motion-replica"]
+    },
+    {
+      "name": "rn-replica-qc",
+      "description": "参考视频复刻 SOP v2。五级保真度 + 素材/运行时/交付三道全帧门 + 精确重放与参数化组件分离。\nReference replica SOP v2 with five fidelity levels and asset/runtime/delivery frame gates.\nTrigger: /rn-replica-qc, 复刻这个视频, 对齐参考视频, 逐帧像素验证",
+      "source": "./",
+      "strict": false,
+      "version": "1.1.0",
+      "category": "quality-control",
+      "keywords": ["质检", "复刻", "QC", "PSNR", "SSIM", "replica", "alignment"],
+      "skills": ["./skills/rn-replica-qc"]
+    },
+    {
+      "name": "rn-dark-saas-video",
+      "description": "暗色 SaaS 魔术短片。黑色星空舞台 + 紫色底光 + 大字动效 + 渐变 CTA。8 套场景蓝图、3 种时长预设。\nDark cinematic SaaS product video in magic UI style. 8 scene blueprints, 3 timing presets.\nTrigger: /rn-dark-saas-video, 暗色SaaS短片, 同款风格",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "video-production",
+      "keywords": ["SaaS", "暗色", "产品视频", "dark", "magic-ui", "cinematic"],
+      "skills": ["./skills/rn-dark-saas-video"]
+    },
+    {
+      "name": "rn-bw-text-opener",
+      "description": "黑白文字打字机开场动画。纯黑背景 + 白色逐字打字 + 同步音效 + 文字替换。3 种时长预设。\nBlack-white typed text opener animation with synced SFX. 3 timing presets.\nTrigger: /rn-bw-text-opener, 黑底白字开场, 打字效果开头",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "video-production",
+      "keywords": ["开场", "打字", "黑底白字", "opener", "typing", "animation"],
+      "skills": ["./skills/rn-bw-text-opener"]
+    },
+    {
+      "name": "rn-cover-skill",
+      "description": "无参考图生成 5:2 编辑图解风封面。固定暖白背景、自适应左文右图，每次重新设计右侧概念图，输出可编辑 SVG + PNG。\nReference-free 5:2 editorial diagram covers with adaptive typography, fresh artwork, and editable SVG + PNG.\nTrigger: /rn-cover-skill, RN封面, 编辑图解风封面",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "design",
+      "keywords": ["封面", "编辑设计", "图解", "cover", "editorial", "diagram"],
+      "skills": ["./skills/rn-cover-skill"]
+    }
+  ]
+}

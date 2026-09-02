@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import configparser
+import hashlib
 import json
 import re
 import shutil
@@ -17,6 +18,7 @@ EXTRACTED_SKILLS_DIR = ROOT / "extracted-skills"
 REGISTRY_DIR = ROOT / "registry"
 PROJECTS_FILE = REGISTRY_DIR / "projects.yaml"
 TAGS_FILE = REGISTRY_DIR / "tags.yaml"
+CATEGORIES_FILE = REGISTRY_DIR / "categories.yaml"
 DOCS_DIR = ROOT / "docs"
 
 
@@ -38,7 +40,7 @@ DEFAULT_TAGS = [
     "research",
 ]
 
-CATEGORY_LABELS = {
+_DEFAULT_CATEGORY_LABELS = {
     "coding-tools": "编程工具类",
     "daily-tools": "日常工具类",
     "personal-collection": "个人合集类",
@@ -50,6 +52,38 @@ CATEGORY_LABELS = {
     "automation-workflow": "自动化流程类",
     "uncategorized": "未分类",
 }
+
+def _load_category_labels() -> dict[str, str]:
+    if CATEGORIES_FILE.exists():
+        try:
+            data = json.loads(CATEGORIES_FILE.read_text(encoding="utf-8"))
+            # 支持两种格式：{id: label} 或 {categories: {id: label}} 或 {id: {label: ""}}
+            if isinstance(data, dict) and "categories" in data and isinstance(data["categories"], dict):
+                data = data["categories"]
+            cleaned: dict[str, str] = {}
+            for k, v in data.items():
+                if isinstance(v, str):
+                    cleaned[k] = v
+                elif isinstance(v, dict):
+                    cleaned[k] = v.get("label") or v.get("zh") or v.get("name") or k
+            if cleaned:
+                return cleaned
+        except Exception:
+            pass
+    return dict(_DEFAULT_CATEGORY_LABELS)
+
+CATEGORY_LABELS = _load_category_labels()
+
+def load_category_labels() -> dict[str, str]:
+    # 动态 reload 供 admin 使用
+    return _load_category_labels()
+
+def save_category_labels(labels: dict[str, str]) -> None:
+    REGISTRY_DIR.mkdir(exist_ok=True)
+    CATEGORIES_FILE.write_text(json.dumps(labels, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # 同步内存中的全局字典
+    CATEGORY_LABELS.clear()
+    CATEGORY_LABELS.update(labels)
 
 CATEGORY_KEYWORDS = {
     "coding-tools": [
@@ -308,11 +342,13 @@ def find_repo_root(path: Path) -> Path | None:
 def top_level_projects() -> list[Path]:
     if not LIBRARIES_DIR.exists():
         return []
+    # 内部运维 skill 不进入公开目录，例如 skillhub-ingest
+    _HIDDEN_PROJECTS = {"skillhub-ingest"}
     return sorted(
         [
             item
             for item in LIBRARIES_DIR.iterdir()
-            if item.is_dir() and not item.name.startswith(".")
+            if item.is_dir() and not item.name.startswith(".") and item.name not in _HIDDEN_PROJECTS
         ],
         key=lambda p: p.name.lower(),
     )
@@ -464,9 +500,22 @@ def project_entry(project_root: Path, existing: dict[str, Any] | None = None) ->
         existing_skills[item_path] = item
         if item_path and not item_path.startswith(f"{LIBRARIES_DIR.name}/"):
             existing_skills[f"{LIBRARIES_DIR.name}/{item_path}"] = item
+    # 去重：kami 等项目的根 SKILL.md 与 plugins/kami/skills/kami/SKILL.md 内容完全相同，需按文件哈希去重，保留更深路径的 canonical skill
+    discovered = discover_project_skills(project_root)
+    seen_hash: dict[str, Path] = {}
+    deduped: list[Path] = []
+    for p in sorted(discovered, key=lambda x: len(x.as_posix()), reverse=True):
+        try:
+            h = hashlib.sha256(p.read_bytes()).hexdigest()
+        except Exception:
+            h = p.as_posix()
+        if h not in seen_hash:
+            seen_hash[h] = p
+            deduped.append(p)
+    discovered = sorted(deduped, key=lambda p: p.as_posix().lower())
     skills = []
     used_ids: set[str] = set()
-    for skill_path in discover_project_skills(project_root):
+    for skill_path in discovered:
         entry = skill_entry(skill_path, existing_skills.get(rel(skill_path.parent)))
         base_id = slug(entry["name"])
         candidate = base_id

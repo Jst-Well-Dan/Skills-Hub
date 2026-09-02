@@ -212,32 +212,62 @@ def build_install_doc(projects: list[dict]) -> str:
 def readme_template(index: str) -> str:
     return f"""# Skills-Hub
 
-这是一个个人 Skill 库收藏仓库。根目录只保留管理文件，实际收藏的 GitHub 项目放在 `libraries/` 下；每个项目库作为一级目录，项目里的多个 `SKILL.md` 作为二级 skill 管理。
+Skills-Hub 是一个面向 AI Agent 开发者和用户的 **Agent Skill 沉浸式检索、深度评测与本地分发/策展枢纽**。
 
-## 常用命令
+- **仓库快照与提炼**：实际收藏的 GitHub 项目完整保留在 `libraries/` 下；提炼出的纯净、开箱即用的可复制/可部署技能保存在 `extracted-skills/` 下。
+- **现代化可视化体验**：零构建单页应用（`site/index.html`），支持即时分类筛选、标签过滤、全文搜索以及抽屉式（Drawer）查看 Skill 原文与 YAML Frontmatter。
+- **本地策展与一键部署**：内置轻量级 Admin 工作台（`start-admin.bat`），支持可视化调整分类、批量多选，并将指定 Skill 直接部署到本机任意项目的 Agent 目录（如 `.claude/skills/`、`.agents/skills/`、`.codex/skills/`）。
+- **实测与最佳实践**：在 `reviews/` 下收录技能组合实践、深度评测与排坑指南。
+
+## 快速启动与管理
+
+### 1. 启动可视化管理与部署工作台 (Admin Mode)
+双击运行根目录脚本，即可同时启动后台服务 (5173) 与前端站点 (5174)，并自动打开管理界面：
+```bash
+# Windows 双击或在终端运行：
+start-admin.bat
+
+# 停止后台服务：
+stop-admin.bat
+```
+或直接通过命令行启动：
+```bash
+python scripts/admin_server.py --port 5173
+```
+浏览器访问 `http://127.0.0.1:5174/index.html?admin=1` 即可进行分类管理与一键部署。
+
+### 2. 静态页面浏览与部署
+运行 `python scripts/generate_site.py` 会读取 `registry/projects.yaml` 生成静态单页 `site/index.html`。页面可直接双击离线打开，也通过 GitHub Actions 自动发布到 GitHub Pages。
+
+## 常用运维命令
 
 ```bash
+# 扫描并同步上游项目与 Skill 元数据
 python scripts/scan_skills.py
+
+# 从 libraries/ 提取可独立安装的 skill 到 extracted-skills/
 python scripts/extract_skills.py
-python scripts/list_skills.py
+
+# 快速查询与列出技能
 python scripts/list_skills.py --skills
 python scripts/list_skills.py --category coding-tools --skills
-python scripts/search_skills.py pdf
-python scripts/sync_skills.py --check
-python scripts/translate_skills.py --project impeccable
+python scripts/search_skills.py <keyword>
+
+# 重新生成文档与静态站点
 python scripts/generate_docs.py
 python scripts/generate_site.py
 ```
 
-## 汉化与点评
+## 专题点评与评测
 
-- 完整译文放在 `translations/<project-id>/<skill-id>/SKILL.md`；用 `translate_skills.py` 按项目或 skill 生成，`--check` 只检查缺失和过期状态。
-- 点评源放在 `reviews/*.md`，使用 JSON front matter 的 `related_projects` 或 `related_skills` 关联目录项；`generate_docs.py` 会生成 `docs/reviews/`。
+- 评测源文件位于 `reviews/*.md`，使用 front-matter 关联项目或技能；
+- 执行 `python scripts/generate_docs.py` 会自动将评测编译生成至 `docs/reviews/`。
 
 {START}
 {index}
 {END}
 """
+
 
 
 def update_readme(index: str) -> None:

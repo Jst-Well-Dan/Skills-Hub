@@ -77,17 +77,47 @@
 - `baoyu-xhs-images`：[`extracted-skills/baoyu-skills/baoyu-xhs-images`](../extracted-skills/baoyu-skills/baoyu-xhs-images)
 - `baoyu-youtube-transcript`：[`extracted-skills/baoyu-skills/baoyu-youtube-transcript`](../extracted-skills/baoyu-skills/baoyu-youtube-transcript)
 
+### claude-plugins-community
+
+复制 [`extracted-skills/claude-plugins-community`](../extracted-skills/claude-plugins-community) 下需要的 skill 到 `~/.claude/skills/`。
+
+- `eli5`：[`extracted-skills/claude-plugins-community/eli5`](../extracted-skills/claude-plugins-community/eli5)
+- `quickdesign`：[`extracted-skills/claude-plugins-community/quickdesign`](../extracted-skills/claude-plugins-community/quickdesign)
+- `testdino-audit`：[`extracted-skills/claude-plugins-community/testdino-audit`](../extracted-skills/claude-plugins-community/testdino-audit)
+- `testdino-health`：[`extracted-skills/claude-plugins-community/testdino-health`](../extracted-skills/claude-plugins-community/testdino-health)
+- `testdino-manual-runs`：[`extracted-skills/claude-plugins-community/testdino-manual-runs`](../extracted-skills/claude-plugins-community/testdino-manual-runs)
+- `testdino-manual-tests`：[`extracted-skills/claude-plugins-community/testdino-manual-tests`](../extracted-skills/claude-plugins-community/testdino-manual-tests)
+- `testdino-releases`：[`extracted-skills/claude-plugins-community/testdino-releases`](../extracted-skills/claude-plugins-community/testdino-releases)
+- `testdino-runs`：[`extracted-skills/claude-plugins-community/testdino-runs`](../extracted-skills/claude-plugins-community/testdino-runs)
+- `testdino-sessions`：[`extracted-skills/claude-plugins-community/testdino-sessions`](../extracted-skills/claude-plugins-community/testdino-sessions)
+- `tres-asc845-swap-reprice-skill`：[`extracted-skills/claude-plugins-community/tres-asc845-swap-reprice-skill`](../extracted-skills/claude-plugins-community/tres-asc845-swap-reprice-skill)
+- `tres-asset-balance-validation`：[`extracted-skills/claude-plugins-community/tres-asset-balance-validation`](../extracted-skills/claude-plugins-community/tres-asset-balance-validation)
+- `tres-cost-basis`：[`extracted-skills/claude-plugins-community/tres-cost-basis`](../extracted-skills/claude-plugins-community/tres-cost-basis)
+- `tres-data-collection-commit`：[`extracted-skills/claude-plugins-community/tres-data-collection-commit`](../extracted-skills/claude-plugins-community/tres-data-collection-commit)
+- `tres-erp-rule-suggestions`：[`extracted-skills/claude-plugins-community/tres-erp-rule-suggestions`](../extracted-skills/claude-plugins-community/tres-erp-rule-suggestions)
+- `tres-explorer-tx-to-ledger`：[`extracted-skills/claude-plugins-community/tres-explorer-tx-to-ledger`](../extracted-skills/claude-plugins-community/tres-explorer-tx-to-ledger)
+- `tres-export-3rd-party-contacts`：[`extracted-skills/claude-plugins-community/tres-export-3rd-party-contacts`](../extracted-skills/claude-plugins-community/tres-export-3rd-party-contacts)
+- `tres-import-contacts`：[`extracted-skills/claude-plugins-community/tres-import-contacts`](../extracted-skills/claude-plugins-community/tres-import-contacts)
+- `tres-invoice-bill-matching`：[`extracted-skills/claude-plugins-community/tres-invoice-bill-matching`](../extracted-skills/claude-plugins-community/tres-invoice-bill-matching)
+- `tres-ledger-link`：[`extracted-skills/claude-plugins-community/tres-ledger-link`](../extracted-skills/claude-plugins-community/tres-ledger-link)
+- `tres-onboarding`：[`extracted-skills/claude-plugins-community/tres-onboarding`](../extracted-skills/claude-plugins-community/tres-onboarding)
+- `tres-recon-gaps`：[`extracted-skills/claude-plugins-community/tres-recon-gaps`](../extracted-skills/claude-plugins-community/tres-recon-gaps)
+- `tres-report-advisor`：[`extracted-skills/claude-plugins-community/tres-report-advisor`](../extracted-skills/claude-plugins-community/tres-report-advisor)
+- `tres-report-analyzer`：[`extracted-skills/claude-plugins-community/tres-report-analyzer`](../extracted-skills/claude-plugins-community/tres-report-analyzer)
+- `tres-report-create`：[`extracted-skills/claude-plugins-community/tres-report-create`](../extracted-skills/claude-plugins-community/tres-report-create)
+- `tres-request-skill-update`：[`extracted-skills/claude-plugins-community/tres-request-skill-update`](../extracted-skills/claude-plugins-community/tres-request-skill-update)
+- `tres-rollup-review`：[`extracted-skills/claude-plugins-community/tres-rollup-review`](../extracted-skills/claude-plugins-community/tres-rollup-review)
+- `tres-rollup-rules`：[`extracted-skills/claude-plugins-community/tres-rollup-rules`](../extracted-skills/claude-plugins-community/tres-rollup-rules)
+- `tres-settings-management`：[`extracted-skills/claude-plugins-community/tres-settings-management`](../extracted-skills/claude-plugins-community/tres-settings-management)
+- `tres-tx-story`：[`extracted-skills/claude-plugins-community/tres-tx-story`](../extracted-skills/claude-plugins-community/tres-tx-story)
+- `tres-upload-tx-header-validation`：[`extracted-skills/claude-plugins-community/tres-upload-tx-header-validation`](../extracted-skills/claude-plugins-community/tres-upload-tx-header-validation)
+- `tres-wallets-upload`：[`extracted-skills/claude-plugins-community/tres-wallets-upload`](../extracted-skills/claude-plugins-community/tres-wallets-upload)
+
 ### codex-complexity-optimizer
 
 复制 [`extracted-skills/codex-complexity-optimizer`](../extracted-skills/codex-complexity-optimizer) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `complexity-optimizer`：[`extracted-skills/codex-complexity-optimizer/complexity-optimizer`](../extracted-skills/codex-complexity-optimizer/complexity-optimizer)
-
-### content-research-writer
-
-复制 [`extracted-skills/content-research-writer`](../extracted-skills/content-research-writer) 下需要的 skill 到 `~/.claude/skills/`。
-
-- `content-research-writer`：[`extracted-skills/content-research-writer/content-research-writer`](../extracted-skills/content-research-writer/content-research-writer)
 
 ### context7-cli
 
@@ -107,7 +137,6 @@
 复制 [`extracted-skills/frontend-slides`](../extracted-skills/frontend-slides) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `frontend-slides`：[`extracted-skills/frontend-slides/frontend-slides`](../extracted-skills/frontend-slides/frontend-slides)
-- `frontend-slides-2`：[`extracted-skills/frontend-slides/frontend-slides-2`](../extracted-skills/frontend-slides/frontend-slides-2)
 
 ### gsap-skills
 
@@ -252,6 +281,30 @@
 - `huashu-wechat-image`：[`extracted-skills/huashu-skills/huashu-wechat-image`](../extracted-skills/huashu-skills/huashu-wechat-image)
 - `huashu-xhs-image`：[`extracted-skills/huashu-skills/huashu-xhs-image`](../extracted-skills/huashu-skills/huashu-xhs-image)
 
+### hyperframes
+
+推荐 `npx skills add heygen-com/hyperframes --full-depth`；也可从 [`extracted-skills/hyperframes`](../extracted-skills/hyperframes) 手动复制。
+
+- `embedded-captions`：[`extracted-skills/hyperframes/embedded-captions`](../extracted-skills/hyperframes/embedded-captions)
+- `faceless-explainer`：[`extracted-skills/hyperframes/faceless-explainer`](../extracted-skills/hyperframes/faceless-explainer)
+- `figma`：[`extracted-skills/hyperframes/figma`](../extracted-skills/hyperframes/figma)
+- `general-video`：[`extracted-skills/hyperframes/general-video`](../extracted-skills/hyperframes/general-video)
+- `hyperframes`：[`extracted-skills/hyperframes/hyperframes`](../extracted-skills/hyperframes/hyperframes)
+- `hyperframes-animation`：[`extracted-skills/hyperframes/hyperframes-animation`](../extracted-skills/hyperframes/hyperframes-animation)
+- `hyperframes-cli`：[`extracted-skills/hyperframes/hyperframes-cli`](../extracted-skills/hyperframes/hyperframes-cli)
+- `hyperframes-core`：[`extracted-skills/hyperframes/hyperframes-core`](../extracted-skills/hyperframes/hyperframes-core)
+- `hyperframes-creative`：[`extracted-skills/hyperframes/hyperframes-creative`](../extracted-skills/hyperframes/hyperframes-creative)
+- `hyperframes-keyframes`：[`extracted-skills/hyperframes/hyperframes-keyframes`](../extracted-skills/hyperframes/hyperframes-keyframes)
+- `hyperframes-registry`：[`extracted-skills/hyperframes/hyperframes-registry`](../extracted-skills/hyperframes/hyperframes-registry)
+- `media-use`：[`extracted-skills/hyperframes/media-use`](../extracted-skills/hyperframes/media-use)
+- `motion-graphics`：[`extracted-skills/hyperframes/motion-graphics`](../extracted-skills/hyperframes/motion-graphics)
+- `music-to-video`：[`extracted-skills/hyperframes/music-to-video`](../extracted-skills/hyperframes/music-to-video)
+- `pr-to-video`：[`extracted-skills/hyperframes/pr-to-video`](../extracted-skills/hyperframes/pr-to-video)
+- `product-launch-video`：[`extracted-skills/hyperframes/product-launch-video`](../extracted-skills/hyperframes/product-launch-video)
+- `remotion-to-hyperframes`：[`extracted-skills/hyperframes/remotion-to-hyperframes`](../extracted-skills/hyperframes/remotion-to-hyperframes)
+- `slideshow`：[`extracted-skills/hyperframes/slideshow`](../extracted-skills/hyperframes/slideshow)
+- `talking-head-recut`：[`extracted-skills/hyperframes/talking-head-recut`](../extracted-skills/hyperframes/talking-head-recut)
+
 ### impeccable
 
 推荐 `npx impeccable skills install`；也可从 [`extracted-skills/impeccable`](../extracted-skills/impeccable) 手动复制。
@@ -263,7 +316,6 @@
 推荐 `npx skills add tw93/kami/plugins/kami -a universal -g -y`；也可从 [`extracted-skills/kami`](../extracted-skills/kami) 手动复制。
 
 - `kami`：[`extracted-skills/kami/kami`](../extracted-skills/kami/kami)
-- `kami-2`：[`extracted-skills/kami/kami-2`](../extracted-skills/kami/kami-2)
 
 ### ljg-skills
 
@@ -365,6 +417,75 @@
 - `obsidian-cli`：[`extracted-skills/obsidian-skills/obsidian-cli`](../extracted-skills/obsidian-skills/obsidian-cli)
 - `obsidian-markdown`：[`extracted-skills/obsidian-skills/obsidian-markdown`](../extracted-skills/obsidian-skills/obsidian-markdown)
 
+### photo-abstract-editorial
+
+复制 [`extracted-skills/photo-abstract-editorial`](../extracted-skills/photo-abstract-editorial) 下需要的 skill 到 `~/.claude/skills/`。
+
+- `photo-abstract-editorial`：[`extracted-skills/photo-abstract-editorial/photo-abstract-editorial`](../extracted-skills/photo-abstract-editorial/photo-abstract-editorial)
+
+### pluviobyte-rnskill
+
+推荐 `npx -y skills add Pluviobyte/rnskill -g --all`；也可从 [`extracted-skills/pluviobyte-rnskill`](../extracted-skills/pluviobyte-rnskill) 手动复制。
+
+- `ai剪口播`：[`extracted-skills/pluviobyte-rnskill/ai剪口播`](../extracted-skills/pluviobyte-rnskill/ai剪口播)
+- `chengfeng-videocut-skills-剪口播`：[`extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-剪口播`](../extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-剪口播)
+- `chengfeng-videocut-skills-口播成片`：[`extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-口播成片`](../extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-口播成片)
+- `chengfeng-videocut-skills-自进化`：[`extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-自进化`](../extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-自进化)
+- `dbs`：[`extracted-skills/pluviobyte-rnskill/dbs`](../extracted-skills/pluviobyte-rnskill/dbs)
+- `dbs-action`：[`extracted-skills/pluviobyte-rnskill/dbs-action`](../extracted-skills/pluviobyte-rnskill/dbs-action)
+- `dbs-agent-migration`：[`extracted-skills/pluviobyte-rnskill/dbs-agent-migration`](../extracted-skills/pluviobyte-rnskill/dbs-agent-migration)
+- `dbs-ai-check`：[`extracted-skills/pluviobyte-rnskill/dbs-ai-check`](../extracted-skills/pluviobyte-rnskill/dbs-ai-check)
+- `dbs-benchmark`：[`extracted-skills/pluviobyte-rnskill/dbs-benchmark`](../extracted-skills/pluviobyte-rnskill/dbs-benchmark)
+- `dbs-chatroom`：[`extracted-skills/pluviobyte-rnskill/dbs-chatroom`](../extracted-skills/pluviobyte-rnskill/dbs-chatroom)
+- `dbs-chatroom-austrian`：[`extracted-skills/pluviobyte-rnskill/dbs-chatroom-austrian`](../extracted-skills/pluviobyte-rnskill/dbs-chatroom-austrian)
+- `dbs-content`：[`extracted-skills/pluviobyte-rnskill/dbs-content`](../extracted-skills/pluviobyte-rnskill/dbs-content)
+- `dbs-content-system`：[`extracted-skills/pluviobyte-rnskill/dbs-content-system`](../extracted-skills/pluviobyte-rnskill/dbs-content-system)
+- `dbs-decision`：[`extracted-skills/pluviobyte-rnskill/dbs-decision`](../extracted-skills/pluviobyte-rnskill/dbs-decision)
+- `dbs-deconstruct`：[`extracted-skills/pluviobyte-rnskill/dbs-deconstruct`](../extracted-skills/pluviobyte-rnskill/dbs-deconstruct)
+- `dbs-diagnosis`：[`extracted-skills/pluviobyte-rnskill/dbs-diagnosis`](../extracted-skills/pluviobyte-rnskill/dbs-diagnosis)
+- `dbs-goal`：[`extracted-skills/pluviobyte-rnskill/dbs-goal`](../extracted-skills/pluviobyte-rnskill/dbs-goal)
+- `dbs-good-question`：[`extracted-skills/pluviobyte-rnskill/dbs-good-question`](../extracted-skills/pluviobyte-rnskill/dbs-good-question)
+- `dbs-hook`：[`extracted-skills/pluviobyte-rnskill/dbs-hook`](../extracted-skills/pluviobyte-rnskill/dbs-hook)
+- `dbs-learning`：[`extracted-skills/pluviobyte-rnskill/dbs-learning`](../extracted-skills/pluviobyte-rnskill/dbs-learning)
+- `dbs-report`：[`extracted-skills/pluviobyte-rnskill/dbs-report`](../extracted-skills/pluviobyte-rnskill/dbs-report)
+- `dbs-resonate`：[`extracted-skills/pluviobyte-rnskill/dbs-resonate`](../extracted-skills/pluviobyte-rnskill/dbs-resonate)
+- `dbs-restore`：[`extracted-skills/pluviobyte-rnskill/dbs-restore`](../extracted-skills/pluviobyte-rnskill/dbs-restore)
+- `dbs-save`：[`extracted-skills/pluviobyte-rnskill/dbs-save`](../extracted-skills/pluviobyte-rnskill/dbs-save)
+- `dbs-slowisfast`：[`extracted-skills/pluviobyte-rnskill/dbs-slowisfast`](../extracted-skills/pluviobyte-rnskill/dbs-slowisfast)
+- `dbs-spread`：[`extracted-skills/pluviobyte-rnskill/dbs-spread`](../extracted-skills/pluviobyte-rnskill/dbs-spread)
+- `dbs-xhs-title`：[`extracted-skills/pluviobyte-rnskill/dbs-xhs-title`](../extracted-skills/pluviobyte-rnskill/dbs-xhs-title)
+- `editorial-collage-motion`：[`extracted-skills/pluviobyte-rnskill/editorial-collage-motion`](../extracted-skills/pluviobyte-rnskill/editorial-collage-motion)
+- `editorial-dot-cover`：[`extracted-skills/pluviobyte-rnskill/editorial-dot-cover`](../extracted-skills/pluviobyte-rnskill/editorial-dot-cover)
+- `heygen-digital-avatar`：[`extracted-skills/pluviobyte-rnskill/heygen-digital-avatar`](../extracted-skills/pluviobyte-rnskill/heygen-digital-avatar)
+- `ian-xiaohei-illustrations`：[`extracted-skills/pluviobyte-rnskill/ian-xiaohei-illustrations`](../extracted-skills/pluviobyte-rnskill/ian-xiaohei-illustrations)
+- `ian-xiaohei-svg-motion`：[`extracted-skills/pluviobyte-rnskill/ian-xiaohei-svg-motion`](../extracted-skills/pluviobyte-rnskill/ian-xiaohei-svg-motion)
+- `manim-video`：[`extracted-skills/pluviobyte-rnskill/manim-video`](../extracted-skills/pluviobyte-rnskill/manim-video)
+- `ra-audio-to-subtitles`：[`extracted-skills/pluviobyte-rnskill/ra-audio-to-subtitles`](../extracted-skills/pluviobyte-rnskill/ra-audio-to-subtitles)
+- `ra-hook`：[`extracted-skills/pluviobyte-rnskill/ra-hook`](../extracted-skills/pluviobyte-rnskill/ra-hook)
+- `ra-local-talking-head-cut`：[`extracted-skills/pluviobyte-rnskill/ra-local-talking-head-cut`](../extracted-skills/pluviobyte-rnskill/ra-local-talking-head-cut)
+- `ra-video-download`：[`extracted-skills/pluviobyte-rnskill/ra-video-download`](../extracted-skills/pluviobyte-rnskill/ra-video-download)
+- `ra-video-production-director`：[`extracted-skills/pluviobyte-rnskill/ra-video-production-director`](../extracted-skills/pluviobyte-rnskill/ra-video-production-director)
+- `ra-video-title`：[`extracted-skills/pluviobyte-rnskill/ra-video-title`](../extracted-skills/pluviobyte-rnskill/ra-video-title)
+- `ra-video-wash-pipeline`：[`extracted-skills/pluviobyte-rnskill/ra-video-wash-pipeline`](../extracted-skills/pluviobyte-rnskill/ra-video-wash-pipeline)
+- `ra-人话`：[`extracted-skills/pluviobyte-rnskill/ra-人话`](../extracted-skills/pluviobyte-rnskill/ra-人话)
+- `ra-公众号提取`：[`extracted-skills/pluviobyte-rnskill/ra-公众号提取`](../extracted-skills/pluviobyte-rnskill/ra-公众号提取)
+- `ra-复盘`：[`extracted-skills/pluviobyte-rnskill/ra-复盘`](../extracted-skills/pluviobyte-rnskill/ra-复盘)
+- `ra-实操策划`：[`extracted-skills/pluviobyte-rnskill/ra-实操策划`](../extracted-skills/pluviobyte-rnskill/ra-实操策划)
+- `ra-洗稿`：[`extracted-skills/pluviobyte-rnskill/ra-洗稿`](../extracted-skills/pluviobyte-rnskill/ra-洗稿)
+- `ra-选题`：[`extracted-skills/pluviobyte-rnskill/ra-选题`](../extracted-skills/pluviobyte-rnskill/ra-选题)
+- `ra-逐字稿提取skill`：[`extracted-skills/pluviobyte-rnskill/ra-逐字稿提取skill`](../extracted-skills/pluviobyte-rnskill/ra-逐字稿提取skill)
+- `rn-bw-text-opener`：[`extracted-skills/pluviobyte-rnskill/rn-bw-text-opener`](../extracted-skills/pluviobyte-rnskill/rn-bw-text-opener)
+- `rn-cover-skill`：[`extracted-skills/pluviobyte-rnskill/rn-cover-skill`](../extracted-skills/pluviobyte-rnskill/rn-cover-skill)
+- `rn-dark-saas-video`：[`extracted-skills/pluviobyte-rnskill/rn-dark-saas-video`](../extracted-skills/pluviobyte-rnskill/rn-dark-saas-video)
+- `rn-motion-director`：[`extracted-skills/pluviobyte-rnskill/rn-motion-director`](../extracted-skills/pluviobyte-rnskill/rn-motion-director)
+- `rn-motion-replica`：[`extracted-skills/pluviobyte-rnskill/rn-motion-replica`](../extracted-skills/pluviobyte-rnskill/rn-motion-replica)
+- `rn-replica-qc`：[`extracted-skills/pluviobyte-rnskill/rn-replica-qc`](../extracted-skills/pluviobyte-rnskill/rn-replica-qc)
+- `skill-captions`：[`extracted-skills/pluviobyte-rnskill/skill-captions`](../extracted-skills/pluviobyte-rnskill/skill-captions)
+- `skill-cover`：[`extracted-skills/pluviobyte-rnskill/skill-cover`](../extracted-skills/pluviobyte-rnskill/skill-cover)
+- `tts-skill`：[`extracted-skills/pluviobyte-rnskill/tts-skill`](../extracted-skills/pluviobyte-rnskill/tts-skill)
+- `video-use`：[`extracted-skills/pluviobyte-rnskill/video-use`](../extracted-skills/pluviobyte-rnskill/video-use)
+- `xhs-article-to-images`：[`extracted-skills/pluviobyte-rnskill/xhs-article-to-images`](../extracted-skills/pluviobyte-rnskill/xhs-article-to-images)
+
 ### ponytail
 
 复制 [`extracted-skills/ponytail`](../extracted-skills/ponytail) 下需要的 skill 到 `~/.claude/skills/`。
@@ -382,12 +503,6 @@
 
 - `punk-avatar`：[`extracted-skills/punk-skill/punk-avatar`](../extracted-skills/punk-skill/punk-avatar)
 - `punk-cover`：[`extracted-skills/punk-skill/punk-cover`](../extracted-skills/punk-skill/punk-cover)
-
-### skillhub-ingest
-
-复制 [`extracted-skills/skillhub-ingest`](../extracted-skills/skillhub-ingest) 下需要的 skill 到 `~/.claude/skills/`。
-
-- `skillhub-ingest`：[`extracted-skills/skillhub-ingest/skillhub-ingest`](../extracted-skills/skillhub-ingest/skillhub-ingest)
 
 ### SoftwareCopyright-Skill
 
@@ -478,3 +593,34 @@
 - `vercel-react-view-transitions`：[`extracted-skills/vercel-labsagent-skills/vercel-react-view-transitions`](../extracted-skills/vercel-labsagent-skills/vercel-react-view-transitions)
 - `web-design-guidelines`：[`extracted-skills/vercel-labsagent-skills/web-design-guidelines`](../extracted-skills/vercel-labsagent-skills/web-design-guidelines)
 - `writing-guidelines`：[`extracted-skills/vercel-labsagent-skills/writing-guidelines`](../extracted-skills/vercel-labsagent-skills/writing-guidelines)
+
+### video-shotcraft
+
+推荐 `npx skills add Vincentwei1021/video-shotcraft`；也可从 [`extracted-skills/video-shotcraft`](../extracted-skills/video-shotcraft) 手动复制。
+
+- `video-shotcraft`：[`extracted-skills/video-shotcraft/video-shotcraft`](../extracted-skills/video-shotcraft/video-shotcraft)
+
+### yichen-skills
+
+推荐 `npx skills add mcncarl/yichen-skills --skill yichen-x-slicer`；也可从 [`extracted-skills/yichen-skills`](../extracted-skills/yichen-skills) 手动复制。
+
+- `yichen-agent-memory`：[`extracted-skills/yichen-skills/yichen-agent-memory`](../extracted-skills/yichen-skills/yichen-agent-memory)
+- `yichen-asr`：[`extracted-skills/yichen-skills/yichen-asr`](../extracted-skills/yichen-skills/yichen-asr)
+- `yichen-bookmarks-export`：[`extracted-skills/yichen-skills/yichen-bookmarks-export`](../extracted-skills/yichen-skills/yichen-bookmarks-export)
+- `yichen-chatgpt-web-research`：[`extracted-skills/yichen-skills/yichen-chatgpt-web-research`](../extracted-skills/yichen-skills/yichen-chatgpt-web-research)
+- `yichen-content-archive`：[`extracted-skills/yichen-skills/yichen-content-archive`](../extracted-skills/yichen-skills/yichen-content-archive)
+- `yichen-grok-consult`：[`extracted-skills/yichen-skills/yichen-grok-consult`](../extracted-skills/yichen-skills/yichen-grok-consult)
+- `yichen-jianying-editor`：[`extracted-skills/yichen-skills/yichen-jianying-editor`](../extracted-skills/yichen-skills/yichen-jianying-editor)
+- `yichen-mac-wechat-dual-open`：[`extracted-skills/yichen-skills/yichen-mac-wechat-dual-open`](../extracted-skills/yichen-skills/yichen-mac-wechat-dual-open)
+- `yichen-social-bookmarks-exporter`：[`extracted-skills/yichen-skills/yichen-social-bookmarks-exporter`](../extracted-skills/yichen-skills/yichen-social-bookmarks-exporter)
+- `yichen-summary`：[`extracted-skills/yichen-skills/yichen-summary`](../extracted-skills/yichen-skills/yichen-summary)
+- `yichen-unified-search`：[`extracted-skills/yichen-skills/yichen-unified-search`](../extracted-skills/yichen-skills/yichen-unified-search)
+- `yichen-video-content`：[`extracted-skills/yichen-skills/yichen-video-content`](../extracted-skills/yichen-skills/yichen-video-content)
+- `yichen-volc-asr`：[`extracted-skills/yichen-skills/yichen-volc-asr`](../extracted-skills/yichen-skills/yichen-volc-asr)
+- `yichen-web-research`：[`extracted-skills/yichen-skills/yichen-web-research`](../extracted-skills/yichen-skills/yichen-web-research)
+- `yichen-wechat-local-vault`：[`extracted-skills/yichen-skills/yichen-wechat-local-vault`](../extracted-skills/yichen-skills/yichen-wechat-local-vault)
+- `yichen-wechat-mp-batch-exporter`：[`extracted-skills/yichen-skills/yichen-wechat-mp-batch-exporter`](../extracted-skills/yichen-skills/yichen-wechat-mp-batch-exporter)
+- `yichen-wecom-local-vault`：[`extracted-skills/yichen-skills/yichen-wecom-local-vault`](../extracted-skills/yichen-skills/yichen-wecom-local-vault)
+- `yichen-wecom-operations`：[`extracted-skills/yichen-skills/yichen-wecom-operations`](../extracted-skills/yichen-skills/yichen-wecom-operations)
+- `yichen-x-article-draft-uploader`：[`extracted-skills/yichen-skills/yichen-x-article-draft-uploader`](../extracted-skills/yichen-skills/yichen-x-article-draft-uploader)
+- `yichen-x-slicer`：[`extracted-skills/yichen-skills/yichen-x-slicer`](../extracted-skills/yichen-skills/yichen-x-slicer)

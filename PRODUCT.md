@@ -1,36 +1,34 @@
 # Product
 
-## Register
-
-product
-
 ## Users
 
-Developers and AI-agent users who want to discover useful skill repositories, understand what each collection contains, and reach the original GitHub project quickly.
+Developers, prompt engineers, and AI-agent users (Claude, Codex, Cursor, Antigravity, Pi, etc.) who want to discover, evaluate, read, and deploy curated Agent Skills into local environments with minimal friction.
 
 ## Product Purpose
 
-Skills-Hub is a focused catalog for finding, comparing, and opening curated Agent Skills. Its primary task is helping a user move from a search or category to a relevant project and then to its source repository with minimal friction.
+Skills-Hub is a curated catalog, immersive reader, and local distribution workbench for AI Agent Skills.
 
-## Brand Personality
+It solves three critical problems:
+1. **Discovery & Evaluation**: Cuts through fragmented GitHub repositories to provide structured, categorized, and searchable skill collections with real-world review guides.
+2. **Immersive Reading**: Offers a zero-friction slide-over drawer to inspect full skill prompts, frontmatter schemas, trigger keywords, and installation commands without opening external tabs.
+3. **Local Management & Deployment**: Provides a local visual admin workbench to curate categories and batch-deploy selected skills directly into target project agent directories (`.claude/skills/`, `.agents/skills/`, `.codex/skills/`).
 
-Restrained, clear, trustworthy. The interface should feel like a dependable developer tool: familiar enough to scan immediately, calm enough to support repeated use, and precise about where every link leads.
+## Core Capabilities
 
-## Anti-references
+- **Curated Multi-Dimensional Exploration**: Filter by functional categories (Coding, Daily Tools, Frontend, Content Creation, Documents & Data, Curated Collections) and keyword tags, with real-time full-text search.
+- **Drawer-Based Skill Reader**: Inspect complete `SKILL.md` content, YAML frontmatter configurations, description summaries, and source repository links.
+- **One-Click Prompt & Install Actions**: Quick copy for `npx skills` commands or raw prompt texts, and direct deep-links to upstream repositories.
+- **Local Admin Workbench (`?admin=1`)**:
+  - Visual category lifecycle management (create, rename, reorder, delete).
+  - Multi-select projects or individual skills to batch reassign categories.
+  - One-click batch deployment directly copying skill packages to any local project path.
+  - In-browser trigger for rebuilding static pages and markdown docs.
+- **In-Depth Reviews & Guides**: Dedicated evaluation articles covering skill combinations (e.g. Taste + Impeccable), architectural anti-patterns, and testing benchmarks.
 
-- Dense directory pages that expose every filter, metric, tag, source, and path at once.
-- Dashboard-like surfaces where counters and controls compete with the content being browsed.
-- Repeated badges, filled buttons, borders, and containers that give every element equal visual weight.
-- Decorative motion or styling that slows down search and comparison.
+## Brand Personality & Design Principles
 
-## Design Principles
+- **Material Design & Modern Flat Aesthetic**: Restrained, clear, and trustworthy developer-tool aesthetic. Subtle elevations, crisp typography, and high contrast.
+- **Zero-Build & Zero-Bloat**: Implemented with pure vanilla HTML5, CSS3, and modern JavaScript. No compilation overhead, instant millisecond load time, and full offline/static host portability.
+- **Progressive Disclosure**: High-level scannability on project cards; deep metadata, raw prompt code, and schema definitions presented within the contextual drawer.
+- **Dark/Light Mode & Accessibility**: Automatic adaptation to system color schemes, WCAG AA compliant contrast ratios, full keyboard navigation, and responsive mobile-to-desktop layouts.
 
-1. Search and category browsing are the primary path.
-2. Project identity, purpose, and GitHub destination must be scannable at a glance.
-3. Secondary metadata belongs in search or progressive disclosure, not the main browsing surface.
-4. Use familiar developer-tool patterns and reserve emphasis for selection and action.
-5. Prefer fewer, clearer choices over exposing the full registry structure.
-
-## Accessibility & Inclusion
-
-Target WCAG AA contrast and interaction behavior. Preserve keyboard navigation, visible focus states, system light and dark themes, reduced-motion preferences, semantic controls, and layouts that remain usable from mobile widths upward.

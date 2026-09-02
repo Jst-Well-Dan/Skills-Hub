@@ -176,21 +176,6 @@
       "skill_count": 2,
       "skills": [
         {
-          "id": "supabase-postgres-best-practices",
-          "name": "supabase-postgres-best-practices",
-          "path": "libraries/agent-skills/skills/supabase-postgres-best-practices",
-          "original_path": "skills/supabase-postgres-best-practices",
-          "tags": [
-            "docs",
-            "coding",
-            "data",
-            "automation"
-          ],
-          "description": "Postgres performance optimization and best practices from Supabase. Use this skill when writing, reviewing, or optimizing Postgres queries, schema designs, or database configurations.",
-          "added_at": "2026-05-17",
-          "extracted_path": "extracted-skills/agent-skills/supabase-postgres-best-practices"
-        },
-        {
           "id": "supabase",
           "name": "supabase",
           "path": "libraries/agent-skills/skills/supabase",
@@ -205,6 +190,21 @@
           "description": "Use when doing ANY task involving Supabase. Triggers: Supabase products (Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues); client libraries and SSR integrations (supabase-js, @supabase/ssr) in Next.js, React, SvelteKit, Astro, Remix; auth issues (login, logout, sessions, JWT, cookies, getSession, getUser, getClaims, RLS); Supabase CLI or MCP server; schema changes, migrations, declarative schemas, security audits, Postgres extensions (pg_graphql, pg_cron, pg_vector).",
           "added_at": "2026-05-17",
           "extracted_path": "extracted-skills/agent-skills/supabase"
+        },
+        {
+          "id": "supabase-postgres-best-practices",
+          "name": "supabase-postgres-best-practices",
+          "path": "libraries/agent-skills/skills/supabase-postgres-best-practices",
+          "original_path": "skills/supabase-postgres-best-practices",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "automation"
+          ],
+          "description": "Postgres performance optimization and best practices from Supabase. Use this skill when writing, reviewing, or optimizing Postgres queries, schema designs, or database configurations.",
+          "added_at": "2026-05-17",
+          "extracted_path": "extracted-skills/agent-skills/supabase-postgres-best-practices"
         }
       ],
       "install": {
@@ -886,7 +886,512 @@
         "last_extracted_commit": "6b7a2e417500561a5ecdd0b168332f4142584617",
         "skill_count": 21
       },
-      "category": "content-creation"
+      "category": "content-creation",
+      "category_locked": true
+    },
+    {
+      "id": "claude-plugins-community",
+      "name": "claude-plugins-community",
+      "path": "libraries/claude-plugins-community",
+      "source": {
+        "type": "github",
+        "repo": "anthropics/claude-plugins-community",
+        "ref": "main",
+        "commit": "a727be1c7bd6064419b6f60d71993a19198adc17"
+      },
+      "tags": [
+        "automation",
+        "browser",
+        "cli",
+        "coding",
+        "data",
+        "docs",
+        "finance",
+        "frontend"
+      ],
+      "description": "Claude Plugins — Community",
+      "added_at": "2026-09-01",
+      "last_checked_at": "2026-09-01",
+      "last_synced_at": "2026-09-01",
+      "skill_count": 31,
+      "skills": [
+        {
+          "id": "eli5",
+          "name": "eli5",
+          "path": "libraries/claude-plugins-community/eli5/skills/eli5",
+          "original_path": "eli5/skills/eli5",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Explain a topic like I'm a 5 year old. Use when the user types /eli5 <topic> or asks for a dead-simple picture explainer of how something works.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/eli5"
+        },
+        {
+          "id": "quickdesign",
+          "name": "quickdesign",
+          "path": "libraries/claude-plugins-community/quickdesign/skills/quickdesign",
+          "original_path": "quickdesign/skills/quickdesign",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "cli",
+            "frontend"
+          ],
+          "description": "Use the `quickdesign` CLI to generate AI media — UGC promo videos, image edits, product creatives, video upscales — through Seedance, Kling, Sora2, Nano Banana, and GPT Image. Invoke this skill whenever the user asks for a talking-avatar video, multi-segment ad / promo / explainer, image edit (object swap, angle change, state change), product photoshoot, or video upscale via QuickDesign.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/quickdesign"
+        },
+        {
+          "id": "testdino-audit",
+          "name": "testdino-audit",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-audit",
+          "original_path": "testdino/skills/testdino-audit",
+          "tags": [
+            "browser",
+            "docs",
+            "coding",
+            "mcp"
+          ],
+          "description": "Use only when the user explicitly asks for a TestDino audit of Playwright automated test code. Routes through the audit tools the TestDino MCP server exposes (get_audit_report + submit_audit_report, or the legacy test_audit). For generic code review or non-Playwright targets, do a normal review instead.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-audit"
+        },
+        {
+          "id": "testdino-health",
+          "name": "testdino-health",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-health",
+          "original_path": "testdino/skills/testdino-health",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Use when the user wants to check TestDino connection status, validate their PAT, discover available organizations and projects, or find the right projectId. Always call this first when the project context is ambiguous before any other TestDino tool.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-health"
+        },
+        {
+          "id": "testdino-manual-runs",
+          "name": "testdino-manual-runs",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-manual-runs",
+          "original_path": "testdino/skills/testdino-manual-runs",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Use when the user wants to manage a manual execution run or update case-level results inside a run — listing runs, creating runs for a release, inspecting a run, assigning cases, or marking case results (passed/failed/blocked/skipped/retest/untested). Accepts counter-style IDs like RUN-12 and TC-156.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-manual-runs"
+        },
+        {
+          "id": "testdino-manual-tests",
+          "name": "testdino-manual-tests",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-manual-tests",
+          "original_path": "testdino/skills/testdino-manual-tests",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Use when the user wants to create, update, or browse manual QA test cases and suites in TestDino — not execution runs. Covers list_manual_test_suites, list_manual_test_cases, get_manual_test_case, create_manual_test_case, update_manual_test_case, create_manual_test_suite.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-manual-tests"
+        },
+        {
+          "id": "testdino-releases",
+          "name": "testdino-releases",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-releases",
+          "original_path": "testdino/skills/testdino-releases",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Use when the user wants to browse, inspect, create, or update releases/milestones in a TestDino project. Covers list_releases, get_release, create_release, and update_release. Accepts counter-style IDs like MS-12.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-releases"
+        },
+        {
+          "id": "testdino-runs",
+          "name": "testdino-runs",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-runs",
+          "original_path": "testdino/skills/testdino-runs",
+          "tags": [
+            "browser",
+            "docs",
+            "coding"
+          ],
+          "description": "Use when the user wants to inspect automated test runs, list failed or flaky tests, debug a failing testcase with historical context, or filter runs by branch, commit, author, environment, browser, status, or tags. Includes list_testruns, get_run_details, list_testcase, get_testcase_details, and debug_testcase.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-runs"
+        },
+        {
+          "id": "testdino-sessions",
+          "name": "testdino-sessions",
+          "path": "libraries/claude-plugins-community/testdino/skills/testdino-sessions",
+          "original_path": "testdino/skills/testdino-sessions",
+          "tags": [
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "Use when the user wants to browse, inspect, create, or update exploratory testing sessions in TestDino — by state, status, session type, assignee, release, or tags. Covers list_sessions, get_session, create_session, and update_session. Accepts counter-style IDs like SES-12.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/testdino-sessions"
+        },
+        {
+          "id": "tres-asc845-swap-reprice-skill",
+          "name": "tres-asc845-swap-reprice-skill",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-asc845-swap-reprice-skill",
+          "original_path": "tres-finance-plugin/skills/tres-asc845-swap-reprice-skill",
+          "tags": [
+            "docs",
+            "finance",
+            "coding"
+          ],
+          "description": "Reprice swap transaction legs under ASC 845 (Nonmonetary Transactions) to ensure clearing accounts net to zero. Use this skill whenever the user wants to: reprice swaps, fix clearing account residuals, apply equal-value exchange to swap legs, run setBatchUseCounterpartyFiatValue, zero out a clearing account, apply ASC 845, fix swap pricing mismatches, ensure no gain/loss on swaps, or close a month where a swaps/trade clearing account has a residual balance. Also trigger when the user mentions \"counterparty fiat value\", \"swap repricing\", \"clearing account net to zero\", or \"equal value exchange\".",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-asc845-swap-reprice-skill"
+        },
+        {
+          "id": "tres-asset-balance-validation",
+          "name": "tres-asset-balance-validation",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-asset-balance-validation",
+          "original_path": "tres-finance-plugin/skills/tres-asset-balance-validation",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data"
+          ],
+          "description": "Validate wallet balances in TRES Finance against DeBank and generate a discrepancy report. Use this skill whenever the user asks to validate, verify, cross-check, or audit their TRES balances against on-chain data or DeBank. Also trigger when the user asks if their balances are correct or wants to see discrepancies. Only EVM-compatible wallets are supported.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-asset-balance-validation"
+        },
+        {
+          "id": "tres-cost-basis",
+          "name": "tres-cost-basis",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-cost-basis",
+          "original_path": "tres-finance-plugin/skills/tres-cost-basis",
+          "tags": [
+            "docs",
+            "finance",
+            "coding"
+          ],
+          "description": "Manage cost basis calculation in TRES Finance: check status, view/change strategy (FIFO, LIFO, AVG, MAX_GAINS, MAX_LOSSES, FIFO_IMPAIRMENT), trigger recalculation, review financial issues, manage reevaluations/impairments, set bulk fiat prices, configure spec-ID lot disposal rules, view per-asset cost basis results, and export cost basis reports. Trigger this skill whenever the user asks about cost basis, gains/losses, realized gains, unrealized gains, COGS, inventory lots, tax lots, cost basis strategy, reevaluation, impairment, fiat value override, spec-ID rules, financial issues (negative balance, missing fiat), or anything related to how their crypto assets are costed. Also trigger when the user says \"calculate cost basis\", \"what is my cost basis strategy\", \"show me financial issues\", \"create a reevaluation\", \"run cost basis\", \"change strategy to LIFO\", or similar.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-cost-basis"
+        },
+        {
+          "id": "tres-data-collection-commit",
+          "name": "tres-data-collection-commit",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-data-collection-commit",
+          "original_path": "tres-finance-plugin/skills/tres-data-collection-commit",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "workflow"
+          ],
+          "description": "Trigger on-chain data collection (a \"Commit\") in Tres Finance for wallets that have already been onboarded. Use this skill whenever the user wants to collect data, pull balances, sync wallets, refresh on-chain data, run a commit, trigger a commit, or \"collect\" anything in Tres. This is the second step of the Tres onboarding flow — it sits between wallet upload (tres-wallets-upload) and balance validation (tres-asset-balance-validation). Always trigger this skill for any request that mentions \"commit\", \"collect\", \"data collection\", \"pull data\", \"fetch on-chain data\", \"sync wallets\", \"refresh balances\", or anytime the user just finished uploading wallets and is ready to bring in their on-chain data.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-data-collection-commit"
+        },
+        {
+          "id": "tres-erp-rule-suggestions",
+          "name": "tres-erp-rule-suggestions",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-erp-rule-suggestions",
+          "original_path": "tres-finance-plugin/skills/tres-erp-rule-suggestions",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "frontend"
+          ],
+          "description": "Guide users through creating ERP accounting rules for crypto organizations on the Tres Finance platform. Maps every transaction type to the correct chart of accounts entries using a layered rule engine. Trigger: user asks to create, review, or fix ERP rules / accounting mappings for an organization.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-erp-rule-suggestions"
+        },
+        {
+          "id": "tres-explorer-tx-to-ledger",
+          "name": "tres-explorer-tx-to-ledger",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-explorer-tx-to-ledger",
+          "original_path": "tres-finance-plugin/skills/tres-explorer-tx-to-ledger",
+          "tags": [
+            "docs",
+            "finance",
+            "coding"
+          ],
+          "description": "Add a blockchain explorer transaction to the TRES Finance ledger. Use when the user provides a blockchain explorer URL (Etherscan, Polygonscan, Arbiscan, Basescan, Snowtrace, BscScan, etc.) or a raw transaction hash and wants to record it in the platform ledger. Trigger phrases include \"add this transaction\", \"import tx from etherscan\", \"record this on-chain tx\", \"add to ledger\".",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-explorer-tx-to-ledger"
+        },
+        {
+          "id": "tres-export-3rd-party-contacts",
+          "name": "tres-export-3rd-party-contacts",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-export-3rd-party-contacts",
+          "original_path": "tres-finance-plugin/skills/tres-export-3rd-party-contacts",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "frontend"
+          ],
+          "description": "Extract all 3rd-party (non-owned) addresses from a TRES Finance environment and export them as an XLSX workbook to help users build their contacts list. Use this skill whenever the user wants to export, list, or identify 3rd-party addresses, counterparties, or external addresses from their transactions — even if they don't say 'contacts'. Also trigger when the user asks to prepare a contacts import file, find unknown addresses, or build an address book from transaction history. Do NOT trigger for viewing existing contacts or searching the address book — only for extracting NEW 3rd-party addresses from transaction data.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-export-3rd-party-contacts"
+        },
+        {
+          "id": "tres-import-contacts",
+          "name": "tres-import-contacts",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-import-contacts",
+          "original_path": "tres-finance-plugin/skills/tres-import-contacts",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "research"
+          ],
+          "description": "Import contacts (address book entries) into TRES Finance from a CSV or XLSX file. Use this skill whenever the user wants to import, upload, or bulk-add contacts, address labels, or address book entries into TRES — whether from a file they filled in after using the export-3rd-party-contacts skill, or from any CSV/XLSX that maps addresses to names. Trigger phrases include: 'import contacts', 'upload contacts', 'add contacts from file', 'import address book', 'load contacts into TRES', 'bulk label addresses', 'import the contacts file', 'upload the filled contacts sheet'. Also trigger when the user says something like 'I filled in the contacts file, now import it' or 'here is my contacts spreadsheet, please upload it to TRES'. Do NOT trigger for exporting or extracting unidentified addresses — that's the export-3rd-party-contacts skill. Do NOT trigger for viewing or searching the existing address book.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-import-contacts"
+        },
+        {
+          "id": "tres-invoice-bill-matching",
+          "name": "tres-invoice-bill-matching",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-invoice-bill-matching",
+          "original_path": "tres-finance-plugin/skills/tres-invoice-bill-matching",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "frontend"
+          ],
+          "description": "Match TRES ledger transactions to ERP invoices/bills (AP/AR) and optionally sync them to the connected ERP (Xero, QuickBooks Online, NetSuite). Trigger this skill whenever the user wants to match, link, close, reconcile, or sync an invoice or bill against a blockchain transaction — even if they don't say \"skill\" or use those exact words. Trigger phrases include: \"match this invoice to a transaction\", \"match a bill to tx\", \"close invoice INV-123\", \"close bill 9988\", \"link this tx to a bill\", \"pay this invoice from this transaction\", \"set up this tx as AP\", \"set up this tx as AR\", \"sync this transaction as AP/AR\", \"match AP/AR\", \"find the invoice/bill for this hash\", \"what bill does this tx pay\". Trigger ONLY for explicit AP/AR matching/closing intent — do NOT trigger for general transaction explanations (use tres-tx-story), for ingesting an explorer link into the ledger (use tres-explorer-tx-to-ledger), or for ERP connection setup itself (use tres-settings-management).",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-invoice-bill-matching"
+        },
+        {
+          "id": "tres-ledger-link",
+          "name": "tres-ledger-link",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-ledger-link",
+          "original_path": "tres-finance-plugin/skills/tres-ledger-link",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "frontend"
+          ],
+          "description": "Build a TRES Finance dashboard ledger URL (Transactions tab) with a precise filter set — date range, wallets, assets, tags, status, amount, and more — so it can be shared with a customer or reused. Use whenever the user asks for a \"ledger link\", \"dashboard link\", \"filter URL\", or \"send <customer> a link to <some filtered view>\". Scoped to the Transactions tab only (not Accounting, Roll Forward, Pivot Tables, Cost Basis, or Trial Balances).",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-ledger-link"
+        },
+        {
+          "id": "tres-onboarding",
+          "name": "tres-onboarding",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-onboarding",
+          "original_path": "tres-finance-plugin/skills/tres-onboarding",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "workflow"
+          ],
+          "description": "End-to-end onboarding of a new entity, customer, or account into TRES Finance. Orchestrates 8 steps in order: wallet upload, data collection (commit), balance validation, reconciliation, cost basis, export unidentified addresses, import contacts, and rollup rules. Trigger ONLY when the user explicitly wants to onboard a new entity, customer, or account — e.g. \"onboard a new entity\", \"onboard new customer\", \"start onboarding for [name]\", \"set up a new account in TRES\", \"run the full onboarding flow\", \"I need to onboard [company name]\", \"new entity onboarding\". Do NOT trigger for individual tasks — those have their own dedicated skills. If the user asks to \"add wallets\" without mentioning onboarding, use tres-wallets-upload. \"Validate balances\" alone is tres-asset-balance-validation. \"Run a commit\" alone is tres-data-collection-commit. Only trigger when the user wants the full pipeline.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-onboarding"
+        },
+        {
+          "id": "tres-recon-gaps",
+          "name": "tres-recon-gaps",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-recon-gaps",
+          "original_path": "tres-finance-plugin/skills/tres-recon-gaps",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "workflow"
+          ],
+          "description": "Query, display, and resolve reconciliation gaps from the TRES Finance MCP connector. Trigger this skill ONLY when the user explicitly requests to view or close reconciliation gaps — for example: \"show me the reconciliation gaps\", \"close the recon gaps\", \"view gaps for today\", \"plug the reconciliation gaps for ETH\", \"fix the gaps for USDC and BTC\". Do NOT trigger for general balance queries, transaction history, or ledger browsing. Covers the full workflow: confirming the target date, optionally filtering by asset, fetching gap data, enriching with fiat and on-chain balances, rendering an HTML dashboard where each gap row has copy-prompt buttons (Plug / Auto-fill) — clicking copies a ready-to-paste Claude prompt for that gap. The user pastes it in the chat and Claude executes the action. Ends with a data collect once the user is done.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-recon-gaps"
+        },
+        {
+          "id": "tres-report-advisor",
+          "name": "tres-report-advisor",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-report-advisor",
+          "original_path": "tres-finance-plugin/skills/tres-report-advisor",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data"
+          ],
+          "description": "Recommend the right TRES Finance report for any user question. Trigger this skill whenever a user asks which report to use, what report contains certain data, how to get specific information out of TRES, or compares two reports. Also trigger when the user describes a goal (e.g. \"month-end close\", \"auditor needs proof\", \"tax filing\", \"reconciliation\") without naming a specific report. Trigger phrases include \"which report\", \"what report\", \"how do I export\", \"where can I find\", \"I need a report for\", \"what's the difference between\", \"best report for\", \"auditor asked for\", or any question about getting data out of TRES Finance.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-report-advisor"
+        },
+        {
+          "id": "tres-report-analyzer",
+          "name": "tres-report-analyzer",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-report-analyzer",
+          "original_path": "tres-finance-plugin/skills/tres-report-analyzer",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data"
+          ],
+          "description": "Analyze any TRES Finance report XLSX and produce an automatic findings summary. Trigger this skill whenever a user uploads a .xlsx file that came from TRES Finance and asks to \"analyze\", \"summarize\", \"review\", \"check\", \"audit\", \"look at\", \"what does this show\", \"any issues\", \"anything interesting\", or \"walk me through\" the report. Also trigger when the user uploads an Excel file and mentions TRES, reconciliation, balances, transactions, cost basis, roll forward, or ERP sync. The skill identifies the report type from the file structure, runs targeted analysis based on report-specific logic, and produces a clear findings summary highlighting anomalies, key metrics, and action items.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-report-analyzer"
+        },
+        {
+          "id": "tres-report-create",
+          "name": "tres-report-create",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-report-create",
+          "original_path": "tres-finance-plugin/skills/tres-report-create",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "mcp"
+          ],
+          "description": "Create (generate) any TRES Finance report end-to-end via the tres-mcp MCP server and GraphQL — trigger the export, verify a report row was actually created (guarding against silent failures), poll until done, and return the download link. Trigger this skill on ANY report creation request, including phrases like \"create a report\", \"generate a report\", \"export\", \"run a report\", \"I need a Transaction Ledger / Balances / Reconciliation / Cost Basis / Roll Forward / Staking / Audit report\", \"pull the data for\", \"download a report for\", \"give me a CSV/XLSX of\", or whenever the user wants TRES to produce a report file. Use together with tres-report-advisor when the user is unsure which report they need.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-report-create"
+        },
+        {
+          "id": "tres-request-skill-update",
+          "name": "tres-request-skill-update",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-request-skill-update",
+          "original_path": "tres-finance-plugin/skills/tres-request-skill-update",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "workflow"
+          ],
+          "description": "Submit feedback about the TRES Claude plugin — bug reports, feature requests, skill improvements, new skill ideas, MCP issues, workflow friction, or positive feedback about what's working well. Use this skill whenever the user wants to share any kind of feedback about the plugin, its skills, or the TRES MCP. Trigger phrases include: \"submit feedback\", \"report a bug\", \"request a feature\", \"suggest an improvement\", \"I have an idea\", \"something is broken\", \"the skill isn't working\", \"I love this skill\", \"this worked great\", \"the MCP is returning wrong data\", \"the flow is confusing\", \"can you fix the skill\", \"file a skill request\", \"give feedback\", \"this could be better\". Also trigger proactively when the conversation appears to be wrapping up — e.g. the user says \"thanks\", \"that's all\", \"looks good\", \"we're done\", \"nothing else\", or any other signal that the task is complete. In that case, offer a brief feedback prompt instead of launching the full guided flow. Do NOT trigger for general questions about how a skill works — only when the user wants to submit feedback or the conversation is ending.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-request-skill-update"
+        },
+        {
+          "id": "tres-rollup-review",
+          "name": "tres-rollup-review",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-rollup-review",
+          "original_path": "tres-finance-plugin/skills/tres-rollup-review",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "frontend"
+          ],
+          "description": "Compute the EXACT sub-transaction impact of a rollup rule in TRES Finance — every filter applied — and flag genuine problems (zero matches, overlap, config mistakes) before the rule is created. Two modes. Mode A: a pre-create quality gate invoked by the tres-rollup-rules skill to vet proposed candidate rules. Mode B: standalone review of a rule someone submitted or of existing PENDING rules. Trigger this skill when the user says \"review this rollup rule\", \"what would this rollup rule actually match\", \"preview the rollup impact\", \"how many transactions would this rule catch\", \"is this rollup rule valid\", \"validate my rollup rule\", \"check my pending rollup rules\", or \"review the rollup requests\". Do NOT use this to design or propose new rollups — that is tres-rollup-rules. This skill only measures impact and flags issues; it never executes mutations.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-rollup-review"
+        },
+        {
+          "id": "tres-rollup-rules",
+          "name": "tres-rollup-rules",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-rollup-rules",
+          "original_path": "tres-finance-plugin/skills/tres-rollup-rules",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data"
+          ],
+          "description": "Analyze an organization's sub-transaction patterns in TRES Finance, identify groups of repetitive transactions, and propose data-driven rollup rules that consolidate them into one aggregated entry per interval (daily or monthly) for cleaner ERP integration. Also lists and deletes rollup rules. Trigger this skill whenever the user asks about rollup rules, transaction aggregation, consolidating transactions, reducing transaction noise, rolling up gas fees, rolling up staking rewards, rolling up micro-transactions, or collapsing many small ledger entries into fewer summary entries. Also trigger on \"create a rollup rule\", \"suggest rollup rules\", \"what should I roll up\", \"show my rollup rules\", \"delete a rollup rule\", \"aggregate transactions\", \"too many transactions\", \"reduce transaction count\", \"roll up fees\", \"daily rollup\", \"monthly rollup\". If a wallet has too many transactions, high-frequency activity, or noisy ledger entries, proactively suggest rollup rules. For computing the EXACT impact of a single already-specified rule or reviewing submitted/pending rules, use the tres-rollup-review skill instead.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-rollup-rules"
+        },
+        {
+          "id": "tres-settings-management",
+          "name": "tres-settings-management",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-settings-management",
+          "original_path": "tres-finance-plugin/skills/tres-settings-management",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "mcp"
+          ],
+          "description": "Manage Organization Settings and Platform Settings via the TRES MCP GraphQL API. Use when users ask about org settings, platform settings, configuration, feature flags, enable/disable platforms, balance diff, commit strategy, cost basis, ERP, pricing, sync boundaries, or any setting read/write operation. Trigger phrases include \"get settings\", \"show settings\", \"update settings\", \"change settings\", \"enable platform\", \"disable platform\", \"balance diff\", \"commit strategy\", \"cost basis strategy\", \"set min sync date\", \"configure\", \"turn on\", \"turn off\".",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-settings-management"
+        },
+        {
+          "id": "tres-tx-story",
+          "name": "tres-tx-story",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-tx-story",
+          "original_path": "tres-finance-plugin/skills/tres-tx-story",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "workflow",
+            "mcp"
+          ],
+          "description": "Analyze a blockchain transaction by its hash using TRES Finance MCP and generate a visual flow diagram showing all asset movements, followed by a plain-language explanation of what happened. Use this skill whenever the user provides a transaction hash and asks to \"analyze\", \"explain\", \"visualize\", \"diagram\", \"show me what happened in\", or \"tell the story of\" a transaction. Also trigger when the user pastes a tx hash (long hex string starting with 0x) and asks anything about it. Always use this skill for transaction hash analysis — do not attempt to answer from memory alone.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-tx-story"
+        },
+        {
+          "id": "tres-upload-tx-header-validation",
+          "name": "tres-upload-tx-header-validation",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-upload-tx-header-validation",
+          "original_path": "tres-finance-plugin/skills/tres-upload-tx-header-validation",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "workflow",
+            "frontend"
+          ],
+          "description": "The exact column header names required by the TRES Finance bulk transaction CSV upload. Use whenever building, fixing, or validating the header row of a TRES manual transaction or sub-transaction upload CSV — especially after an upload fails with \\\"Missing required column(s): ...\\\". Trigger phrases include: 'fix my CSV headers', 'bulk transaction upload failed', 'missing required columns', 'validate TRES upload CSV', 'transaction CSV template headers'. This skill is ONLY about the header naming convention; it does not cover row values or upload workflow. Do NOT trigger for contacts import CSV (use tres-import-contacts), wallet upload CSV (use tres-wallets-upload), or general CSV parsing unrelated to bulk TX upload headers.",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-upload-tx-header-validation"
+        },
+        {
+          "id": "tres-wallets-upload",
+          "name": "tres-wallets-upload",
+          "path": "libraries/claude-plugins-community/tres-finance-plugin/skills/tres-wallets-upload",
+          "original_path": "tres-finance-plugin/skills/tres-wallets-upload",
+          "tags": [
+            "docs",
+            "finance",
+            "coding",
+            "data",
+            "workflow"
+          ],
+          "description": "Upload and onboard multiple on-chain wallets or exchange accounts into Tres Finance. Use this skill whenever the user wants to add wallets, onboard wallets, import wallets, upload wallet addresses, ingest wallets, or connect exchanges into Tres — whether from a file (CSV/Excel) or by typing them manually. This skill guides Claude through the full flow: wallet type selection → input collection → validation → preview with editable HTML table → exchange credential collection (if exchange) → user confirmation → batch creation via the TRES MCP API. Always trigger this skill for wallet onboarding, wallet data ingestion, or any request to \"add wallets to Tres\".",
+          "added_at": "2026-09-01",
+          "extracted_path": "extracted-skills/claude-plugins-community/tres-wallets-upload"
+        }
+      ],
+      "category": "personal-collection",
+      "install": {
+        "method": "extracted",
+        "extracted_root": "extracted-skills/claude-plugins-community"
+      },
+      "extracted": {
+        "root": "extracted-skills/claude-plugins-community",
+        "source_library": "claude-plugins-community",
+        "source_path": "libraries/claude-plugins-community",
+        "last_extracted_commit": "a727be1c7bd6064419b6f60d71993a19198adc17",
+        "skill_count": 31
+      },
+      "category_locked": true
     },
     {
       "id": "codex-complexity-optimizer",
@@ -934,58 +1439,6 @@
         "skill_count": 1
       },
       "category": "coding-tools"
-    },
-    {
-      "id": "content-research-writer",
-      "name": "content-research-writer",
-      "path": "libraries/content-research-writer",
-      "source": {
-        "type": "github",
-        "repo": "ComposioHQ/awesome-claude-skills",
-        "ref": "master",
-        "commit": "92568c1edaff1bde5371154f036d959346c145a8",
-        "original_path": "content-research-writer"
-      },
-      "tags": [
-        "docs",
-        "research",
-        "workflow"
-      ],
-      "description": "Content Research Writer",
-      "added_at": "2026-06-25",
-      "last_checked_at": "2026-07-18",
-      "last_synced_at": "2026-06-25",
-      "skill_count": 1,
-      "skills": [
-        {
-          "id": "content-research-writer",
-          "name": "content-research-writer",
-          "path": "libraries/content-research-writer",
-          "original_path": "libraries/content-research-writer",
-          "tags": [
-            "docs",
-            "coding",
-            "workflow",
-            "research"
-          ],
-          "description": "Assists in writing high-quality content by conducting research, adding citations, improving hooks, iterating on outlines, and providing real-time feedback on each section. Transforms your writing process from solo effort to collaborative partnership.",
-          "added_at": "2026-06-25",
-          "extracted_path": "extracted-skills/content-research-writer/content-research-writer"
-        }
-      ],
-      "install": {
-        "method": "extracted",
-        "extracted_root": "extracted-skills/content-research-writer"
-      },
-      "extracted": {
-        "root": "extracted-skills/content-research-writer",
-        "source_library": "content-research-writer",
-        "source_path": "libraries/content-research-writer",
-        "last_extracted_commit": "92568c1edaff1bde5371154f036d959346c145a8",
-        "skill_count": 1
-      },
-      "category": "content-creation",
-      "category_locked": true
     },
     {
       "id": "context7-cli",
@@ -1129,7 +1582,7 @@
       "added_at": "2026-05-17",
       "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-06-25",
-      "skill_count": 2,
+      "skill_count": 1,
       "skills": [
         {
           "id": "frontend-slides",
@@ -1144,20 +1597,6 @@
           "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files. Use when the user wants to build a presentation, convert a PPT/PPTX to web, or create slides for a talk/pitch. Helps non-designers discover their aesthetic through visual exploration rather than abstract choices.",
           "added_at": "2026-05-17",
           "extracted_path": "extracted-skills/frontend-slides/frontend-slides"
-        },
-        {
-          "id": "frontend-slides-2",
-          "name": "frontend-slides",
-          "path": "libraries/frontend-slides",
-          "original_path": "libraries/frontend-slides",
-          "tags": [
-            "docs",
-            "coding",
-            "frontend"
-          ],
-          "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files. Use when the user wants to build a presentation, convert a PPT/PPTX to web, or create slides for a talk/pitch. Helps non-designers discover their aesthetic through visual exploration rather than abstract choices.",
-          "added_at": "2026-05-17",
-          "extracted_path": "extracted-skills/frontend-slides/frontend-slides-2"
         }
       ],
       "install": {
@@ -1171,7 +1610,8 @@
         "last_extracted_commit": "9906a34d640d2111f724544cbc50f7f130569ae1",
         "skill_count": 2
       },
-      "category": "frontend-presentation"
+      "category": "document-data",
+      "category_locked": true
     },
     {
       "id": "gsap-skills",
@@ -1317,7 +1757,7 @@
         "last_extracted_commit": "aed9cfd3277740755f6bfc1155c7aa645403b760",
         "skill_count": 8
       },
-      "category": "frontend-presentation",
+      "category": "video-image",
       "category_locked": true
     },
     {
@@ -1369,7 +1809,8 @@
         "last_extracted_commit": "82fe5ae129e8c2a12e1155fcabed6703342749d6",
         "skill_count": 1
       },
-      "category": "frontend-presentation"
+      "category": "document-data",
+      "category_locked": true
     },
     {
       "id": "guizang-social-card-skill",
@@ -2537,7 +2978,7 @@
         "last_extracted_commit": "d0efb1eaa3b65c731709981718cd5a0a0d4e8f71",
         "skill_count": 81
       },
-      "category": "frontend-presentation",
+      "category": "document-data",
       "category_locked": true
     },
     {
@@ -2592,7 +3033,8 @@
         "last_extracted_commit": "1de2f3dcb3c92792d403a97b1ac972f2fe13741e",
         "skill_count": 1
       },
-      "category": "content-creation"
+      "category": "document-data",
+      "category_locked": true
     },
     {
       "id": "huashu-skills",
@@ -2913,7 +3355,339 @@
         "last_extracted_commit": "35e7cf31328f6de07e5d125bfd094791f84b2352",
         "skill_count": 21
       },
-      "category": "content-creation"
+      "category": "personal-collection",
+      "category_locked": true
+    },
+    {
+      "id": "hyperframes",
+      "name": "hyperframes",
+      "path": "libraries/hyperframes",
+      "source": {
+        "type": "github",
+        "repo": "heygen-com/hyperframes",
+        "ref": "main",
+        "commit": "88853f170f9ab6c7bfa515d59694d1f995ac0e7d"
+      },
+      "tags": [
+        "animation",
+        "automation",
+        "browser",
+        "cli",
+        "coding",
+        "data",
+        "docs",
+        "finance"
+      ],
+      "description": "Quick Start",
+      "added_at": "2026-08-06",
+      "last_checked_at": "2026-08-06",
+      "last_synced_at": "2026-08-06",
+      "skill_count": 19,
+      "skills": [
+        {
+          "id": "embedded-captions",
+          "name": "embedded-captions",
+          "path": "libraries/hyperframes/skills/embedded-captions",
+          "original_path": "skills/embedded-captions",
+          "tags": [
+            "docs",
+            "coding",
+            "workflow",
+            "frontend"
+          ],
+          "description": "Add captions or subtitles to an existing single-subject talking-head video without editing the footage. Use for plain verbatim captions, cinematic captions embedded behind the subject, VFX captions, “炸/特效/酷炫字幕,” or a named identity from the 35-style catalog. Route by visual identity, not by backend engine. The quiet `anchor` rail is the default; embed every word only when the user explicitly wants a fully cinematic treatment. The workflow runs locally end to end, including transcription and subject matting; split multi-shot footage before applying it.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/embedded-captions"
+        },
+        {
+          "id": "faceless-explainer",
+          "name": "faceless-explainer",
+          "path": "libraries/hyperframes/skills/faceless-explainer",
+          "original_path": "skills/faceless-explainer",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "frontend"
+          ],
+          "description": "Turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video: there is no site or footage to capture, so the visuals are invented per scene (typography, abstract graphics, diagrams, data-viz). Use for topic explainers, concept breakdowns, how-tos, listicles. Not a video built from a website (/product-launch-video — promo or tour). Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/faceless-explainer"
+        },
+        {
+          "id": "figma",
+          "name": "figma",
+          "path": "libraries/hyperframes/skills/figma",
+          "original_path": "skills/figma",
+          "tags": [
+            "docs",
+            "coding",
+            "cli",
+            "animation"
+          ],
+          "description": "Import Figma content into a HyperFrames composition — rendered assets, brand tokens, components, storyboard sections → reconstructed motion (frames read as states, not slides) (REST/CLI), connector-assisted motion when available, and shaders from a connector or native export. Use when the user pastes a figma.com link or asks to bring a Figma design, frame, logo, brand, or animation into a video/composition.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/figma"
+        },
+        {
+          "id": "general-video",
+          "name": "general-video",
+          "path": "libraries/hyperframes/skills/general-video",
+          "original_path": "skills/general-video",
+          "tags": [
+            "docs",
+            "coding",
+            "workflow",
+            "frontend",
+            "animation"
+          ],
+          "description": "Author or edit a custom HyperFrames composition when no specialized workflow fits, or when BRIEF.md sets flow: companion. Use for longer or multi-scene pieces, brand and sizzle reels, montages, static loops, static title cards, footage remixes, and freeform builds. Use motion-graphics instead for a short unnarrated motion-first unit, including an animated title. Route fresh creation through hyperframes before using this skill.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/general-video"
+        },
+        {
+          "id": "hyperframes",
+          "name": "hyperframes",
+          "path": "libraries/hyperframes/skills/hyperframes",
+          "original_path": "skills/hyperframes",
+          "tags": [
+            "browser",
+            "docs",
+            "coding",
+            "workflow",
+            "cli"
+          ],
+          "description": "Mandatory entry point: read this first for any request to make, create, edit, animate, or render a video, animation, or motion graphic, including a promo, explainer, captioned clip, title card, overlay, slideshow or interactive deck, Remotion port, or any HyperFrames HTML composition. Also use it to inspect, diagnose, validate, preview, publish, or batch-render an existing HyperFrames project. Inputs may be a website URL, GitHub PR, Figma design or URL, text or brief, existing footage, or music. It resumes project state, captures intent when applicable, selects and installs the owning workflow, and routes domain capabilities. HyperFrames is the default output framework unless the user explicitly chooses another framework for the deliverable or asks only to record a browser session.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes"
+        },
+        {
+          "id": "hyperframes-animation",
+          "name": "hyperframes-animation",
+          "path": "libraries/hyperframes/skills/hyperframes-animation",
+          "original_path": "skills/hyperframes-animation",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "All animation knowledge for HyperFrames — atomic motion rules, multi-phase scene blueprints, scene transitions, broader motion-design techniques, AND the seven runtime adapters (GSAP default, plus Lottie, Three.js, Anime.js, CSS keyframes, Web Animations API, TypeGPU). Use for any motion or animation task: pick 2-4 rules and compose, or load a blueprint, or look up runtime-specific API (e.g. GSAP eases / Lottie player / Three.js mixer). Also covers auditing an existing composition's choreography (animation map) and 24 named text-animation effects. HyperFrames-native: single paused timeline, seek-safe, deterministic.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes-animation"
+        },
+        {
+          "id": "hyperframes-cli",
+          "name": "hyperframes-cli",
+          "path": "libraries/hyperframes/skills/hyperframes-cli",
+          "original_path": "skills/hyperframes-cli",
+          "tags": [
+            "browser",
+            "docs",
+            "coding",
+            "cli",
+            "frontend"
+          ],
+          "description": "Use the HyperFrames CLI development loop: init, add, catalog, capture, lint, check, snapshot, compare, grade-compare, preview, play, present, beats, keyframes, single or batch render, publish, cloud, cloudrun, feedback, lambda, doctor, browser, info, upgrade, skills, compositions, docs, benchmark, telemetry, transcribe, auth, tts, and remove-background. Also use when diagnosing build or render failures. validate, inspect, and layout are deprecated aliases; use check. Covers local, HeyGen-hosted cloud, AWS Lambda, and Google Cloud Run rendering.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes-cli"
+        },
+        {
+          "id": "hyperframes-core",
+          "name": "hyperframes-core",
+          "path": "libraries/hyperframes/skills/hyperframes-core",
+          "original_path": "skills/hyperframes-core",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "cli",
+            "frontend"
+          ],
+          "description": "The HyperFrames composition contract — build one renderable project. Use for composition structure, the `data-*` timing attributes, `class=\"clip\"`, tracks, sub-compositions, variables, framework-owned media playback, deterministic-render rules, and validation. Also covers Tailwind projects and the STORYBOARD.md / SCRIPT.md plan formats. Read before writing composition HTML.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes-core"
+        },
+        {
+          "id": "hyperframes-creative",
+          "name": "hyperframes-creative",
+          "path": "libraries/hyperframes/skills/hyperframes-creative",
+          "original_path": "skills/hyperframes-creative",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat planning, audio-reactive visuals, composition patterns, and brand / style decisions. For atomic motion patterns and scene blueprints, use `hyperframes-animation`.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes-creative"
+        },
+        {
+          "id": "hyperframes-keyframes",
+          "name": "hyperframes-keyframes",
+          "path": "libraries/hyperframes/skills/hyperframes-keyframes",
+          "original_path": "skills/hyperframes-keyframes",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "Use when a HyperFrames composition needs seek-safe 2D/3D keyframes, GSAP timelines, CSS keyframes, Anime.js, WAAPI, FLIP, paths, masks, SVG morph/draw, text trails, 3D depth, or `hyperframes keyframes` diagnostics. Don't use for broad scene strategy, brand design, media sourcing, captions, or general video planning.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes-keyframes"
+        },
+        {
+          "id": "hyperframes-registry",
+          "name": "hyperframes-registry",
+          "path": "libraries/hyperframes/skills/hyperframes-registry",
+          "original_path": "skills/hyperframes-registry",
+          "tags": [
+            "docs",
+            "coding",
+            "data"
+          ],
+          "description": "Install, discover, and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add or hyperframes catalog, installing one item or every block matching a tag, wiring an installed item into index.html, or working with hyperframes.json. Covers discovery, install locations, block sub-composition wiring, component snippet merging, and authoring a new block or component to contribute upstream (idea → scaffold → validate → PR).",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/hyperframes-registry"
+        },
+        {
+          "id": "media-use",
+          "name": "media-use",
+          "path": "libraries/hyperframes/skills/media-use",
+          "original_path": "skills/media-use",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "Agent Media OS, the single skill for every media need in a HyperFrames project. Resolve BGM, SFX, image, icon, brand logo, voice, color grade, or LUT into a frozen local file or paste-ready block + ledger record (one verb, `resolve`); generate via TTS / music / image models when the catalog misses; produce voiceover, transcription, captions, and background removal through one shared audio engine; operate on media (cut / reframe / transform); and reuse assets across projects. Also use for vague feedback that real footage looks dark, flat, boring, should feel retro/camcorder/print/ASCII, needs privacy, or needs a media reveal.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/media-use"
+        },
+        {
+          "id": "motion-graphics",
+          "name": "motion-graphics",
+          "path": "libraries/hyperframes/skills/motion-graphics",
+          "original_path": "skills/motion-graphics",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "data",
+            "frontend"
+          ],
+          "description": "A short, design-led motion graphic where motion is the message — kinetic typography, stat count-up, chart/data-viz hit, logo sting / brand lockup, lower-third / callout / social overlay, animated map (highlight regions, connect places, zoom to a location), animated tweet / news-article / headline, webpage / UI animation (scroll, cursor, callouts), or fusing a real image's geometry into a chart. Usually under 10s (up to ~30s), no narration or live-action subject; renders to MP4 or transparent overlay. Longer / narrated / multi-scene → /general-video. Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/motion-graphics"
+        },
+        {
+          "id": "music-to-video",
+          "name": "music-to-video",
+          "path": "libraries/hyperframes/skills/music-to-video",
+          "original_path": "skills/music-to-video",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "workflow"
+          ],
+          "description": "Turn a music track (an audio file, a video to pull audio from, or a track generated from a mood brief) into a beat-synced video — lyric video, slideshow, or kinetic promo. The music drives all pacing; any user-supplied images/videos are cut onto the same beat grid, and a complete video needs zero assets. Narrated pieces → the input-matched workflow (see /hyperframes). Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/music-to-video"
+        },
+        {
+          "id": "pr-to-video",
+          "name": "pr-to-video",
+          "path": "libraries/hyperframes/skills/pr-to-video",
+          "original_path": "skills/pr-to-video",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Turn a GitHub pull request (a PR URL, owner/repo#N, or 'this PR' in a checked-out repo) into a code-change explainer video — changelog, feature reveal, fix, or refactor walkthrough built from the diff, commits, and files: the input is a code change, not a website. Not a product promo (/product-launch-video) or a no-PR topic explainer (/faceless-explainer). Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/pr-to-video"
+        },
+        {
+          "id": "product-launch-video",
+          "name": "product-launch-video",
+          "path": "libraries/hyperframes/skills/product-launch-video",
+          "original_path": "skills/product-launch-video",
+          "tags": [
+            "docs",
+            "finance",
+            "coding"
+          ],
+          "description": "Turn a product or marketing URL, pasted script, or brief into a product launch / promo video — SaaS promos, feature reveals, product demos, app and company launches. Use when the user wants to market, launch, promote, or reveal a product; the default for any commercial URL. Site tours / showcases of a website route here too — the brief carries the show-it-as-is intent. Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/product-launch-video"
+        },
+        {
+          "id": "remotion-to-hyperframes",
+          "name": "remotion-to-hyperframes",
+          "path": "libraries/hyperframes/skills/remotion-to-hyperframes",
+          "original_path": "skills/remotion-to-hyperframes",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "Port an existing Remotion (React) composition''s source to HyperFrames HTML. Use ONLY on an explicit ask to port/convert/migrate/translate a Remotion source — one-way, Remotion-only. A passing Remotion mention, reference-only code, or \"make something like my Remotion video\" is a fresh build (/general-video). Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/remotion-to-hyperframes"
+        },
+        {
+          "id": "slideshow",
+          "name": "slideshow",
+          "path": "libraries/hyperframes/skills/slideshow",
+          "original_path": "skills/slideshow",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "Author a HyperFrames slideshow — a presentation, pitch deck, or interactive deck with discrete slides, fragment reveals, branching, hotspot navigation, and built-in presenter mode with speaker notes; also converts an existing page into a deck. Output is a navigable deck, not a rendered MP4. If the user didn't explicitly ask for a slideshow, confirm before authoring. Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/slideshow"
+        },
+        {
+          "id": "talking-head-recut",
+          "name": "talking-head-recut",
+          "path": "libraries/hyperframes/skills/talking-head-recut",
+          "original_path": "skills/talking-head-recut",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "obsidian",
+            "data"
+          ],
+          "description": "Package an existing talking-head / interview / podcast video with timed, designed GRAPHIC OVERLAY cards — kinetic titles, lower-thirds, data callouts, quotes, side panels, picture-in-picture — synced to the transcript, on a 16:9 / 9:16 / 4:5 canvas of your choice; the clip plays untouched underneath. Trigger on \"graphic overlays\", \"on-screen graphics\", \"package / dress up my video\". Not plain subtitles (/embedded-captions). Unclear → /hyperframes.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/hyperframes/talking-head-recut"
+        }
+      ],
+      "install": {
+        "method": "npx",
+        "extracted_root": "extracted-skills/hyperframes",
+        "command": "npx skills add heygen-com/hyperframes --full-depth",
+        "fallback": "extracted"
+      },
+      "extracted": {
+        "root": "extracted-skills/hyperframes",
+        "source_library": "hyperframes",
+        "source_path": "libraries/hyperframes",
+        "last_extracted_commit": "88853f170f9ab6c7bfa515d59694d1f995ac0e7d",
+        "skill_count": 19
+      },
+      "category": "video-image",
+      "category_locked": true
     },
     {
       "id": "impeccable",
@@ -2992,7 +3766,7 @@
       "added_at": "2026-07-02",
       "last_checked_at": "2026-07-18",
       "last_synced_at": "2026-07-18",
-      "skill_count": 2,
+      "skill_count": 1,
       "skills": [
         {
           "id": "kami",
@@ -3009,22 +3783,6 @@
           "description": "Typeset professional documents and product landing pages: resumes, one-pagers, white papers, letters, portfolios, slide decks, landing pages. Warm parchment, ink-blue accent, serif-led hierarchy. CN uses TsangerJinKai02, EN uses Charter, JA uses YuMincho (best-effort). Triggers on \"做 PDF / 排版 / 一页纸 / 白皮书 / 作品集 / 简历 / PPT / slides / Marp / markdown slides / マークダウンのスライド / 落地页 / 官网 / landing page / product page\", or \"build me a resume / make a one-pager / design a slide deck / turn this into a PDF / make this presentable / create a landing page\".",
           "added_at": "2026-07-02",
           "extracted_path": "extracted-skills/kami/kami"
-        },
-        {
-          "id": "kami-2",
-          "name": "kami",
-          "path": "libraries/kami",
-          "original_path": ".",
-          "tags": [
-            "docs",
-            "coding",
-            "data",
-            "frontend",
-            "pdf"
-          ],
-          "description": "Typeset professional documents and product landing pages: resumes, one-pagers, white papers, letters, portfolios, slide decks, landing pages. Warm parchment, ink-blue accent, serif-led hierarchy. CN uses TsangerJinKai02, EN uses Charter, JA uses YuMincho (best-effort). Triggers on \"做 PDF / 排版 / 一页纸 / 白皮书 / 作品集 / 简历 / PPT / slides / Marp / markdown slides / マークダウンのスライド / 落地页 / 官网 / landing page / product page\", or \"build me a resume / make a one-pager / design a slide deck / turn this into a PDF / make this presentable / create a landing page\".",
-          "added_at": "2026-07-02",
-          "extracted_path": "extracted-skills/kami/kami-2"
         }
       ],
       "install": {
@@ -3038,7 +3796,7 @@
         "source_library": "kami",
         "source_path": "libraries/kami",
         "last_extracted_commit": "f97bfc9ef83626edb863f6e42632067047a23601",
-        "skill_count": 2
+        "skill_count": 1
       },
       "category": "document-data",
       "category_locked": true
@@ -3377,7 +4135,8 @@
         "last_extracted_commit": "df4e2ff2afaf6e56c7d2751571cd821f94392ece",
         "skill_count": 21
       },
-      "category": "content-creation"
+      "category": "personal-collection",
+      "category_locked": true
     },
     {
       "id": "lottie",
@@ -3428,7 +4187,7 @@
         "last_extracted_commit": "d8973f96fb4553c3dbe6d118b20b83f0f98196dd",
         "skill_count": 1
       },
-      "category": "animation-motion",
+      "category": "video-image",
       "category_locked": true
     },
     {
@@ -4133,7 +4892,7 @@
         "root": "extracted-skills/notebooklm",
         "source_library": "notebooklm",
         "source_path": "libraries/notebooklm",
-        "last_extracted_commit": "8f3cd95a3f4b14f4e536e56c36b37f12c13327d9",
+        "last_extracted_commit": "45fd4258e608fbb9685496f26cfcea48810c44ee",
         "skill_count": 1
       },
       "category": "daily-tools"
@@ -4256,6 +5015,903 @@
       "category": "daily-tools"
     },
     {
+      "id": "photo-abstract-editorial",
+      "name": "photo-abstract-editorial",
+      "path": "libraries/photo-abstract-editorial",
+      "source": {
+        "type": "github",
+        "repo": "ZzzLc0405/photo-abstract-editorial",
+        "ref": "main",
+        "commit": "82636602dcd386b38a3377df5a05a30702ad7e05"
+      },
+      "tags": [
+        "coding",
+        "docs",
+        "image"
+      ],
+      "description": "Photo Abstract Editorial",
+      "added_at": "2026-08-06",
+      "last_checked_at": "2026-08-06",
+      "last_synced_at": "2026-08-06",
+      "skill_count": 1,
+      "skills": [
+        {
+          "id": "photo-abstract-editorial",
+          "name": "photo-abstract-editorial",
+          "path": "libraries/photo-abstract-editorial",
+          "original_path": ".",
+          "tags": [
+            "image",
+            "docs",
+            "coding"
+          ],
+          "description": "Create a clean, vertical editorial artwork that preserves an uploaded photograph as the original image and pairs it with a restrained, photo-derived abstract memory panel and poetic English title. Use when asked to transform a photo into an abstract editorial diptych, photo-plus-abstraction composition, visual memory panel, or minimalist archival poster without redrawing or stylizing the source photo.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/photo-abstract-editorial/photo-abstract-editorial"
+        }
+      ],
+      "install": {
+        "method": "extracted",
+        "extracted_root": "extracted-skills/photo-abstract-editorial"
+      },
+      "extracted": {
+        "root": "extracted-skills/photo-abstract-editorial",
+        "source_library": "photo-abstract-editorial",
+        "source_path": "libraries/photo-abstract-editorial",
+        "last_extracted_commit": "82636602dcd386b38a3377df5a05a30702ad7e05",
+        "skill_count": 1
+      },
+      "category": "video-image",
+      "category_locked": true
+    },
+    {
+      "id": "pluviobyte-rnskill",
+      "name": "pluviobyte-rnskill",
+      "path": "libraries/pluviobyte-rnskill",
+      "source": {
+        "type": "github",
+        "repo": "Pluviobyte/rnskill",
+        "ref": "main",
+        "commit": "766e4eba4162630c783b531f531a3fafe6f45c81"
+      },
+      "tags": [
+        "animation",
+        "automation",
+        "browser",
+        "cli",
+        "coding",
+        "data",
+        "docs",
+        "frontend"
+      ],
+      "description": "rnskill",
+      "added_at": "2026-08-06",
+      "last_checked_at": "2026-08-06",
+      "last_synced_at": "2026-08-06",
+      "skill_count": 58,
+      "skills": [
+        {
+          "id": "ai剪口播",
+          "name": "AI剪口播",
+          "path": "libraries/pluviobyte-rnskill/skills/ai-jian-koubo",
+          "original_path": "skills/ai-jian-koubo",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "口播视频转录和口误识别。生成审查稿和删除任务清单。触发词：剪口播、处理视频、识别口误",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ai剪口播"
+        },
+        {
+          "id": "chengfeng-videocut-skills-剪口播",
+          "name": "chengfeng-videocut-skills:剪口播",
+          "path": "libraries/pluviobyte-rnskill/skills/chengfeng-videocut-skills/剪口播",
+          "original_path": "skills/chengfeng-videocut-skills/剪口播",
+          "tags": [
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "口播基础素材包生成。转录口播、识别口误、生成审核页；用户确认后剪出新视频，Agent 再基于剪后视频重新转写、AI 校对字幕，输出后续口播成片可用的 source_cut.mp4 和 subtitles.srt。触发词：剪口播、处理口播素材、准备口播素材、识别口误、基础素材包",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-剪口播"
+        },
+        {
+          "id": "chengfeng-videocut-skills-口播成片",
+          "name": "chengfeng-videocut-skills:口播成片",
+          "path": "libraries/pluviobyte-rnskill/skills/chengfeng-videocut-skills/口播成片",
+          "original_path": "skills/chengfeng-videocut-skills/口播成片",
+          "tags": [
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "口播视频成片 Skill。把文章/口播稿/SRT、剪后视频和 HTML/图片素材串成分镜稿、时间线预览和最终 MP4；成片比例和动画风格从用户配置读取，动画默认使用小黑风格。触发词：口播成片、做分镜稿、时间线预览、合成口播视频、导出竖屏MP4",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-口播成片"
+        },
+        {
+          "id": "ian-xiaohei-svg-motion",
+          "name": "ian-xiaohei-svg-motion",
+          "path": "libraries/pluviobyte-rnskill/skills/chengfeng-videocut-skills/口播成片/动画/ian-xiaohei-svg-motion",
+          "original_path": "skills/chengfeng-videocut-skills/口播成片/动画/ian-xiaohei-svg-motion",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "workflow",
+            "animation"
+          ],
+          "description": "Create Ian Xiaohei-style HTML/SVG motion illustrations for Chinese articles, scripts, storyboard scenes, workflow explanations, concept metaphors, and short video visual aids. Use when the user asks for 小黑 SVG、漫画感 HTML、分层 SVG 动效、把小黑生图做成 HTML/SVG、可编辑矢量动效、口播流程动画、手绘漫画动效、正文配图动画, or wants a Xiaohei illustration style adapted into controllable HTML/SVG/GSAP output instead of raster image generation.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ian-xiaohei-svg-motion"
+        },
+        {
+          "id": "chengfeng-videocut-skills-自进化",
+          "name": "chengfeng-videocut-skills:自进化",
+          "path": "libraries/pluviobyte-rnskill/skills/chengfeng-videocut-skills/自进化",
+          "original_path": "skills/chengfeng-videocut-skills/自进化",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "自进化 skills。记录用户反馈，更新方法论和规则。触发词：更新规则、记录反馈、改进skill",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/chengfeng-videocut-skills-自进化"
+        },
+        {
+          "id": "dbs",
+          "name": "dbs",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs",
+          "original_path": "skills/dbs",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 商业工具箱主入口。双模式：任务前路由（你的问题该用哪个 skill）+ 任务后导航（刚做完诊断，下一步该干什么）。\n触发方式：/dbs、/商业、「帮我看看」、「下一步怎么走」\nMain entry point for dontbesilent business toolkit. Dual mode: pre-task routing + post-task navigation.\nTrigger: /dbs, \"help me with my business\", \"what's next\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs"
+        },
+        {
+          "id": "dbs-action",
+          "name": "dbs-action",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-action",
+          "original_path": "skills/dbs-action",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 执行力诊断。用阿德勒心理学框架诊断你「知道该做什么但就是不做」的真正原因。\n触发方式：/dbs-action、/action、「我知道该怎么做但就是不做」「为什么我总是拖延」\nExecution block diagnosis using Adlerian psychology framework.\nTrigger: /dbs-action, \"I know what to do but can't do it\", \"why do I procrastinate\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-action"
+        },
+        {
+          "id": "dbs-agent-migration",
+          "name": "dbs-agent-migration",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-agent-migration",
+          "original_path": "skills/dbs-agent-migration",
+          "tags": [
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "Agent 工作台迁移。把任意项目整理成 Claude Code / Codex / Grok 三端一致、可长期维护的 Agent 工作台：审计规则文件、识别真源、统一命名并生成 bridge。\n触发方式：/dbs-agent-migration、/agent迁移、「迁移到 Codex」「迁移到 Claude Code」「迁移到 Grok」「统一 AGENTS.md」「整理 skill bridge」「我的 Agent 工作台很乱」「帮我统一 Claude 和 Codex 和 Grok」\nAgent workspace migration. Turn any project into a maintainable Claude Code / Codex / Grok three-host workspace by auditing rule files, establishing source-of-truth skills, normalizing names, and generating bridges.\nTrigger: /dbs-agent-migration, /agent-migration, \"migrate to Codex\", \"migrate to Claude Code\", \"migrate to Grok\", \"fix AGENTS.md\", \"organize skill bridges\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-agent-migration"
+        },
+        {
+          "id": "dbs-ai-check",
+          "name": "dbs-ai-check",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-ai-check",
+          "original_path": "skills/dbs-ai-check",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent AI 写作特征识别。扫描文案中的 AI 生成痕迹，输出检测报告。默认只诊断不改。\n触发方式：/dbs-ai-check、/AI检测、「帮我看看有没有 AI 味」「检测一下 AI 特征」\nAI writing fingerprint detection. Scans copy for AI-generated patterns and outputs a diagnostic report. Diagnosis only by default.\nTrigger: /dbs-ai-check, \"check for AI writing\", \"does this sound like AI\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-ai-check"
+        },
+        {
+          "id": "dbs-benchmark",
+          "name": "dbs-benchmark",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-benchmark",
+          "original_path": "skills/dbs-benchmark",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 对标分析。用五重过滤法帮你找到值得模仿的对标，排除一切关于「我」的噪音。\n触发方式：/dbs-benchmark、/对标、「帮我找对标」「我该模仿谁」\nBenchmark analysis using dontbesilent's five-filter method.\nTrigger: /dbs-benchmark, \"find me a benchmark\", \"who should I copy\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-benchmark"
+        },
+        {
+          "id": "dbs-chatroom",
+          "name": "dbs-chatroom",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-chatroom",
+          "original_path": "skills/dbs-chatroom",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "定向聊天室：根据话题推荐或接受用户指定的专家，模拟多角色对话。触发方式：/dbs-chatroom、/定向聊天室、「定向聊天室」",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-chatroom"
+        },
+        {
+          "id": "dbs-chatroom-austrian",
+          "name": "dbs-chatroom-austrian",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-chatroom-austrian",
+          "original_path": "skills/dbs-chatroom-austrian",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "哈耶克 × 米塞斯 × Claude 三人对话。奥派经济学视角的多角色讨论。\n触发方式：/dbs-chatroom-austrian、/chatroom-austrian、/奥派、「奥派聊天室」\nAustrian economics chatroom. Hayek × Mises × Claude debate.\nTrigger: /dbs-chatroom-austrian, /chatroom-austrian, /奥派, \"Austrian chat\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-chatroom-austrian"
+        },
+        {
+          "id": "dbs-content",
+          "name": "dbs-content",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-content",
+          "original_path": "skills/dbs-content",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 内容创作诊断。选题通过后，诊断怎么把这个选题做成好内容。\n触发方式：/dbs-content、/内容诊断、「这个内容怎么做」「帮我看看这个文案」\nContent creation diagnosis. After topic passes, diagnose how to turn it into good content.\nTrigger: /dbs-content, \"how should I create this content\", \"review my copy\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-content"
+        },
+        {
+          "id": "dbs-content-system",
+          "name": "dbs-content-system",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-content-system",
+          "original_path": "skills/dbs-content-system",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "dontbesilent 内容结构化系统。把本地大量文稿、推文、选题、案例和课程稿搭成一个可持续生长的内容结构化工程：先审计内容规模与边界，再建立新工程、复制素材、抽取内容单元、生成主题地图与选题装配稿。\n触发方式：/dbs-content-system、/内容结构化系统、「把我的内容做成结构化系统」「把本地素材变成可重组系统」「帮我搭内容资产工程」「我想把旧内容变成可复用资产」\nContent structuring system. Audits local content volume, then builds a reusable content knowledge project with units, topic maps, and assembly drafts.\nTrigger: /dbs-content-system, \"build a content structuring system\", \"turn my archive into reusable assets\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-content-system"
+        },
+        {
+          "id": "dbs-decision",
+          "name": "dbs-decision",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-decision",
+          "original_path": "skills/dbs-decision",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "research"
+          ],
+          "description": "dontbesilent 个人决策系统。把任何一个需要长期跟踪的领域（业务、关系、健康、职业、学习、投资……）做成一个本地知识工程：四层结构、来源标签、写完不改的快照、能炼出规律的概念库。\n触发方式：/dbs-decision、/决策系统、/决策立案、/结果回填、/状态画像\nPersonal decision system. Turns any long-running domain into a local knowledge project with four layers, source tags, immutable snapshots, and a concept library that learns patterns over time.\nTrigger: /dbs-decision, /决策系统, /决策立案, /结果回填, /状态画像",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-decision"
+        },
+        {
+          "id": "dbs-deconstruct",
+          "name": "dbs-deconstruct",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-deconstruct",
+          "original_path": "skills/dbs-deconstruct",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 概念拆解。用维特根斯坦 + 奥派经济学的方法，把模糊的商业概念拆到原子级别。\n触发方式：/dbs-deconstruct、/拆概念、「帮我拆解这个概念」「这个词到底什么意思」\nConcept deconstruction using Wittgenstein + Austrian economics framework.\nTrigger: /dbs-deconstruct, \"deconstruct this concept\", \"what does this really mean\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-deconstruct"
+        },
+        {
+          "id": "dbs-diagnosis",
+          "name": "dbs-diagnosis",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-diagnosis",
+          "original_path": "skills/dbs-diagnosis",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 商业模式诊断。两种模式：问诊（消解你的问题）和体检（拆解你的商业模式）。\n触发方式：/dbs-diagnosis、/问诊、「帮我看看商业模式」「诊断一下我的业务」「我有个商业问题」\nBusiness model diagnosis using dontbesilent's ontological framework. Two modes: consultation (dissolve your question) and checkup (analyze your business model).\nTrigger: /dbs-diagnosis, \"diagnose my business model\", \"I have a business question\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-diagnosis"
+        },
+        {
+          "id": "dbs-goal",
+          "name": "dbs-goal",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-goal",
+          "original_path": "skills/dbs-goal",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 目标清晰化。用维特根斯坦的语言哲学把模糊的目标审计成可检查的交付物。\n触发方式：/dbs-goal、/目标、「帮我搞清楚目标」「我想做个人 IP」「我的目标是成为...」「我想变得更...」\nGoal clarification using Wittgenstein's philosophy of language. Audits fuzzy goals into checkable deliverables.\nTrigger: /dbs-goal, \"help me clarify my goal\", \"I want to become...\", \"my goal is...\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-goal"
+        },
+        {
+          "id": "dbs-good-question",
+          "name": "dbs-good-question",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-good-question",
+          "original_path": "skills/dbs-good-question",
+          "tags": [
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "dontbesilent 好问题生成器。把模糊问题改写成 Agent 可推理、可批评、可验证的问题说明书，并判断它能被自动化解决到什么程度。\n触发方式：/dbs-good-question、/好问题、/问题说明书、/Agent可解性、「这个问题能不能自动化解决」「帮我把问题说清楚」\nTurn fuzzy problems into agent-solvable problem briefs and evaluate automation readiness.\nTrigger: /dbs-good-question, \"clarify this problem\", \"can an agent solve this\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-good-question"
+        },
+        {
+          "id": "dbs-hook",
+          "name": "dbs-hook",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-hook",
+          "original_path": "skills/dbs-hook",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "dontbesilent 短视频开头优化。诊断开头问题 + 生成优化方案。\n触发方式：/dbs-hook、/hook、「帮我优化开头」「开头怎么写」\nShort video opening optimization with diagnosis and solutions.\nTrigger: /dbs-hook, \"optimize my opening\", \"how to write opening\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-hook"
+        },
+        {
+          "id": "dbs-learning",
+          "name": "dbs-learning",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-learning",
+          "original_path": "skills/dbs-learning",
+          "tags": [
+            "docs",
+            "coding",
+            "workflow",
+            "frontend",
+            "research"
+          ],
+          "description": "dontbesilent 交互式学习。把一个课题拆成连续学习文章，根据用户在上一篇中的反馈调整下一篇的深度、角度和节奏。\n触发方式：/dbs-learning、/dbs-learn、/交互式学习、「带我学一个课题」「继续下一篇」「根据我的反馈写下一篇」\nInteractive learning workflow. Builds an adaptive sequence of learning articles based on user feedback.\nTrigger: /dbs-learning, /dbs-learn, \"teach me a topic\", \"continue the next lesson\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-learning"
+        },
+        {
+          "id": "dbs-report",
+          "name": "dbs-report",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-report",
+          "original_path": "skills/dbs-report",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "把多次 dbs-save 攒下来的诊断状态合并成一份可交付的 markdown 报告。\n触发方式：/dbs-report、/出报告、「打包」「整理一份」「给合伙人看的」\nGenerate a deliverable diagnosis report by merging all dbs-save snapshots.\nTrigger: /dbs-report, \"package this up\", \"make me a report\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-report"
+        },
+        {
+          "id": "dbs-resonate",
+          "name": "dbs-resonate",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-resonate",
+          "original_path": "skills/dbs-resonate",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "文稿共鸣诊断。你写完了一段内容但心里没底——怕没流量、怕没戳中观众、怕完播率低。把文稿给这个 skill，它用传播心理学框架诊断有没有引起共鸣、哪里出了问题、具体怎么改。\n触发方式：/dbs-resonate、「这个文稿有没有戳中人」「帮我看看能不能发」「这个完播率会不会低」「文稿发出去有没有流量」\nDraft resonance diagnosis. You finished a draft but aren't sure it will connect. Diagnoses psychological resonance issues and gives specific fixes.\nTrigger: /dbs-resonate, \"will this resonate\", \"check my draft\", \"will people watch this\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-resonate"
+        },
+        {
+          "id": "dbs-restore",
+          "name": "dbs-restore",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-restore",
+          "original_path": "skills/dbs-restore",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "把上次诊断的状态拉出来，接着用。配合 dbs-save 使用。\n触发方式：/dbs-restore、/续上、「接着上次」「之前的结论」「上次诊断到哪了」\nRestore the most recent diagnosis snapshot saved by dbs-save.\nTrigger: /dbs-restore, \"continue from last time\", \"where did we leave off\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-restore"
+        },
+        {
+          "id": "dbs-save",
+          "name": "dbs-save",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-save",
+          "original_path": "skills/dbs-save",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "把当前诊断的关键状态存到本地，下次回来可以接着用。\n触发方式：/dbs-save、/存档、「保存这次诊断」「记下来」「这个结论留着」\nSave the current diagnosis state to disk for cross-session recall.\nTrigger: /dbs-save, \"save this diagnosis\", \"remember this\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-save"
+        },
+        {
+          "id": "dbs-slowisfast",
+          "name": "dbs-slowisfast",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-slowisfast",
+          "original_path": "skills/dbs-slowisfast",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "dontbesilent 慢就是快。帮创业者找到看起来更慢但长期更快的方法，用摩擦建造资产。\n触发方式：/dbs-slowisfast、/慢就是快、「有没有更慢的方法」「我是不是太快了」\nSlow-is-fast diagnosis. Help entrepreneurs find seemingly slower methods that build assets through friction.\nTrigger: /dbs-slowisfast, \"is there a slower way\", \"am I going too fast\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-slowisfast"
+        },
+        {
+          "id": "dbs-spread",
+          "name": "dbs-spread",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-spread",
+          "original_path": "skills/dbs-spread",
+          "tags": [
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "传播心理解码。给定一段内容，用 5 个经典传播学理论解码它为什么能引起受众共鸣，分析受众情绪底层和有效立场，输出聊天室的讨论方向。\n触发方式：/dbs-spread、「传播心理解码」、「为什么这个能火」、「受众想听什么」、「这个内容打中了什么情绪」\nTransmission psychology decoder. Given a piece of content, analyze the psychological mechanism that makes it resonate, identify the emotional core and effective stance, and output direction for chatroom discussion.\nTrigger: /dbs-spread, \"why does this resonate\", \"what emotion does this hit\", \"decode this content\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-spread"
+        },
+        {
+          "id": "dbs-xhs-title",
+          "name": "dbs-xhs-title",
+          "path": "libraries/pluviobyte-rnskill/skills/dbs-xhs-title",
+          "original_path": "skills/dbs-xhs-title",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "小红书图文/泛内容标题公式工具。从 75 个验证过的爆款公式中，帮你挑对的、用对的、理解为什么用这个。\n不用于视频成片标题、视频洗稿标题、两段式抖音标题、成片目录 视频标题.md 写入；这些场景使用 ra-video-title。\n触发方式：/dbs-xhs-title、/小红书标题、「帮我起个小红书标题」「小红书标题公式」\nXiaohongshu article/general title formula tool. Pick the right formula from 75 proven templates. For finished video titles or two-part benchmark-driven titles, use ra-video-title instead.\nTrigger: /dbs-xhs-title, \"xiaohongshu title\", \"RED title formula\"",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/dbs-xhs-title"
+        },
+        {
+          "id": "editorial-collage-motion",
+          "name": "editorial-collage-motion",
+          "path": "libraries/pluviobyte-rnskill/skills/editorial-collage-motion",
+          "original_path": "skills/editorial-collage-motion",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "将参考图或简要描述解码为可编辑的半色调纸张拼贴规范，默认使用 Codex 内置 image_gen 生成品牌一致的静帧和透明图层，再用本地 FFmpeg 或 HyperFrames 制作“从空背景逐件组装”的确定性动态视频。用户提到半色调拼贴、纸张拼贴、剪纸拼贴、编辑式拼贴、杂志拼贴、复古印刷拼贴、拼贴动效、拼贴动画、剪纸动画、纸片组装、逐层组装、从无到有、元素飞入拼装、定格拼贴、定格动画、Arcads 风格、参考图拆解、风格拆解、反向拆解视觉、照这个风格做、做类似的、生成拼贴静帧、让这张图动起来、让这些元素组装起来、制作拼贴广告或拼贴解释视频时使用。英文触发语义包括 editorial collage、halftone collage、paper collage、paper-cut motion、stop-motion graphic、assemble from empty、build-on motion、analyze this、break this down、reverse-engineer this look、generate the stills、animate this、make these move。默认不调用 Arcads、Nano Banana、Seedance 或 Kling；只有用户明确要求且对应连接器可用时才进入外部生成路径。",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/editorial-collage-motion"
+        },
+        {
+          "id": "editorial-dot-cover",
+          "name": "editorial-dot-cover",
+          "path": "libraries/pluviobyte-rnskill/skills/editorial-dot-cover",
+          "original_path": "skills/editorial-dot-cover",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "data",
+            "research"
+          ],
+          "description": "Create deterministic editorial-style cover images with a warm paper-gray background, oversized black slab-serif/Chinese display typography, generous whitespace, and a dotted vector analysis icon. Use when the user asks for a “点阵编辑风封面”, “暖灰杂志风封面”, “Codex + Hyperframes 同款封面”, or wants to reproduce/adapt the specific minimal left-text/right-icon banner style. Produce editable SVG and a rendered PNG; do not use this skill for generic covers without this visual direction.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/editorial-dot-cover"
+        },
+        {
+          "id": "heygen-digital-avatar",
+          "name": "heygen-digital-avatar",
+          "path": "libraries/pluviobyte-rnskill/skills/heygen-digital-avatar",
+          "original_path": "skills/heygen-digital-avatar",
+          "tags": [
+            "docs",
+            "coding",
+            "cli",
+            "animation"
+          ],
+          "description": "Create and composite HeyGen digital-human videos in the content workspace. Use whenever the user asks for a 数字人, 数字人5, HeyGen, AI 口播人物, 数字人小窗, 圆形头像口播, full-screen digital human, or asks to make a video that uses the existing avatar. Enforce Creator-plan CLI OAuth, the configured Digital Twin, local IndexTTS2 narration, Avatar III for an unspecified digital human but Avatar V whenever the named preset 数字人5 is requested, adaptive face measurement plus the approved human-reviewed visual-centering offset in the headroom_08 circular bottom-left layout unless full-screen is explicitly requested, subtitle-safe placement, credit-aware master reuse, final QC/archive routing, and mandatory pairing with `heygen-avatar-motion` before any motion prompt or paid generation.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/heygen-digital-avatar"
+        },
+        {
+          "id": "ian-xiaohei-illustrations",
+          "name": "ian-xiaohei-illustrations",
+          "path": "libraries/pluviobyte-rnskill/skills/ian-xiaohei-illustrations",
+          "original_path": "skills/ian-xiaohei-illustrations",
+          "tags": [
+            "image",
+            "docs",
+            "coding"
+          ],
+          "description": "生成 Ian 风格的中文正文配图。用于用户要求为中文文章、帖子、博客、Notion 文档、工作流文档、方法论、流程、结构、状态、隐喻或观点生成“怪诞”“小黑”“手绘”“正文配图”“文章插图”“配图建议”“shot list”“去标题/改图”等任务；默认使用小黑 IP、纯白手绘、少量红橙蓝批注、简洁清爽但天马行空的视觉风格。",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ian-xiaohei-illustrations"
+        },
+        {
+          "id": "ra-audio-to-subtitles",
+          "name": "ra-audio-to-subtitles",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-audio-to-subtitles",
+          "original_path": "skills/ra-audio-to-subtitles",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Generate production subtitle artifacts from the final narration audio or final merged video using Volcengine Doubao ASR word timestamps. Use for local IndexTTS2 videos, Xiaohei page videos, talking-head delivery subtitles, SRT/VTT export, or whenever subtitle timing must match the final audio. Do not use script-length interpolation for final deliverables.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-audio-to-subtitles"
+        },
+        {
+          "id": "ra-hook",
+          "name": "ra-hook",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-hook",
+          "original_path": "skills/ra-hook",
+          "tags": [
+            "docs",
+            "coding",
+            "workflow",
+            "frontend"
+          ],
+          "description": "短视频钩子（开头）类型选择与写法，中文名「钩子」。Use when 起钩子、写钩子、钩子怎么写、钩子没思路、设计前5秒钩子、写视频开头/口播稿开头, or when the user asks 视频开头怎么做、开头模板、hook 类型、帮我起个钩子, including during ra-洗稿 script rewriting and 选题深化. Provides a scenario-based taxonomy of 7 hook types with decision flow, prerequisites, sentence templates, and common mistakes. For diagnosing and optimizing an existing hook draft, use dbs-hook instead; this skill chooses the type, dbs-hook polishes the execution.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-hook"
+        },
+        {
+          "id": "ra-local-talking-head-cut",
+          "name": "ra-local-talking-head-cut",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-local-talking-head-cut",
+          "original_path": "skills/ra-local-talking-head-cut",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Produce a polished local talking-head or narrated screen-recording rough cut without a cloud editor. Use when Codex must clean Chinese or mixed Chinese-English speech, correct product terminology before semantic editing, compress pauses without making speech breathless, preserve source resolution and frame rate, normalize dialogue loudness, generate final-audio subtitle artifacts, or benchmark local output against ChatCut/video-use/chengfeng/AI剪口播.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-local-talking-head-cut"
+        },
+        {
+          "id": "ra-video-download",
+          "name": "ra-video-download",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-video-download",
+          "original_path": "skills/ra-video-download",
+          "tags": [
+            "docs",
+            "coding",
+            "workflow"
+          ],
+          "description": "Download source video or audio from Douyin, YouTube, Bilibili, Twitter/X, Xiaohongshu, and other yt-dlp-supported URLs into the content-creation workspace. Use when the user says 下载视频, 下载音频, 保存这个链接, 把源视频拉下来, or when another video workflow needs a local source file before transcription, frame analysis, editing, reference replication, or archiving.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-video-download"
+        },
+        {
+          "id": "ra-video-production-director",
+          "name": "ra-video-production-director",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-video-production-director",
+          "original_path": "skills/ra-video-production-director",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "End-to-end video production orchestration for the content-creation workspace. Use when the user asks to make, recreate, package, render, QC, or archive a video; when the user says 制作待制作队列, 按交接稿制作, 制作队列视频, or points at a handoff project folder under 01-内容生产/视频工作台/待制作/ (contract file 交接稿.md inside) or an image-card handoff under 01-内容生产/图文工作台/待制作/ (its frontmatter is the binding production contract); when a request could route to HyperFrames, Remotion, captions, TTS, download/transcription, website/product videos, motion graphics, or reference replication; or when the user needs production planning before editing.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-video-production-director"
+        },
+        {
+          "id": "ra-video-title",
+          "name": "ra-video-title",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-video-title",
+          "original_path": "skills/ra-video-title",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "视频标题生成与落盘工作流。Use when the user asks to title a finished or planned video, especially 抖音/小红书视频标题, 视频标题.md, 成片同级目录, 对标标题共性, 两段式标题, 基于视频主题起标题, 洗稿后标题, or replacing generic dbs-xhs-title for video titles. It derives the real video theme first, studies benchmark title patterns when provided, generates 8-12 theme-first two-part candidates, recommends/selects one, and writes 视频标题.md next to the final MP4 when requested.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-video-title"
+        },
+        {
+          "id": "ra-video-wash-pipeline",
+          "name": "ra-video-wash-pipeline",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-video-wash-pipeline",
+          "original_path": "skills/ra-video-wash-pipeline",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "End-to-end Chinese video washing pipeline. Use when the user provides a Bilibili, Douyin, Xiaohongshu, YouTube, web video URL, or local video file and asks for 视频洗稿, 视频二创, 洗稿并制作视频, 链接视频改写, 提取逐字稿后洗稿, or producing a new AI video from a source video. Orchestrates ra-逐字稿提取skill and ra-洗稿, ending at the 01-内容生产/视频工作台/待制作/ handoff queue; production continues through ra-video-production-director only on explicit request (直接制作/直接出片/一条龙).",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-video-wash-pipeline"
+        },
+        {
+          "id": "ra-人话",
+          "name": "ra-人话",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-人话",
+          "original_path": "skills/ra-人话",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Chinese AI/tech writing de-AI editor for posts, X/Twitter threads, technical essays, product notes, model reviews, and public-writing drafts. Use when the user asks to 去AI味, 改得像本人, 写推特post, 精修中文AI技术文章, or complains about AI-flavored shells such as 不是A而是B, 真正/其实/本质上, 更重要的是, 冒号讲义腔, 空泛总结, 顺滑但没作者判断的稿子.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-人话"
+        },
+        {
+          "id": "ra-公众号提取",
+          "name": "ra-公众号提取",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-公众号提取",
+          "original_path": "skills/ra-公众号提取",
+          "tags": [
+            "docs",
+            "coding",
+            "workflow",
+            "frontend"
+          ],
+          "description": "提取微信公众号文章全文。Use when the user provides a mp.weixin.qq.com URL and asks for 提取文章, 抓取公众号, 读一下这篇, or when another skill (ra-洗稿, ra-选题, ra-video-wash-pipeline) needs to read a WeChat article before processing. Uses MicroMessenger UA spoofing to bypass WeChat's first-layer access control. Stdlib only, no API key required.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-公众号提取"
+        },
+        {
+          "id": "ra-复盘",
+          "name": "ra-复盘",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-复盘",
+          "original_path": "skills/ra-复盘",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "内容复盘工作流：取数 → 爆款分级（R/M/Tier）→ 按需拉取内容本体 → 归因 → 沉淀（方法论/金句库/案例库/概念库/课程灵感）+ 选题卡回写。\nUse when the user says 复盘xx, 内容复盘, xx数据怎么样, xx表现如何, 复盘一下这条, 为什么这条爆了, 为什么这条没爆.\n沉淀铁律：复盘不沉淀，等于白复盘——每次至少一条资产入库，或写明为什么没有。",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-复盘"
+        },
+        {
+          "id": "ra-实操策划",
+          "name": "ra-实操策划",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-实操策划",
+          "original_path": "skills/ra-实操策划",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "实操长片策划工作流（B站/YouTube 新赛道，实操+真人出镜）。产出可直接照着录的策划稿：测试题组（含可粘贴 prompt）、\n结构时间轴（全身出镜段 vs PiP 段）、出镜口播稿、录屏操作清单、悬念与彩蛋设计。\nUse when the user says 做实操长片, 实操视频, 实测视频, 对比实测, xx做成实操, 出个实测策划, 这个选题拍实操,\nor ra-选题 routes a 实操长片 立项 here. 策划稿落 `01-内容生产/视频工作台/制作中/<日期-主题>/策划稿.md`，frontmatter status 是与制作端交接的唯一状态机。",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-实操策划"
+        },
+        {
+          "id": "ra-洗稿",
+          "name": "ra-洗稿",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-洗稿",
+          "original_path": "skills/ra-洗稿",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "视频脚本洗稿和二创脚本工作流。Use when the user provides an existing transcript, oral draft, viral script, competitor video text, rough topic notes, or wants 洗稿, 二创改写, 爆款视频脚本重写, 逐字稿改成短视频脚本, rewrite with ra-人话, and queue the approved script into 01-内容生产/视频工作台/待制作/ as the handoff contract for video production. If the user provides a video URL or local video file and asks 视频洗稿、视频二创、洗稿并制作视频, use ra-video-wash-pipeline first.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-洗稿"
+        },
+        {
+          "id": "ra-选题",
+          "name": "ra-选题",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-选题",
+          "original_path": "skills/ra-选题",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "选题全生命周期调度：记录选题、深化选题、选题推荐、立项分发（视频/图文/文章/实操长片/多形态）、发布归档。\nUse when the user says 灵感xx, 想法xx, 记录选题, 这个可以做个选题, 先存着这个链接, 深化选题/深化一下xx,\n给我N个选题, 帮我出选题, 选题推荐, 立项, 做成视频, 制作视频, 做成文章, 制作文章, 做成图文, 制作图文,\n做成实操长片, 图文视频文章都做/都分发, 我要自己出镜讲, xx发布了, xx要改;\nor when the user gives a link plus a target form (链接+制作视频/文章/图文).\nOwns the 00-选题池 card system: one topic = one card; user never moves files — this skill does.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-选题"
+        },
+        {
+          "id": "ra-逐字稿提取skill",
+          "name": "ra-逐字稿提取skill",
+          "path": "libraries/pluviobyte-rnskill/skills/ra-逐字稿提取skill",
+          "original_path": "skills/ra-逐字稿提取skill",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "视频内容逐字稿提取专用 skill。Use when the user provides a 抖音 or 小红书 URL and asks for逐字稿、视频转文字、听写视频或提取口播内容。Only extract transcript content; do not use this skill as the production subtitle clock, and do not summarize, rewrite, translate, title, or start production. Uses qushuiyin plus Paraformer ASR.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/ra-逐字稿提取skill"
+        },
+        {
+          "id": "rn-bw-text-opener",
+          "name": "rn-bw-text-opener",
+          "path": "libraries/pluviobyte-rnskill/skills/rn-bw-text-opener",
+          "original_path": "skills/rn-bw-text-opener",
+          "tags": [
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "Create reusable black-background white-text opening animations for new videos. Use when the user asks for \"黑底白字开场\", \"纯黑加白字\", \"白色文字逐渐出来\", \"一个个字出来\", \"打字效果\", \"打字音效\", \"字体变化开头\", \"opening title animation\", \"kinetic text opener\", or a short black-and-white intro before a HyperFrames, Remotion, ffmpeg, SaaS/product, tutorial, commentary, or course video. This is for original opener creation, not pixel-level reference matching.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/rn-bw-text-opener"
+        },
+        {
+          "id": "rn-cover-skill",
+          "name": "rn-cover-skill",
+          "path": "libraries/pluviobyte-rnskill/skills/rn-cover-skill",
+          "original_path": "skills/rn-cover-skill",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "research"
+          ],
+          "description": "Create reference-free 5:2 editorial technology covers with exact #FAF9F5 backgrounds, large left-aligned typography, adaptable grid geometry, and a newly generated right-side diagram. Use when the user asks for “RN封面”, “编辑图解风格封面”, “左文右图暖白封面”, “无参考图生成同类封面”, or a premium AI research/editorial cover with charcoal paths and a restrained coral accent. Generate fresh transparent right-side artwork for each new cover, then compose exact text and a flexible editorial layout into editable SVG and PNG.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/rn-cover-skill"
+        },
+        {
+          "id": "rn-dark-saas-video",
+          "name": "rn-dark-saas-video",
+          "path": "libraries/pluviobyte-rnskill/skills/rn-dark-saas-video",
+          "original_path": "skills/rn-dark-saas-video",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation",
+            "automation"
+          ],
+          "description": "Create dark cinematic SaaS/product motion videos in the Presenton-like \"magic UI\" style: black starfield stage, bottom purple glow, large kinetic type, cyan-to-magenta CTA buttons, prompt cards, floating UI templates, integration badges, model rings, export objects, speed-blur transitions, and short product capability arcs. Use when the user asks for \"这种风格\", \"同款风格\", dark SaaS promo, AI product demo, magic UI product video, or a style-level creation inspired by a reference video. Do not use for pixel-level or frame-accurate replication; use rn-replica-qc first for that.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/rn-dark-saas-video"
+        },
+        {
+          "id": "rn-motion-director",
+          "name": "rn-motion-director",
+          "path": "libraries/pluviobyte-rnskill/skills/rn-motion-director",
+          "original_path": "skills/rn-motion-director",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "Motion-first AI video director for topic-to-video creation. Use when the user gives a theme, idea, article, script, or brief and wants AI to freely create a real animated video instead of a PPT/slideshow-style explainer; when deciding visual metaphors, motion grammar, scene beats, component choices, generated image needs, HyperFrames/Remotion implementation strategy, and anti-PPT QC.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/rn-motion-director"
+        },
+        {
+          "id": "rn-motion-replica",
+          "name": "rn-motion-replica",
+          "path": "libraries/pluviobyte-rnskill/skills/rn-motion-replica",
+          "original_path": "skills/rn-motion-replica",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "Analyze a public or local reference video, isolate a time range, deconstruct its layout, motion, timing, and transitions, then build an original verified motion replica with reusable templates and final MP4 QC. Use when the user says 复刻这个视频效果, 参考这个视频做同款动效, 拆解前 N 秒, 还原方框/连线/卡片动画, or provides a video or URL as a motion reference rather than asking to copy its footage or script.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/rn-motion-replica"
+        },
+        {
+          "id": "rn-replica-qc",
+          "name": "rn-replica-qc",
+          "path": "libraries/pluviobyte-rnskill/skills/rn-replica-qc",
+          "original_path": "skills/rn-replica-qc",
+          "tags": [
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "Analyze, recreate, align, and verify reference-video motion. Use when the user asks to recreate, copy, match, align, pixel-align, or compare a video; when a HyperFrames or Remotion remake is judged not aligned; when fixed reference playback and reusable motion components must be separated; or when delivery needs full-frame runtime, render, decode, boundary, timing, and archive evidence instead of sampled screenshots alone.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/rn-replica-qc"
+        },
+        {
+          "id": "skill-captions",
+          "name": "skill-captions",
+          "path": "libraries/pluviobyte-rnskill/skills/skill-captions",
+          "original_path": "skills/skill-captions",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Render, preview, validate, and burn consistent production subtitles from QC-passed real-timestamp caption artifacts. Use for AI-video production, washed-video production, IndexTTS2 explainers, practical long-form videos, talking-head edits, Kimi-style dark rounded captions, warm-white translucent captions, subtitle styling, subtitle overlays, or fixing caption size, position, shadow, drift, and 4K scaling. Always pair with ra-audio-to-subtitles when final word timestamps do not already exist.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/skill-captions"
+        },
+        {
+          "id": "skill-cover",
+          "name": "skill-cover",
+          "path": "libraries/pluviobyte-rnskill/skills/skill-cover",
+          "original_path": "skills/skill-cover",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Create or revise Chinese social-media covers through the registered Skill-封面 asset system, reusable styles, presenter identities, ratio-specific layouts, and exact replacement prompts. Use only when the user explicitly says“skill-cover”“Skill-封面”“实战风格”, requests the registered style/gesture assets, asks for simultaneous 3:4 and 4:3 registered-layout output, replaces a reference cover's person with the current digital-human frame, or extends this registered cover system. Do not use for a generic“制作封面/生成封面”request; generic cover requests belong to dog-skill.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/skill-cover"
+        },
+        {
+          "id": "tts-skill",
+          "name": "tts-skill",
+          "path": "libraries/pluviobyte-rnskill/skills/tts-skill",
+          "original_path": "skills/tts-skill",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Generate cloned narration for the content workspace. Use local IndexTTS2 with the canonical lossless Pluviobyte reference for every local video, voice audition, digital-human narration, and subtitle-ready audio render. Preserve MiniMax only for public-facing articles or tutorials that teach users to connect through the relay service; never use MiniMax for local video production.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/tts-skill"
+        },
+        {
+          "id": "video-use",
+          "name": "video-use",
+          "path": "libraries/pluviobyte-rnskill/skills/video-use",
+          "original_path": "skills/video-use",
+          "tags": [
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "Edit any video by conversation. Transcribe, cut, color grade, generate overlay animations, burn subtitles — for talking heads, montages, tutorials, travel, interviews. No presets, no menus. Ask questions, confirm the plan, execute, iterate, persist. Production-correctness rules are hard; everything else is artistic freedom.",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/video-use"
+        },
+        {
+          "id": "manim-video",
+          "name": "manim-video",
+          "path": "libraries/pluviobyte-rnskill/skills/video-use/skills/manim-video",
+          "original_path": "skills/video-use/skills/manim-video",
+          "tags": [
+            "docs",
+            "coding",
+            "data",
+            "animation"
+          ],
+          "description": "Production pipeline for mathematical and technical animations using Manim Community Edition. Creates 3Blue1Brown-style explainer videos, algorithm visualizations, equation derivations, architecture diagrams, and data stories. Use when users request: animated explanations, math animations, concept visualizations, algorithm walkthroughs, technical explainers, 3Blue1Brown style videos, or any programmatic animation with geometric/mathematical content.",
+          "added_at": "2026-08-06",
+          "version": "1.0.0",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/manim-video"
+        },
+        {
+          "id": "xhs-article-to-images",
+          "name": "xhs-article-to-images",
+          "path": "libraries/pluviobyte-rnskill/skills/xhs-article-to-images",
+          "original_path": "skills/xhs-article-to-images",
+          "tags": [
+            "browser",
+            "image",
+            "docs",
+            "coding",
+            "automation"
+          ],
+          "description": "把 Markdown 长文转成小红书 3:4（1080×1440）图片组的 Agent skill。内置五套设计皮肤（E 雅刊·默认 / A 暖杏奶咖 / B 雾松青 / C 黛墨描金 / D 夜读鎏金）+ 女性向三主题（F 粉色王国 / G 乙游夜境 / H 吉卜力）× 多种页型；Agent 负责读文章、拆页和填 HTML，Playwright 渲染器负责逐张截图导出 PNG。当用户说\"长文转图片\"、\"小红书长图\"、\"把这篇文章做成小红书图文/图片/卡片\"、\"文章转图片\"、\"用我的设计稿排版\"、\"转成 3:4 图组\"、想要\"女性向/少女风/粉色/乙游风/吉卜力风\"排版时使用；用户给了一篇文章并提到发小红书时也应使用。",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/pluviobyte-rnskill/xhs-article-to-images"
+        }
+      ],
+      "install": {
+        "method": "npx",
+        "extracted_root": "extracted-skills/pluviobyte-rnskill",
+        "command": "npx -y skills add Pluviobyte/rnskill -g --all",
+        "fallback": "extracted"
+      },
+      "extracted": {
+        "root": "extracted-skills/pluviobyte-rnskill",
+        "source_library": "pluviobyte-rnskill",
+        "source_path": "libraries/pluviobyte-rnskill",
+        "last_extracted_commit": "766e4eba4162630c783b531f531a3fafe6f45c81",
+        "skill_count": 58
+      },
+      "category": "video-image",
+      "category_locked": true
+    },
+    {
       "id": "ponytail",
       "name": "ponytail",
       "path": "libraries/ponytail",
@@ -4276,6 +5932,19 @@
       "last_synced_at": "2026-07-15",
       "skill_count": 6,
       "skills": [
+        {
+          "id": "ponytail",
+          "name": "ponytail",
+          "path": "libraries/ponytail/ponytail",
+          "original_path": "libraries/ponytail/ponytail",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Forces the laziest solution that actually works, simplest, shortest, most minimal. Channels a senior dev who has seen everything: question whether the task needs to exist at all (YAGNI), reach for the standard library before custom code, native platform features before dependencies, one line before fifty. Supports intensity levels: lite, full (default), ultra. Use on ANY coding task: writing, adding, refactoring, fixing, reviewing, or designing code, and choosing libraries or dependencies. Also use whenever the user says \"ponytail\", \"be lazy\", \"lazy mode\", \"simplest solution\", \"minimal solution\", \"yagni\", \"do less\", or \"shortest path\", or complains about over-engineering, bloat, boilerplate, or unnecessary dependencies. Do NOT use for non-coding requests (general knowledge, prose, translation, summaries, recipes).",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/ponytail/ponytail"
+        },
         {
           "id": "ponytail-audit",
           "name": "ponytail-audit",
@@ -4343,19 +6012,6 @@
           "description": "Code review focused exclusively on over-engineering. Finds what to delete: reinvented standard library, unneeded dependencies, speculative abstractions, dead flexibility. One line per finding: location, what to cut, what replaces it. Use when the user says \"review for over-engineering\", \"what can we delete\", \"is this over-engineered\", \"simplify review\", or invokes /ponytail-review. Complements correctness-focused review, this one only hunts complexity.",
           "added_at": "2026-07-15",
           "extracted_path": "extracted-skills/ponytail/ponytail-review"
-        },
-        {
-          "id": "ponytail",
-          "name": "ponytail",
-          "path": "libraries/ponytail/ponytail",
-          "original_path": "libraries/ponytail/ponytail",
-          "tags": [
-            "docs",
-            "coding"
-          ],
-          "description": "Forces the laziest solution that actually works, simplest, shortest, most minimal. Channels a senior dev who has seen everything: question whether the task needs to exist at all (YAGNI), reach for the standard library before custom code, native platform features before dependencies, one line before fifty. Supports intensity levels: lite, full (default), ultra. Use on ANY coding task: writing, adding, refactoring, fixing, reviewing, or designing code, and choosing libraries or dependencies. Also use whenever the user says \"ponytail\", \"be lazy\", \"lazy mode\", \"simplest solution\", \"minimal solution\", \"yagni\", \"do less\", or \"shortest path\", or complains about over-engineering, bloat, boilerplate, or unnecessary dependencies. Do NOT use for non-coding requests (general knowledge, prose, translation, summaries, recipes).",
-          "added_at": "2026-07-15",
-          "extracted_path": "extracted-skills/ponytail/ponytail"
         }
       ],
       "install": {
@@ -4366,7 +6022,7 @@
         "root": "extracted-skills/ponytail",
         "source_library": "ponytail",
         "source_path": "libraries/ponytail",
-        "last_extracted_commit": "14a0d79548d4de8fc2de95c1b94bb0de63a739d3",
+        "last_extracted_commit": "16f29800fd2681bdf24f3eb4ccffe38be3baec6b",
         "skill_count": 6
       },
       "category": "coding-tools"
@@ -4433,53 +6089,6 @@
         "skill_count": 2
       },
       "category": "content-creation",
-      "category_locked": true
-    },
-    {
-      "id": "skillhub-ingest",
-      "name": "skillhub-ingest",
-      "path": "libraries/skillhub-ingest",
-      "source": {
-        "type": "local"
-      },
-      "tags": [
-        "coding",
-        "docs",
-        "workflow"
-      ],
-      "description": "SkillHub Ingest",
-      "added_at": "2026-06-26",
-      "last_checked_at": "2026-06-26",
-      "last_synced_at": null,
-      "skill_count": 1,
-      "skills": [
-        {
-          "id": "skillhub-ingest",
-          "name": "skillhub-ingest",
-          "path": "libraries/skillhub-ingest",
-          "original_path": "libraries/skillhub-ingest",
-          "tags": [
-            "docs",
-            "coding",
-            "workflow"
-          ],
-          "description": "Add, classify, extract, document, and validate GitHub-hosted skills in the Skills-Hub repository. Use when the user asks to add one or more skill repositories, import skills from GitHub URLs, process todo.md skill intake items, recover from partial GitHub downloads, create a new category or tag for incoming skills, refresh the Skills-Hub registry/docs after intake, or repeat the repository's skill入库 workflow.",
-          "added_at": "2026-06-26",
-          "extracted_path": "extracted-skills/skillhub-ingest/skillhub-ingest"
-        }
-      ],
-      "install": {
-        "method": "extracted",
-        "extracted_root": "extracted-skills/skillhub-ingest"
-      },
-      "extracted": {
-        "root": "extracted-skills/skillhub-ingest",
-        "source_library": "skillhub-ingest",
-        "source_path": "libraries/skillhub-ingest",
-        "last_extracted_commit": null,
-        "skill_count": 1
-      },
-      "category": "automation-workflow",
       "category_locked": true
     },
     {
@@ -5409,20 +7018,6 @@
           "extracted_path": "extracted-skills/taste-skill/stitch-design-taste"
         },
         {
-          "id": "design-taste-frontend-v1",
-          "name": "design-taste-frontend-v1",
-          "path": "libraries/taste-skill/taste-skill-v1",
-          "original_path": "libraries/taste-skill/taste-skill-v1",
-          "tags": [
-            "docs",
-            "coding",
-            "frontend"
-          ],
-          "description": "The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is `design-taste-frontend` (v2 experimental), which is a substantial rewrite. Use this v1 install name only if you need exact backward compatibility.",
-          "added_at": "2026-07-15",
-          "extracted_path": "extracted-skills/taste-skill/design-taste-frontend-v1"
-        },
-        {
           "id": "design-taste-frontend",
           "name": "design-taste-frontend",
           "path": "libraries/taste-skill/taste-skill",
@@ -5436,6 +7031,20 @@
           "description": "Anti-slop frontend skill for landing pages, portfolios, and redesigns. The agent reads the brief, infers the right design direction, and ships interfaces that do not look templated. Real design systems when applicable, audit-first on redesigns, strict pre-flight check.",
           "added_at": "2026-07-15",
           "extracted_path": "extracted-skills/taste-skill/design-taste-frontend"
+        },
+        {
+          "id": "design-taste-frontend-v1",
+          "name": "design-taste-frontend-v1",
+          "path": "libraries/taste-skill/taste-skill-v1",
+          "original_path": "libraries/taste-skill/taste-skill-v1",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend"
+          ],
+          "description": "The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is `design-taste-frontend` (v2 experimental), which is a substantial rewrite. Use this v1 install name only if you need exact backward compatibility.",
+          "added_at": "2026-07-15",
+          "extracted_path": "extracted-skills/taste-skill/design-taste-frontend-v1"
         }
       ],
       "install": {
@@ -5446,7 +7055,7 @@
         "root": "extracted-skills/taste-skill",
         "source_library": "taste-skill",
         "source_path": "libraries/taste-skill",
-        "last_extracted_commit": "b17742737e796305d829b3ad39eda3add0d79060",
+        "last_extracted_commit": "7c397f22d3af6f2b3f1925eb147d8e8801086151",
         "skill_count": 13
       },
       "category": "frontend-presentation"
@@ -5626,6 +7235,387 @@
         "skill_count": 9
       },
       "category": "coding-tools"
+    },
+    {
+      "id": "video-shotcraft",
+      "name": "video-shotcraft",
+      "path": "libraries/video-shotcraft",
+      "source": {
+        "type": "github",
+        "repo": "Vincentwei1021/video-shotcraft",
+        "ref": "main",
+        "commit": "0022ec45d28800cecb5b16624a3179093c93f4e9"
+      },
+      "tags": [
+        "animation",
+        "coding",
+        "docs",
+        "frontend"
+      ],
+      "description": "🎬 Showcase",
+      "added_at": "2026-08-06",
+      "last_checked_at": "2026-08-06",
+      "last_synced_at": "2026-08-06",
+      "skill_count": 1,
+      "skills": [
+        {
+          "id": "video-shotcraft",
+          "name": "video-shotcraft",
+          "path": "libraries/video-shotcraft",
+          "original_path": ".",
+          "tags": [
+            "docs",
+            "coding",
+            "frontend",
+            "animation"
+          ],
+          "description": "Create cinematic product videos from shot recipe cards, a validated template, and code/audio assets (Remotion + real page screenshots + 2.5D camera moves + beat-synced cuts + sound design). Use when the user asks to turn a frontend project or webpage into a product video, says \"use video-shotcraft to make a video/promo\", names the Ink Press template or asks to reproduce its effect, or wants a single shot card's motion. 用镜头配方卡 + 已验收模板 + 代码/音频资产制作电影感产品视频（Remotion + 真实页面截图 + 2.5D 运镜 + 节奏卡点 + 声音设计）。当用户要求\"用 video-shotcraft 做视频/宣传片\"、把前端项目/网页做成产品视频、点名 Ink Press 模板或要求复刻模板片效果，或要用镜头卡做单个动效镜头时使用。",
+          "added_at": "2026-08-06",
+          "extracted_path": "extracted-skills/video-shotcraft/video-shotcraft"
+        }
+      ],
+      "install": {
+        "method": "npx",
+        "extracted_root": "extracted-skills/video-shotcraft",
+        "command": "npx skills add Vincentwei1021/video-shotcraft",
+        "fallback": "extracted"
+      },
+      "extracted": {
+        "root": "extracted-skills/video-shotcraft",
+        "source_library": "video-shotcraft",
+        "source_path": "libraries/video-shotcraft",
+        "last_extracted_commit": "0022ec45d28800cecb5b16624a3179093c93f4e9",
+        "skill_count": 1
+      },
+      "category": "video-image",
+      "category_locked": true
+    },
+    {
+      "id": "yichen-skills",
+      "name": "yichen-skills",
+      "path": "libraries/yichen-skills",
+      "source": {
+        "type": "github",
+        "repo": "mcncarl/yichen-skills",
+        "ref": "main",
+        "commit": "d84171687281268df45b337bddc80ccf24f32239",
+        "original_path": "."
+      },
+      "tags": [
+        "automation",
+        "browser",
+        "coding",
+        "data",
+        "docs",
+        "research",
+        "workflow"
+      ],
+      "description": "A skill collection for creators covering writing, X content slicing and article drafts, WeChat digital-asset capture, research, media processing, and local Claude Code/Codex workflows.",
+      "added_at": "2026-08-09",
+      "last_checked_at": "2026-08-09",
+      "last_synced_at": "2026-08-09",
+      "skill_count": 20,
+      "skills": [
+        {
+          "id": "yichen-grok-consult",
+          "name": "yichen-grok-consult",
+          "path": "libraries/yichen-skills/plugins/yichen-grok-consult/skills/yichen-grok-consult",
+          "original_path": "libraries/yichen-skills/plugins/yichen-grok-consult/skills/yichen-grok-consult",
+          "tags": [
+            "docs",
+            "coding",
+            "research"
+          ],
+          "description": "Consult or search with xAI Grok from a GPT-led Codex conversation without switching the main model. Use when the user asks Grok to answer, review, challenge, compare, provide a second opinion, search the web, search X/Twitter, find recent or fixed-date posts, decode timestamps embedded in X status IDs, research current topics, or invoke Grok while staying in the current GPT conversation.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-grok-consult"
+        },
+        {
+          "id": "yichen-agent-memory",
+          "name": "yichen-agent-memory",
+          "path": "libraries/yichen-skills/yichen-agent-memory",
+          "original_path": "libraries/yichen-skills/yichen-agent-memory",
+          "tags": [
+            "docs",
+            "coding",
+            "obsidian",
+            "automation",
+            "research"
+          ],
+          "description": "Install, upgrade, inspect, and maintain the public Agent Memory Vault system from the mcncarl/agent-memory-vault repository, including a shared Claude Code and Codex setup. Use when the user asks to install a Markdown/Obsidian-first memory vault, connect Claude Code and Codex to one fact source, configure SQLite/FTS or optional Zvec semantic retrieval, run search, closeout, audit, or troubleshoot memory scripts and hooks.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-agent-memory"
+        },
+        {
+          "id": "yichen-asr",
+          "name": "yichen-asr",
+          "path": "libraries/yichen-skills/yichen-asr",
+          "original_path": "libraries/yichen-skills/yichen-asr",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "逸尘自用的统一音视频转写入口，在 StepFun Step ASR 与火山引擎豆包 ASR 之间按输出需求、安全边界和可用状态路由。用于本地音频或视频的纯文本转写、时间戳、SRT 字幕、口播粗剪，以及转写前体检；用户明确指定服务商时不得静默切换。Use when a local audio or video file needs transcription and the correct ASR backend is unclear, or when the user explicitly invokes $yichen-asr.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-asr"
+        },
+        {
+          "id": "yichen-bookmarks-export",
+          "name": "yichen-bookmarks-export",
+          "path": "libraries/yichen-skills/yichen-bookmarks-export",
+          "original_path": "libraries/yichen-skills/yichen-bookmarks-export",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "在用户当轮明确授权后，只读导出其小红书收藏、抖音收藏或 X/Twitter 书签为本地链接文件，复用现有 yichen-social-bookmarks-exporter 完成滚动、去重、数量核验和抽样验证。用于“导出/备份/同步我的收藏或书签链接”等私人数据导出任务；不得用于公开搜索、收藏内容分析、媒体下载、正文归档、推荐发现或未获当轮授权的私人读取。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-bookmarks-export"
+        },
+        {
+          "id": "yichen-chatgpt-web-research",
+          "name": "yichen-chatgpt-web-research",
+          "path": "libraries/yichen-skills/yichen-chatgpt-web-research",
+          "original_path": "libraries/yichen-skills/yichen-chatgpt-web-research",
+          "tags": [
+            "browser",
+            "docs",
+            "finance",
+            "coding",
+            "mcp"
+          ],
+          "description": "Use the user's already signed-in official ChatGPT website account, especially GPT-5.5 Pro / ChatGPT Pro, to perform product research, market research, competitor research, second-opinion analysis, or any request that says ChatGPT 官网, ChatGPT 网页版, GPT-5.5 Pro, 5.5 Pro, 用官网调研, 产品调研, 市场调研, or avoid API cost. Prefer the Chrome plugin/extension route; if it is unavailable or cannot attach, fall back to Computer Use on the real visible Chrome window/profile. This skill must control the real ChatGPT web page in the intended Chrome account/profile; it must not open a different free-account window, use OpenAI API, use web search alone, use generic Playwright, or use the deprecated chatgpt-web MCP.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-chatgpt-web-research"
+        },
+        {
+          "id": "yichen-content-archive",
+          "name": "yichen-content-archive",
+          "path": "libraries/yichen-skills/yichen-content-archive",
+          "original_path": "libraries/yichen-skills/yichen-content-archive",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "读取、下载并归档用户已提供的普通网页、Twitter/X 推文与 Article、小红书、抖音、微信公众号、YouTube、B站和小宇宙链接、URL 文件、上游已确认候选或用户明确指定的 known_collection；内置小红书图文/视频与抖音视频抓取，并可在用户明确要求时把小红书素材沉淀到指定飞书多维表格。用于“把这些已知链接读一下/下载/归档”“下载这条抖音”“抓取/沉淀这篇小红书”“读取这条 X 推文或 X Article”“归档这个明确播放列表/播客清单/公众号历史”等已有明确输入的任务；不得用于关键词搜索、站点爬取、账号/频道发现、相似推荐、跨来源扩展、私人收藏导出或未确认候选扩展。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-content-archive"
+        },
+        {
+          "id": "yichen-jianying-editor",
+          "name": "yichen-jianying-editor",
+          "path": "libraries/yichen-skills/yichen-jianying-editor",
+          "original_path": "libraries/yichen-skills/yichen-jianying-editor",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "当用户让 Codex 操作剪映/CapCut 桌面端、导入视频/音频素材、把素材放入时间线、在剪映内手动剪辑或精修、添加字幕、导出视频，或要求边操作剪映边记录项目日志时使用。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-jianying-editor"
+        },
+        {
+          "id": "yichen-mac-wechat-dual-open",
+          "name": "yichen-mac-wechat-dual-open",
+          "path": "libraries/yichen-skills/yichen-mac-wechat-dual-open",
+          "original_path": "libraries/yichen-skills/yichen-mac-wechat-dual-open",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "Create, inspect, repair, and polish a second WeChat app on macOS.\nCopy WeChat, change the bundle identifier, ad-hoc re-sign, launch the second\ninstance, set Chinese language preferences, and recolor only the copied app\nicon from WeChat green to blue. Use when the user asks whether Mac WeChat\ndual-open methods are reliable, asks to double-open WeChat, fix WeChat-2\nlanguage/icon/cache issues, or make the second WeChat visually distinct\nwithout installing third-party injection tools.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-mac-wechat-dual-open"
+        },
+        {
+          "id": "yichen-social-bookmarks-exporter",
+          "name": "yichen-social-bookmarks-exporter",
+          "path": "libraries/yichen-skills/yichen-social-bookmarks-exporter",
+          "original_path": "libraries/yichen-skills/yichen-social-bookmarks-exporter",
+          "tags": [
+            "browser",
+            "docs",
+            "coding"
+          ],
+          "description": "批量导出小红书、抖音与 X/Twitter 的私人收藏或书签为本地链接文件，支持 Chrome 登录态收藏页滚动去重、Field Theory GraphQL-only 同步、数量核验和按需转入媒体下载。用户要求抓取、导出、同步、备份、迁移或检查小红书收藏、抖音收藏、X 书签时使用；读取私人收藏前必须获得当轮明确授权。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-social-bookmarks-exporter"
+        },
+        {
+          "id": "yichen-summary",
+          "name": "yichen-summary",
+          "path": "libraries/yichen-skills/yichen-summary",
+          "original_path": "libraries/yichen-skills/yichen-summary",
+          "tags": [
+            "docs",
+            "coding",
+            "obsidian"
+          ],
+          "description": "将当前对话的精华内容提取并保存到 Obsidian。触发条件：用户说 \"/yichen-summary\"、\"保存对话\"、\"导出精华\"、\"沉淀到 Obsidian\" 等，或明确要求将对话内容保存到笔记软件时使用。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-summary"
+        },
+        {
+          "id": "yichen-unified-search",
+          "name": "yichen-unified-search",
+          "path": "libraries/yichen-skills/yichen-unified-search",
+          "original_path": "libraries/yichen-skills/yichen-unified-search",
+          "tags": [
+            "docs",
+            "coding",
+            "cli",
+            "research"
+          ],
+          "description": "逸尘自用的统一网页与社交平台搜索编排器。用于关键词驱动的实时公共网页检索、并行批量搜索、金融/学术/法律/安全等垂直搜索，以及 GitHub、微信公众号、小红书、抖音、今日头条、Twitter/X、B站、YouTube、小宇宙等平台的公开内容发现；可对本次搜索所得候选做原文核验和轻量富化，并把不同后端结果统一交接为候选记录。AnySearch 负责公共网页、批量与垂直搜索，平台原生/OpenCLI 只作对应平台适配器。不用于读取或下载用户直接给出的已知 URL、URL 文件或已确认候选；此类任务使用 yichen-content-archive。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-unified-search"
+        },
+        {
+          "id": "yichen-video-content",
+          "name": "yichen-video-content",
+          "path": "libraries/yichen-skills/yichen-video-content",
+          "original_path": "libraries/yichen-skills/yichen-video-content",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "对标视频内容拆解。输入视频口播稿，输出逐句作用拆解 + 问题诊断 + 可模仿报告。\n触发方式：/yichen-video-content、「拆解这个视频」、「分析对标内容」",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-video-content"
+        },
+        {
+          "id": "yichen-volc-asr",
+          "name": "yichen-volc-asr",
+          "path": "libraries/yichen-skills/yichen-volc-asr",
+          "original_path": "libraries/yichen-skills/yichen-volc-asr",
+          "tags": [
+            "docs",
+            "coding"
+          ],
+          "description": "火山引擎音视频转写 + 口播自动粗剪 skill。用于语音转文字、视频转文字、音频识别、生成时间戳/SRT 字幕，也用于帮我剪口播、自动粗剪、删重复、删停顿、删口误、生成粗剪 MP4。\n触发场景：用户说\"帮我转写这个视频\"、\"音视频转文字\"、\"识别这个音频\"、\"帮我剪口播\"、\"自动剪辑\"时使用。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-volc-asr"
+        },
+        {
+          "id": "yichen-web-research",
+          "name": "yichen-web-research",
+          "path": "libraries/yichen-skills/yichen-web-research",
+          "original_path": "libraries/yichen-skills/yichen-web-research",
+          "tags": [
+            "docs",
+            "coding",
+            "research"
+          ],
+          "description": "逸尘自用的互联网研究总入口。用于跨平台且跨阶段，或用户尚未确定工具的研究任务，把“搜索发现、候选核验、内容归档、按需转写分析”路由到 yichen-unified-search、yichen-content-archive、yichen-bookmarks-export 与 yichen-asr。若用户只要求搜索、只处理已知链接、只导出私人收藏或只转写已有音视频，应直接使用对应子 Skill。Use when an internet-research request spans multiple stages, the correct child route is unclear, or the user explicitly invokes $yichen-web-research.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-web-research"
+        },
+        {
+          "id": "yichen-wechat-local-vault",
+          "name": "yichen-wechat-local-vault",
+          "path": "libraries/yichen-skills/yichen-wechat-local-vault",
+          "original_path": "libraries/yichen-skills/yichen-wechat-local-vault",
+          "tags": [
+            "docs",
+            "coding",
+            "obsidian"
+          ],
+          "description": "微信 Mac 4.x 本地数据库全量/增量解析与数字资产库。用于本机微信聊天记录、联系人、群聊、朋友圈、收藏夹、语音/附件索引的密钥提取、全量解密、增量刷新、指定联系人/群聊导出、关系复盘、客户跟进和内容沉淀。触发词：微信解析、微信全量、微信增量、聊天记录、导出聊天、朋友圈解析、收藏夹解析、客户跟进、yichen-wechat-local-vault。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-wechat-local-vault"
+        },
+        {
+          "id": "yichen-wechat-mp-batch-exporter",
+          "name": "yichen-wechat-mp-batch-exporter",
+          "path": "libraries/yichen-skills/yichen-wechat-mp-batch-exporter",
+          "original_path": "libraries/yichen-skills/yichen-wechat-mp-batch-exporter",
+          "tags": [
+            "docs",
+            "coding",
+            "obsidian",
+            "data",
+            "frontend"
+          ],
+          "description": "批量下载微信公众号文章正文、历史文章列表、原创文章筛选、历史计数口径、阅读量、点赞/转发等指标、评论和评论回复。Use when the user asks to batch fetch mp.weixin.qq.com articles, export WeChat public-account history, distinguish publish groups vs expanded article URLs vs original articles, use wechat-article-exporter, use wxdown-service credentials, collect read/comment metrics, or create an archive for Obsidian/Feishu/local analysis. Do not use for ordinary one-off article summarization unless batch/enhanced data is requested.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-wechat-mp-batch-exporter"
+        },
+        {
+          "id": "yichen-wecom-local-vault",
+          "name": "yichen-wecom-local-vault",
+          "path": "libraries/yichen-skills/yichen-wecom-local-vault",
+          "original_path": "libraries/yichen-skills/yichen-wecom-local-vault",
+          "tags": [
+            "docs",
+            "coding",
+            "obsidian",
+            "data",
+            "workflow"
+          ],
+          "description": "Read, decrypt, query, search, and export local WeCom/企业微信 5.x desktop databases on macOS into a private read-only vault. Use when the user asks to parse 企业微信本地数据、企微聊天记录、WeCom/WXWork contacts, sessions, groups, customers, message history, local database backup, structured export, or a Mac enterprise-WeChat data analysis workflow.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-wecom-local-vault"
+        },
+        {
+          "id": "yichen-wecom-operations",
+          "name": "yichen-wecom-operations",
+          "path": "libraries/yichen-skills/yichen-wecom-operations",
+          "original_path": "libraries/yichen-skills/yichen-wecom-operations",
+          "tags": [
+            "docs",
+            "coding",
+            "cli"
+          ],
+          "description": "企业微信官方 wecom-cli 操作入口。用于把本地 Markdown 创建为普通或智能文档、在用户另行配置图片上传 helper 后生成含本地图片的智能文档、读取或覆写企微文档、创建与管理待办，并在企业权限开放时预约、查询、更新或取消会议和日程。用户提到“企微文档”“智能文档”“上传 Markdown”“预定会议”“企微会议”“企微日程”“企微待办”时使用；不用于消息发送或企业微信客户端操作。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-wecom-operations"
+        },
+        {
+          "id": "yichen-x-article-draft-uploader",
+          "name": "yichen-x-article-draft-uploader",
+          "path": "libraries/yichen-skills/yichen-x-article-draft-uploader",
+          "original_path": "libraries/yichen-skills/yichen-x-article-draft-uploader",
+          "tags": [
+            "browser",
+            "docs",
+            "coding",
+            "obsidian"
+          ],
+          "description": "将 Obsidian 或本地 Markdown 文章上传到 X/Twitter Articles 草稿，自动把第一张图作为封面，并按原文位置插入所有正文图片。适用于用户要求上传、发布、保存 Markdown 到 X Article，尤其是需要复用 Chrome 登录态、使用独立 Playwright 浏览器、不接管用户当前浏览器、封面必须是最上方图片，或旧脚本出现缺图、错位、MPH_MARKER 等残留时。",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-x-article-draft-uploader"
+        },
+        {
+          "id": "yichen-x-slicer",
+          "name": "yichen-x-slicer",
+          "path": "libraries/yichen-skills/yichen-x-slicer",
+          "original_path": "libraries/yichen-skills/yichen-x-slicer",
+          "tags": [
+            "image",
+            "docs",
+            "coding",
+            "animation"
+          ],
+          "description": "Convert a public X/Twitter Post, Quote Post, or Thread URL into a verified sequence of 1080×1440 Chinese image slices and a finished MP4 using one of 11 bundled visual templates. Native videos attached to selected posts play in full inside their media frame instead of becoming frozen thumbnails and retain their own source audio on the matching page timeline when present; source-silent pages remain silent, and the final MP4 has no audio stream when no selected native video has one. Use when the user asks to use Yichen X Slicer（逸尘 X 切片）to turn an X link into image cards, tweet slices, a finished social video, 3:4 post graphics, or the 落日琥珀版/default style. Ignore quoted content, retain only the selected Post or same-author Thread body and its own media, and never create TTS, voice-over, BGM, music, Jianying drafts, or publish content.",
+          "added_at": "2026-08-09",
+          "extracted_path": "extracted-skills/yichen-skills/yichen-x-slicer"
+        }
+      ],
+      "install": {
+        "method": "npx",
+        "extracted_root": "extracted-skills/yichen-skills",
+        "command": "npx skills add mcncarl/yichen-skills --skill yichen-x-slicer",
+        "fallback": "extracted"
+      },
+      "extracted": {
+        "root": "extracted-skills/yichen-skills",
+        "source_library": "yichen-skills",
+        "source_path": "libraries/yichen-skills",
+        "last_extracted_commit": "d84171687281268df45b337bddc80ccf24f32239",
+        "skill_count": 20
+      },
+      "category": "personal-collection",
+      "category_locked": true
     }
   ]
 }

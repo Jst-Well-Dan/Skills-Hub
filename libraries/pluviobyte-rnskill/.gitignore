@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+dist/
+build/
+releases/
+*.log
+.env
+.env.*
+AGENTS.md
+CLAUDE.md
+SOURCE_OF_TRUTH.md

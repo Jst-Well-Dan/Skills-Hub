@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B2 双模式底坞 · 整理 / 部署 · 原型</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,700;9..144,1,700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0F1A14;--paper:#F4EFE6;--line:#E8E0D1;--grid:#EDE7DA;--orange:#D86C3A;--moss:#3A7D6B;--muted:#6B7A74;--cream:#FFFFFF;--sans:Inter,sans-serif;--mono:IBM Plex Mono,monospace;--display:Fraunces,serif;--ease:cubic-bezier(.16,1,.3,1)}
+*{box-sizing:border-box}body{margin:0;min-width:320px;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;padding-bottom:110px}
+a{color:inherit;text-decoration:none}button,input,select{font:inherit}:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.topbar{position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line);background:color-mix(in srgb, var(--paper) 96%, white);backdrop-filter:blur(10px)}
+.topbar-inner{max-width:1240px;margin:0 auto;padding:12px 24px;display:grid;grid-template-columns:220px minmax(280px,1fr) auto;gap:16px;align-items:center}
+.mark{width:32px;height:32px;border:1.4px solid var(--ink);background:var(--cream);color:var(--ink);display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:13px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-title{margin:0;font-size:16px;font-weight:700;letter-spacing:-.02em}
+.brand-meta{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.search-box{position:relative}
+.search-box input{width:100%;height:40px;padding:0 40px 0 38px;border:1px solid var(--line);background:var(--cream);outline:none}
+.search-box input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(216,108,58,.12)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+/* admin mode bar with segmented */
+.admin-bar{position:sticky;top:56px;z-index:29;background:var(--ink);color:var(--paper);border-bottom:1px solid var(--ink);padding:0;display:flex;justify-content:center}
+.admin-bar-inner{max-width:1240px;width:100%;margin:0 auto;padding:10px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.admin-bar-left{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.admin-bar-left{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.admin-bar strong{font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+.admin-hint{color:rgba(244,239,230,.72);font-family:var(--mono);font-size:11px}
+.segmented{display:inline-grid;grid-auto-flow:column;gap:3px;padding:3px;background:rgba(244,239,230,.14);border-radius:9px}
+.segment{min-width:84px;height:30px;padding:0 14px;border:0;border-radius:7px;background:transparent;color:rgba(244,239,230,.72);cursor:pointer;font-family:var(--mono);font-size:11px;transition:all .18s var(--ease)}
+.segment.active{background:var(--cream);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.segment:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.admin-chip{min-height:36px;padding:0 12px;border:1px solid var(--line);background:var(--cream);color:var(--ink);font-family:var(--mono);font-size:12px;cursor:pointer}
+.admin-chip:hover{border-color:var(--ink)} .admin-chip.primary{background:var(--orange);color:white;border-color:var(--orange)} .admin-chip.primary:hover{background:#C45A2A}
+.admin-bar .admin-chip{background:transparent;border-color:rgba(244,239,230,.22);color:var(--paper)}
+.admin-bar .admin-chip:hover{border-color:var(--paper);background:rgba(244,239,230,.08)}
+.admin-bar .admin-chip.primary{background:var(--orange);border-color:var(--orange);color:white}
+.layout{max-width:1240px;margin:0 auto;padding:28px 24px 48px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px}
+.sidebar{align-self:start;position:sticky;top:110px}
+.filter-panel{border:1px solid var(--line);background:var(--cream)}
+.filter-head{padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.filter-title{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.14em}
+.filter-list{display:grid}
+.facet{width:100%;min-height:38px;padding:9px 12px;border:0;border-bottom:1px solid var(--grid);background:var(--cream);display:flex;justify-content:space-between;gap:8px;align-items:center;text-align:left;cursor:pointer;font-size:13px}
+.facet:hover{background:var(--paper)} .facet.active{background:var(--ink);color:white}
+.count{min-width:22px;padding:2px 6px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-family:var(--mono);font-size:11px;text-align:center}
+.facet.active .count{background:rgba(255,255,255,.15);color:white;border-color:rgba(255,255,255,.2)}
+.facet.drag-over{background:rgba(216,108,58,.08);outline:2px dashed var(--orange);outline-offset:-2px}
+.facet-row{display:contents}
+.mode-organize .facet-row{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--grid)}
+.mode-organize .facet-row .facet{flex:1;border-bottom:0}
+.facet-actions{display:none;gap:6px;padding:4px 6px 4px 0}
+.mode-organize .facet-actions{display:inline-flex}
+.facet-actions button{min-height:28px;padding:0 8px;border:1px solid var(--ink);background:var(--paper);font-family:var(--mono);font-size:11px;cursor:pointer}
+.facet-actions button:hover{background:var(--ink);color:white}
+.facet-actions button[data-act="delete"]{border-color:var(--orange);color:var(--orange)} .facet-actions button[data-act="delete"]:hover{background:var(--orange);color:white}
+.workspace{min-width:0;display:grid;gap:16px}
+/* catalog intro - REDESIGNED: no double radial circles, single restrained geometry */
+.catalog-intro{position:relative;overflow:hidden;background:var(--paper);border:1px solid var(--line);padding:20px 18px 16px}
+.catalog-intro::before{content:"";position:absolute;width:220px;height:220px;left:-40px;bottom:-60px;border:1px solid rgba(58,125,107,.18);border-radius:50%;pointer-events:none}
+.catalog-intro::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 30%, var(--paper) 92%);pointer-events:none}
+.catalog-intro>*{position:relative;z-index:1}
+.catalog-title{margin:0;font-family:var(--display);font-size:30px;line-height:1.1;letter-spacing:-.03em} .catalog-title i{font-style:italic;color:var(--orange)}
+.catalog-copy{margin:8px 0 0;max-width:65ch;color:var(--muted);font-size:13px;line-height:1.6}
+.q-badge{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 7px;border-radius:999px;background:var(--ink);color:white;font-family:var(--mono);font-size:10px;letter-spacing:.04em;cursor:pointer;vertical-align:middle}
+.q-badge.orange{background:var(--orange)}
+.toolbar{padding:10px 0 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.result-meta{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--ink)}
+.project-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.project-card{position:relative;border:1px solid var(--line);background:var(--cream);overflow:hidden;transition:transform .16s var(--ease), box-shadow .16s var(--ease)}
+.project-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,26,20,.08)}
+.project-card.selected{outline:2px solid var(--ink);outline-offset:-2px}
+.project-card.dragging{opacity:.55}
+.project-main{width:100%;border:0;background:transparent;color:inherit;padding:16px 16px 12px;text-align:left;cursor:pointer;display:grid;gap:8px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--moss);display:flex;gap:6px;align-items:center}
+.eyebrow::before{content:"◉";color:var(--orange);font-size:9px}
+.project-name{margin:0;font-size:16px;font-weight:700;overflow-wrap:anywhere}
+.badge{display:inline-flex;align-items:center;min-height:22px;padding:3px 7px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-family:var(--mono);font-size:11px}
+.description{margin:0;color:var(--muted);line-height:1.6;font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:42px}
+.project-foot{padding:0 16px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px dashed var(--line);margin:0 16px;padding-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap} .card-tags span{padding:3px 6px;border:1px solid var(--line);background:var(--paper);font-size:11px}
+.admin-check-wrap{position:absolute;top:0;left:0;width:44px;height:44px;display:grid;place-items:center;z-index:5;cursor:pointer}
+.admin-checkbox{width:18px;height:18px;accent-color:var(--ink);cursor:pointer}
+.project-card.has-check .project-main{padding-left:44px}
+/* drawer */
+.drawer{position:fixed;inset:0;z-index:40;pointer-events:none}
+.drawer.open{pointer-events:auto}
+.drawer-backdrop{position:absolute;inset:0;background:rgba(15,26,20,.24);opacity:0;transition:opacity .18s}
+.drawer.open .drawer-backdrop{opacity:1}
+.drawer-panel{position:absolute;top:0;right:0;width:min(760px,100vw);height:100%;background:var(--paper);border-left:1px solid var(--ink);transform:translateX(100%);transition:transform .2s var(--ease);display:grid;grid-template-rows:auto 1fr}
+.drawer.open .drawer-panel{transform:translateX(0)}
+.drawer-head{padding:18px;border-bottom:1px solid var(--line);background:var(--cream);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+.drawer-title{margin:0;font-family:var(--display);font-size:26px;line-height:1.2}
+.drawer-body{overflow:auto;padding:18px;display:grid;gap:16px;align-content:start}
+.skill-list{display:grid;gap:8px}
+.skill-item{border:1px solid var(--line);background:var(--cream);padding:12px;display:grid;gap:6px}
+.skill-name{font-weight:700} .skill-description{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.text-link{border:0;background:transparent;color:var(--orange);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer}
+.skill-panel{margin-top:6px;padding-top:10px;border-top:1px solid var(--line);display:grid;gap:10px}
+.skill-panel[hidden]{display:none}
+.skill-content{margin:0;max-height:520px;overflow:auto;padding:12px;border:1px solid var(--line);background:var(--paper);font:12px/1.65 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.drawer-notice{padding:10px 12px;border:1px dashed var(--line);background:var(--cream);font-family:var(--mono);font-size:11px;color:var(--muted)}
+/* bottom docks — 卡片弹窗：居底悬浮，不再通栏 */
+.bottom-dock{position:fixed;left:50%;bottom:20px;z-index:45;background:var(--cream);border:1px solid var(--ink);border-radius:16px;box-shadow:0 20px 40px rgba(15,26,20,.18), 0 4px 12px rgba(15,26,20,.10);transform:translateX(-50%) translateY(calc(100% + 28px)) scale(.97);opacity:0;transition:transform .36s var(--ease), opacity .28s var(--ease);display:flex;align-items:center;gap:10px;padding:14px 16px;flex-wrap:wrap;width:min(760px, calc(100vw - 32px));max-width:92vw;pointer-events:none}
+.bottom-dock.open{transform:translateX(-50%) translateY(0) scale(1);opacity:1;pointer-events:auto}
+.bottom-dock::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:999px;background:var(--line);opacity:.9}
+.bottom-dock strong{font-family:var(--mono);font-size:12px}
+.bottom-dock .hint{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bottom-dock input[type="text"]{height:36px;border:1px solid var(--line);background:var(--cream);padding:0 10px;font-family:var(--mono);font-size:12px;min-width:200px;flex:1}
+.bottom-dock select{height:36px;border:1px solid var(--line);background:var(--cream);padding:0 8px;font-family:var(--mono);font-size:12px}
+.flash{animation:flash .9s var(--ease)}
+@keyframes flash{0%{background:rgba(216,108,58,.18)}100%{background:var(--cream)}}
+.q-panel{position:fixed;right:16px;bottom:96px;z-index:46;width:min(360px,92vw);background:var(--cream);border:1px solid var(--ink);box-shadow:0 12px 32px rgba(15,26,20,.16);display:grid;gap:0;max-height:60vh;overflow:auto}
+.q-panel-head{padding:12px 14px;background:var(--ink);color:var(--paper);display:flex;justify-content:space-between;align-items:center}
+.q-panel-head strong{font-family:var(--mono);font-size:11px;letter-spacing:.06em}
+.q-panel-body{padding:12px 14px;display:grid;gap:12px}
+.q-item{padding:10px 12px;border:1px solid var(--line);background:var(--paper);display:grid;gap:6px}
+.q-item h4{margin:0;font-size:12px;font-weight:700} .q-item p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.q-item .q-actions{display:flex;gap:8px}
+.q-panel[hidden]{display:none}
+@media(max-width:980px){.topbar-inner{grid-template-columns:1fr auto}.search-box{grid-column:1 / -1;order:3}.layout{display:flex;flex-direction:column;gap:18px}.layout .sidebar{order:2;position:static}.workspace{display:contents}.catalog-intro{order:1}.toolbar{order:3}.project-grid{order:4;grid-template-columns:1fr}.filter-panel{display:flex;align-items:center;gap:10px}.filter-head{flex:0 0 auto;border:0;padding:0 8px}.filter-list{display:flex;flex:1;min-width:0;gap:6px;overflow:auto;padding-bottom:4px}.facet{flex:0 0 auto;white-space:nowrap}.mode-organize .facet-row{flex:0 0 auto;border-bottom:0;border-right:1px solid var(--grid)}}
+@media(max-width:680px){.topbar-inner,.layout{padding-left:14px;padding-right:14px}.catalog-title{font-size:26px}.bottom-dock{bottom:12px;padding:12px 14px;border-radius:14px;width:calc(100vw - 16px);max-width:calc(100vw - 16px)}.q-panel{right:8px;left:8px;width:auto}}
+@media(prefers-reduced-motion:reduce){.drawer-panel,.bottom-dock,.project-card{transition:none}.bottom-dock{transform:translateX(-50%) translateY(calc(100% + 28px));opacity:0}.bottom-dock.open{transform:translateX(-50%) translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#"><div class="mark" aria-hidden="true">SH</div><div><h1 class="brand-title">Skills-Hub</h1><div class="brand-meta">CATALOG · B2 原型</div></div></a>
+    <div class="search-box"><span class="search-icon">⌕</span><input id="searchInput" placeholder="搜索项目或 skill" autocomplete="off"></div>
+    <div style="display:flex;gap:8px;align-items:center"><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">ADMIN 预览</span></div>
+  </div>
+</header>
+
+<div class="admin-bar" role="tablist" aria-label="管理模式">
+  <div class="admin-bar-inner">
+    <div class="admin-bar-left">
+      <strong>ADMIN 模式</strong>
+      <div class="segmented" id="modeSwitch">
+        <button class="segment active" data-mode="organize" role="tab" aria-selected="true">整理模式</button>
+        <button class="segment" data-mode="deploy" role="tab" aria-selected="false">部署模式</button>
+      </div>
+      <span class="admin-hint" id="adminHint">目录策展 · 无副作用 · 拖拽卡片到左栏可移动</span>
+    </div>
+  </div>
+</div>
+
+<main class="layout" id="layoutRoot">
+  <aside class="sidebar" aria-label="分类">
+    <section class="filter-panel">
+      <div class="filter-head"><h2 class="filter-title" id="filterTitle">分类</h2><button class="admin-chip" id="newCatBtn" style="min-height:28px;padding:0 8px;font-size:11px">+ 新建</button></div>
+      <div class="filter-list" id="categoryFilters"></div>
+      <div id="sidebarFoot" style="padding:10px 12px;border-top:1px solid var(--line);display:flex;gap:8px"><span class="admin-hint">整理模式可改名/删除/拖拽</span></div>
+    </section>
+  </aside>
+  <section class="workspace">
+    <header class="catalog-intro">
+      <h2 class="catalog-title">Agent Skills 目录 <i>策展</i> <span class="q-badge" data-q="q1">Q1 圆形已重做 →</span></h2>
+      <p class="catalog-copy">收录 35 个项目 · 441 个 Skills。当前为 <strong id="modeCopy">整理模式</strong>：以项目为单位整理目录，不产生文件副作用。<span class="q-badge orange" data-q="q1">点此看说明</span></p>
+    </header>
+    <div class="toolbar">
+      <div class="result-meta" id="resultMeta"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="admin-hint" id="toolbarHint">拖拽卡片到左栏分类可移动</span>
+      </div>
+    </div>
+    <div class="project-grid" id="projectGrid"></div>
+  </section>
+</main>
+
+<!-- 整理底坞 -->
+<div class="bottom-dock open" id="bottomDockOrganize" aria-label="整理底坞">
+  <strong id="dockOrganizeCount">已选 0 个项目</strong>
+  <span class="hint">移动到</span>
+  <select class="admin-chip" id="batchTargetOrganize" aria-label="目标分类"></select>
+  <button class="admin-chip primary" id="batchMoveBtn">批量移动</button>
+  <button class="admin-chip" id="dockNewCatBtn">新建分类</button>
+  <button class="admin-chip" id="regenBtn">重新生成</button>
+  <span class="hint" id="dockOrganizeHint" role="status" aria-live="polite"></span>
+  <span class="q-badge" data-q="q5" style="margin-left:auto">Q5 底坞手机端 →</span>
+</div>
+<!-- 部署底坞 -->
+<div class="bottom-dock" id="bottomDockDeploy" aria-label="部署底坞">
+  <strong id="dockDeployCount">已选 0 个 skill + 0 个项目</strong>
+  <button class="admin-chip" id="selectCategorySkillsBtn" title="全选当前过滤分类下所有 skills">全选当前分类的 skills</button>
+  <input type="text" id="deployRoot" placeholder="目标路径，如 E:\Code\my-app">
+  <button class="admin-chip" id="browseBtn">浏览</button>
+  <select id="deployDir"><option value=".claude">.claude</option><option value=".codex">.codex</option><option value=".agents">.agents</option><option value=".pi">.pi</option><option value="custom">自定义…</option></select>
+  <input type="text" id="deployCustomDir" placeholder="自定义目录" style="display:none;min-width:120px">
+  <button class="admin-chip primary" id="deployBtn">部署选中</button>
+  <span class="hint" id="deployHint"></span>
+  <span class="q-badge orange" data-q="q4" style="margin-left:auto">Q4 文案确认 →</span>
+</div>
+
+<!-- 整理抽屉 -->
+<div class="drawer" id="drawerOrganize" aria-hidden="true">
+  <div class="drawer-backdrop" data-close="organize"></div>
+  <section class="drawer-panel" role="dialog" aria-modal="true" aria-label="整理详情">
+    <div class="drawer-head">
+      <div><h2 class="drawer-title" id="drawerOrganizeTitle"></h2><p class="description" id="drawerOrganizeDesc"></p>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-family:var(--mono);font-size:12px"><input type="checkbox" id="drawerOrganizeCheck"> 选择此项目加入批量移动 <span class="q-badge" data-q="q3">Q3</span></label>
+      </div>
+      <button class="admin-chip" data-close="organize">× 关闭</button>
+    </div>
+    <div class="drawer-body" id="drawerOrganizeBody"></div>
+    <div style="padding:12px 18px;border-top:1px solid var(--line);background:var(--cream)"><div class="drawer-notice">整理抽屉仅项目级勾选，skill 不可勾 — 移动以项目为单位。</div></div>
+  </section>
+</div>
+<!-- 部署抽屉 -->
+<div class="drawer" id="drawerDeploy" aria-hidden="true">
+  <div class="drawer-backdrop" data-close="deploy"></div>
+  <section class="drawer-panel" role="dialog" aria-modal="true" aria-label="部署详情">
+    <div class="drawer-head">
+      <div><h2 class="drawer-title" id="drawerDeployTitle"></h2><p class="description" id="drawerDeployDesc"></p>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-family:var(--mono);font-size:12px"><input type="checkbox" id="drawerDeployCheck"> 按 skill 粒度勾选（项目级全选在下方）</label>
+        <div style="margin-top:8px;display:flex;gap:8px"><button class="admin-chip" id="drawerSelectAllSkills">全选本项目 skills</button><button class="admin-chip" id="drawerClearAllSkills">全不选本项目</button></div>
+      </div>
+      <button class="admin-chip" data-close="deploy">× 关闭</button>
+    </div>
+    <div class="drawer-body" id="drawerDeployBody"></div>
+    <div style="padding:12px 18px;border-top:1px solid var(--line);background:var(--cream)"><div class="drawer-notice">部署抽屉可到单 skill 粒度勾选，内容区与整理抽屉 100% 一致（同一模板）。</div></div>
+  </section>
+</div>
+
+<!-- 提问面板 -->
+<div class="q-panel" id="qPanel" hidden>
+  <div class="q-panel-head"><strong>原型待确认 · 点标记查看</strong><button class="admin-chip" id="qClose" style="background:transparent;color:white;border-color:rgba(255,255,255,.3)">×</button></div>
+  <div class="q-panel-body" id="qPanelBody"></div>
+</div>
+<button class="admin-chip" id="qToggle" style="position:fixed;right:16px;bottom:16px;z-index:47;background:var(--ink);color:white;border-color:var(--ink)">待确认问题 6</button>
+
+<script>
+const categories = [
+  {id:'all', label:'全部', count:8},
+  {id:'coding', label:'编程工具', count:3},
+  {id:'content', label:'内容创作', count:2},
+  {id:'browser', label:'浏览器自动化', count:2},
+  {id:'data', label:'数据处理', count:1},
+];
+const projects = [
+  {id:'p1', name:'awesome-claude-skills', category:'coding', skills:5, desc:'精选 Claude Skills 合集，覆盖编码与写作。', tags:['coding','docs'], skillKeys:['s1','s2']},
+  {id:'p2', name:'agent-browser', category:'browser', skills:12, desc:'浏览器自动化与页面抓取 skills。', tags:['browser'], skillKeys:['s3','s4','s5']},
+  {id:'p3', name:'content-creator', category:'content', skills:4, desc:'内容创作与扩写流水线。', tags:['content'], skillKeys:['s6']},
+  {id:'p4', name:'data-pipeline', category:'data', skills:7, desc:'数据清洗与转换工具。', tags:['data'], skillKeys:['s7','s8']},
+  {id:'p5', name:'code-review-bot', category:'coding', skills:3, desc:'代码审查与重构建议。', tags:['coding'], skillKeys:['s9']},
+  {id:'p6', name:'seo-toolkit', category:'content', skills:6, desc:'SEO 与文案优化。', tags:['content'], skillKeys:['s10','s11']},
+  {id:'p7', name:'web-scraper', category:'browser', skills:9, desc:'高效抓取与反检测。', tags:['browser'], skillKeys:['s12']},
+  {id:'p8', name:'dev-utils', category:'coding', skills:8, desc:'开发小工具集。', tags:['coding'], skillKeys:['s13','s14']},
+];
+const skillContent = {
+  s1:{name:'commit-helper', desc:'规范化提交信息', content:'# commit-helper\n\n生成符合 Conventional Commits 的提交信息。\n\n- 支持 emoji\n- 自动关联 issue'},
+  s2:{name:'test-gen', desc:'单元测试生成', content:'# test-gen\n\n根据函数生成 Vitest/Jest 测试。'},
+  s3:{name:'page-navigator', desc:'页面导航', content:'# page-navigator\n\n自动化翻页与等待策略。'},
+  s4:{name:'form-filler', desc:'表单填充', content:'# form-filler\n\n智能识别表单并填充。'},
+  s5:{name:'scrape-table', desc:'表格抓取', content:'# scrape-table\n\n抽取 HTML 表格为 JSON。'},
+  s6:{name:'rewrite', desc:'改写润色', content:'# rewrite\n\n一键改写，保持原意。'},
+  s7:{name:'csv-clean', desc:'CSV 清洗', content:'# csv-clean\n\n处理编码与分隔符。'},
+  s8:{name:'json-transform', desc:'JSON 转换', content:'# json-transform\n\nJSONPath 变换。'},
+  s9:{name:'review-diff', desc:'diff 审查', content:'# review-diff\n\n对 PR diff 提建议。'},
+  s10:{name:'keyword', desc:'关键词提取', content:'# keyword\n\nTF-IDF 关键词。'},
+  s11:{name:'meta-gen', desc:'meta 生成', content:'# meta-gen\n\n生成 SEO meta。'},
+  s12:{name:'stealth', desc:'反检测', content:'# stealth\n\n绕过 Bot 检测。'},
+  s13:{name:'env-setup', desc:'环境初始化', content:'# env-setup\n\n一键初始化 .env。'},
+  s14:{name:'log-viewer', desc:'日志查看', content:'# log-viewer\n\n结构化日志查看。'},
+};
+
+let mode='organize';
+let filterCat='all';
+let selected=new Set();
+let skillSelected=new Set();
+let currentDrawerId=null;
+let searchQ='';
+
+const qs = s=>document.querySelector(s);
+const qsa = s=>[...document.querySelectorAll(s)];
+
+function skillContentHtml(key){
+  const s=skillContent[key];
+  if(!s) return `<pre class="skill-content">未找到 ${key}</pre>`;
+  return `<div class="skill-name">${s.name}</div><p class="skill-description">${s.desc}</p><button class="text-link" data-toggle="${key}">查看内容 →</button><div class="skill-panel" id="panel-${key}" hidden><pre class="skill-content">${s.content}</pre></div>`;
+}
+function buildSkillListHtml(project, forDeploy){
+  return project.skillKeys.map(k=>{
+    const s=skillContent[k];
+    const checked = skillSelected.has(project.id+':'+k);
+    const deployCheck = forDeploy ? `<label style="display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:12px"><input type="checkbox" data-skill="${k}" data-project="${project.id}" ${checked?'checked':''}> 勾选此 skill</label>` : '';
+    return `<div class="skill-item">${deployCheck}${skillContentHtml(k)}</div>`;
+  }).join('');
+}
+
+function renderCats(){
+  const list=qs('#categoryFilters');
+  const isOrganize = mode==='organize';
+  list.className='filter-list';
+  qs('#layoutRoot').className = isOrganize ? 'layout mode-organize' : 'layout';
+  // header
+  qs('#filterTitle').textContent = isOrganize ? '分类' : '分类 · 筛选待部署';
+  qs('#newCatBtn').style.display = isOrganize ? '' : 'none';
+  qs('#sidebarFoot').style.display = isOrganize ? '' : 'none';
+  // render
+  list.innerHTML = categories.map(c=>{
+    const active = c.id===filterCat ? ' active' : '';
+    const count = c.count;
+    if(isOrganize){
+      return `<div class="facet-row" draggable="true" data-cat="${c.id}">
+        <button class="facet${active}" data-cat="${c.id}">${c.label} <span class="count">${count}</span></button>
+        <span class="facet-actions">${c.id!=='all'?`<button data-act="rename" data-cat="${c.id}">改名</button><button data-act="delete" data-cat="${c.id}">删除</button>`:''}</span>
+      </div>`;
+    } else {
+      return `<button class="facet${active}" data-cat="${c.id}">${c.label} <span class="count">${count}</span></button>`;
+    }
+  }).join('');
+  // batch target options
+  const opts = categories.filter(c=>c.id!=='all').map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  qs('#batchTargetOrganize').innerHTML = opts;
+  // q: show hint about drag
+  qsa('[data-cat]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const cat = e.currentTarget.dataset.cat || e.currentTarget.closest('[data-cat]')?.dataset.cat;
+      if(!cat) return;
+      if(e.target.dataset.act) return;
+      filterCat=cat; renderCats(); renderGrid(); updateToolbar();
+    });
+  });
+  qsa('[data-act="rename"]').forEach(b=> b.addEventListener('click', e=>{
+    const cat=e.currentTarget.dataset.cat; const cur=categories.find(x=>x.id===cat);
+    const nv=prompt('重命名分类', cur.label); if(nv) {cur.label=nv; renderCats();}
+  }));
+  qsa('[data-act="delete"]').forEach(b=> b.addEventListener('click', e=>{
+    const cat=e.currentTarget.dataset.cat; if(confirm('删除分类 '+cat+'？')){ const idx=categories.findIndex(x=>x.id===cat); if(idx>=0) categories.splice(idx,1); filterCat='all'; renderCats(); renderGrid(); }
+  }));
+  // drag over for organize
+  if(isOrganize){
+    qsa('.facet-row').forEach(row=>{
+      row.addEventListener('dragover', e=>{ e.preventDefault(); row.querySelector('.facet').classList.add('drag-over'); });
+      row.addEventListener('dragleave', ()=> row.querySelector('.facet').classList.remove('drag-over'));
+      row.addEventListener('drop', e=>{
+        e.preventDefault(); row.querySelector('.facet').classList.remove('drag-over');
+        const targetCat=row.dataset.cat;
+        const draggedId=e.dataTransfer.getData('text/plain');
+        const p=projects.find(x=>x.id===draggedId);
+        if(p && targetCat!=='all'){ p.category=targetCat; flash(qs('#dockOrganizeHint'),'已移动 '+p.name+' → '+targetCat); renderCats(); renderGrid(); updateDock(); }
+        else if(selected.size>0 && targetCat!=='all'){ selected.forEach(id=>{ const pr=projects.find(x=>x.id===id); if(pr) pr.category=targetCat; }); flash(qs('#dockOrganizeHint'),'批量移动 '+selected.size+' 项 → '+targetCat); renderCats(); renderGrid(); updateDock(); }
+      });
+    });
+  }
+}
+
+function filteredProjects(){
+  let list=projects;
+  if(filterCat!=='all') list=list.filter(p=>p.category===filterCat);
+  if(searchQ) { const q=searchQ.toLowerCase(); list=list.filter(p=> p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)); }
+  return list;
+}
+
+function renderGrid(){
+  const grid=qs('#projectGrid');
+  const list=filteredProjects();
+  const isOrganize = mode==='organize';
+  grid.innerHTML = list.map(p=>{
+    const sel=selected.has(p.id);
+    const draggable = isOrganize ? ' draggable="true"' : '';
+    const check = `<label class="admin-check-wrap" title="${isOrganize?'选择项目加入批量移动':'勾选项目=全选其 skills'}"><input type="checkbox" class="admin-checkbox" data-check="${p.id}" ${sel?'checked':''}></label>`;
+    return `<article class="project-card has-check ${sel?'selected':''}" data-id="${p.id}"${draggable}>
+      ${check}
+      <button class="project-main" data-open="${p.id}">
+        <div class="eyebrow">${categories.find(c=>c.id===p.category)?.label || p.category} · ${p.skills} skills</div>
+        <div class="project-row"><h3 class="project-name">${p.name}</h3><span class="badge">${p.category}</span></div>
+        <p class="description">${p.desc}</p>
+      </button>
+      <div class="project-foot"><span class="card-tags">${p.tags.map(t=>`<span>${t}</span>`).join('')}</span><span>${p.skills} skills</span></div>
+    </article>`;
+  }).join('') || `<div class="empty">无匹配项目</div>`;
+  // events
+  qsa('[data-check]').forEach(cb=>{
+    cb.addEventListener('change', e=>{
+      const id=e.currentTarget.dataset.check;
+      if(mode==='organize'){
+        if(e.currentTarget.checked) selected.add(id); else selected.delete(id);
+      } else {
+        // deploy: check project = select all its skills
+        const p=projects.find(x=>x.id===id);
+        if(e.currentTarget.checked){ selected.add(id); p.skillKeys.forEach(k=> skillSelected.add(id+':'+k)); }
+        else { selected.delete(id); p.skillKeys.forEach(k=> skillSelected.delete(id+':'+k)); }
+      }
+      syncDrawerChecks(); updateDock(); renderGrid();
+    });
+  });
+  qsa('[data-open]').forEach(btn=> btn.addEventListener('click', e=> openDetail(e.currentTarget.dataset.open)));
+  // drag start
+  if(isOrganize){
+    qsa('.project-card[draggable]').forEach(card=>{
+      card.addEventListener('dragstart', e=>{ card.classList.add('dragging'); e.dataTransfer.setData('text/plain', card.dataset.id); });
+      card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+    });
+  }
+  updateToolbar();
+  updateDock();
+}
+
+function openDetail(id){
+  currentDrawerId=id;
+  const p=projects.find(x=>x.id===id);
+  if(!p) return;
+  // close other
+  if(mode==='organize'){
+    qs('#drawerDeploy').classList.remove('open'); qs('#drawerDeploy').setAttribute('aria-hidden','true');
+    qs('#drawerOrganizeTitle').textContent=p.name; qs('#drawerOrganizeDesc').textContent=p.desc;
+    qs('#drawerOrganizeCheck').checked=selected.has(id);
+    qs('#drawerOrganizeBody').innerHTML = buildSkillListHtml(p,false);
+    qs('#drawerOrganize').classList.add('open'); qs('#drawerOrganize').setAttribute('aria-hidden','false');
+    bindToggleContent(qs('#drawerOrganizeBody'));
+  } else {
+    qs('#drawerOrganize').classList.remove('open'); qs('#drawerOrganize').setAttribute('aria-hidden','true');
+    qs('#drawerDeployTitle').textContent=p.name; qs('#drawerDeployDesc').textContent=p.desc;
+    qs('#drawerDeployBody').innerHTML = buildSkillListHtml(p,true);
+    qs('#drawerDeploy').classList.add('open'); qs('#drawerDeploy').setAttribute('aria-hidden','false');
+    bindToggleContent(qs('#drawerDeployBody'));
+    // bind skill checks
+    qsa('#drawerDeployBody [data-skill]').forEach(cb=> cb.addEventListener('change', e=>{
+      const key=e.currentTarget.dataset.project+':'+e.currentTarget.dataset.skill;
+      if(e.currentTarget.checked) skillSelected.add(key); else skillSelected.delete(key);
+      // if any skill selected, ensure project considered selected
+      if(skillSelected.has(key)) selected.add(e.currentTarget.dataset.project);
+      updateDock(); syncGridChecks();
+    }));
+  }
+}
+function bindToggleContent(root){
+  root.querySelectorAll('[data-toggle]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const k=e.currentTarget.dataset.toggle;
+      const panel=root.querySelector('#panel-'+k) || document.querySelector('#panel-'+k);
+      // toggle both drawers' same key
+      const p1=document.querySelector('#drawerOrganizeBody #panel-'+k);
+      const p2=document.querySelector('#drawerDeployBody #panel-'+k);
+      const willOpen = panel.hasAttribute('hidden');
+      [p1,p2].forEach(p=>{ if(p) { if(willOpen) p.removeAttribute('hidden'); else p.setAttribute('hidden',''); }});
+      // update button text in both
+      document.querySelectorAll(`[data-toggle="${k}"]`).forEach(b=> b.textContent = willOpen ? '收起内容 ←' : '查看内容 →');
+    });
+  });
+}
+function closeDrawers(){
+  qsa('.drawer').forEach(d=>{ d.classList.remove('open'); d.setAttribute('aria-hidden','true'); });
+}
+function syncDrawerChecks(){
+  if(qs('#drawerOrganizeCheck')) qs('#drawerOrganizeCheck').checked = currentDrawerId ? selected.has(currentDrawerId) : false;
+}
+function syncGridChecks(){
+  renderGrid();
+}
+function updateToolbar(){
+  const n=filteredProjects().length;
+  qs('#resultMeta').textContent = mode==='organize' ? `共 ${n} 个项目 · 拖拽卡片到左栏可移动` : `共 ${n} 个项目 · 筛选后可按分类全选 skills`;
+  qs('#toolbarHint').textContent = mode==='organize' ? '拖拽卡片到左栏可移动' : '点击左栏分类筛选，按底坞全选部署';
+  qs('#modeCopy').textContent = mode==='organize' ? '整理模式' : '部署模式';
+  qs('#adminHint').textContent = mode==='organize' ? '目录策展 · 无副作用 · 拖拽卡片到左栏可移动' : '文件分发 · 有副作用 · 按分类筛选后批量部署';
+}
+function updateDock(){
+  const org=qs('#bottomDockOrganize'), dep=qs('#bottomDockDeploy');
+  if(mode==='organize'){ org.classList.add('open'); dep.classList.remove('open'); qs('#dockOrganizeCount').textContent=`已选 ${selected.size} 个项目`; }
+  else { dep.classList.add('open'); org.classList.remove('open'); const skillN=skillSelected.size; const projN=selected.size; qs('#dockDeployCount').textContent=`已选 ${skillN} 个 skill + ${projN} 个项目`; }
+}
+function flash(el, msg){
+  if(!el) return; el.textContent=msg; el.parentElement.classList.add('flash'); setTimeout(()=> el.parentElement.classList.remove('flash'), 900);
+}
+
+// mode switch
+qsa('.segment').forEach(btn=> btn.addEventListener('click', e=>{
+  mode=e.currentTarget.dataset.mode;
+  qsa('.segment').forEach(b=>{ b.classList.toggle('active', b.dataset.mode===mode); b.setAttribute('aria-selected', b.dataset.mode===mode); });
+  closeDrawers(); renderCats(); renderGrid(); updateToolbar(); updateDock();
+  if(mode==='deploy') flash(qs('#deployHint'),'已切换到部署模式');
+}));
+
+// drawer events
+qs('#drawerOrganizeCheck').addEventListener('change', e=>{
+  if(!currentDrawerId) return;
+  if(e.currentTarget.checked) selected.add(currentDrawerId); else selected.delete(currentDrawerId);
+  updateDock(); renderGrid();
+});
+qsa('[data-close]').forEach(b=> b.addEventListener('click', e=>{ closeDrawers(); }));
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeDrawers(); selected.clear(); skillSelected.clear(); updateDock(); renderGrid(); }});
+qs('#drawerSelectAllSkills').addEventListener('click', ()=>{
+  if(!currentDrawerId) return; const p=projects.find(x=>x.id===currentDrawerId); p.skillKeys.forEach(k=> skillSelected.add(currentDrawerId+':'+k)); selected.add(currentDrawerId); updateDock(); openDetail(currentDrawerId);
+});
+qs('#drawerClearAllSkills').addEventListener('click', ()=>{
+  if(!currentDrawerId) return; const p=projects.find(x=>x.id===currentDrawerId); p.skillKeys.forEach(k=> skillSelected.delete(currentDrawerId+':'+k)); updateDock(); openDetail(currentDrawerId);
+});
+
+// bottom dock actions (mock)
+qs('#batchMoveBtn').addEventListener('click', ()=>{
+  if(selected.size===0) return flash(qs('#dockOrganizeHint'),'请先勾选项目');
+  const target=qs('#batchTargetOrganize').value;
+  selected.forEach(id=>{ const p=projects.find(x=>x.id===id); if(p) p.category=target; });
+  flash(qs('#dockOrganizeHint'),'已移动 '+selected.size+' 项 → '+target); selected.clear(); renderCats(); renderGrid();
+});
+qs('#dockNewCatBtn').addEventListener('click', ()=> qs('#newCatBtn').click());
+qs('#newCatBtn').addEventListener('click', ()=>{
+  const id=prompt('新分类 ID（英文，如 my-cat）'); if(!id) return;
+  const label=prompt('分类名称（中文）', id); if(!label) return;
+  categories.push({id, label, count:0}); renderCats();
+});
+qs('#regenBtn').addEventListener('click', ()=> flash(qs('#dockOrganizeHint'),'重新生成已触发（原型 mock）'));
+qs('#selectCategorySkillsBtn').addEventListener('click', ()=>{
+  if(filterCat==='all') return flash(qs('#deployHint'),'请先在左栏选择一个分类');
+  const list=projects.filter(p=>p.category===filterCat);
+  list.forEach(p=>{ selected.add(p.id); p.skillKeys.forEach(k=> skillSelected.add(p.id+':'+k)); });
+  flash(qs('#deployHint'),'已全选「'+filterCat+'」下 '+skillSelected.size+' 个 skills'); updateDock(); renderGrid();
+});
+qs('#deployBtn').addEventListener('click', ()=>{
+  if(skillSelected.size===0 && selected.size===0) return flash(qs('#deployHint'),'请先勾选 skill 或项目');
+  const root=qs('#deployRoot').value.trim() || '（未填路径）';
+  flash(qs('#deployHint'),'已部署 '+skillSelected.size+' 个 skills 到 '+root+'（mock）');
+});
+qs('#browseBtn').addEventListener('click', ()=>{
+  const p=prompt('输入目标项目路径', qs('#deployRoot').value || 'E:\\Code\\my-app'); if(p!==null) qs('#deployRoot').value=p;
+});
+qs('#deployDir').addEventListener('change', e=>{
+  const v=e.target.value; qs('#deployCustomDir').style.display = v==='custom'?'':'none';
+});
+qs('#searchInput').addEventListener('input', e=>{ searchQ=e.target.value; renderGrid(); });
+
+// Q panel
+const qData={
+  q1:{title:'Q1 · 圆形装饰已重做', html:'<p>原双重同心圆（moss+orange）已移除，改为 catalog-intro 左下角单枚 1px 线框圆（`rgba(58,125,107,.18)`）+ 45% 柔和纸纹渐变，满足 Restrained 要求。</p><p><strong>待你确认：</strong>① 保留这枚克制圆还是彻底无装饰？② 是否需要把圆改成与品牌 SH 相关的几何？</p><p style="color:var(--orange)">原型已体现新圆，刷新即可看到。</p>'},
+  q2:{title:'Q2 · 模式切换是否需二次确认', html:'<p>当前：点击分段控件即时切换，自动关闭另一抽屉，<code>selected / skillSelected</code> <strong>保留</strong>（todo 4.4）仅抽屉关闭。</p><p><strong>待确认：</strong>① 保留是否符合预期？② 是否需要切换时清空另一模式的选择？③ Esc 是否清空双集合（当前是）？</p>'},
+  q3:{title:'Q3 · 拖拽与触屏', html:'<p>整理模式：卡片 draggable，左栏分类为 drop 目标，支持单卡拖拽 + 批量（先勾选再拖分类）两种。部署模式不可拖拽。</p><p><strong>待确认：</strong>手机端拖拽体验差，是否接受“手机靠底坞下拉+批量移动”而不用 drag？还是需要长按拖拽？</p>'},
+  q4:{title:'Q4 · 部署底坞文案', html:'<p>当前按钮文案“全选当前分类的 skills”较长，但语义精确。</p><p><strong>待确认：</strong>① 是否缩为“全选此类”？② 底坞计数“X个skill+Y个项目”是否改成“X skills / Y 项目”？</p>'},
+  q5:{title:'Q5 · 底坞已改卡片弹窗', html:'<p>已按你的要求改为<strong>居底悬浮卡片</strong>：<code>left:50% + translateX(-50%)</code> 居中，<code>bottom:20px</code>（手机 12px），<code>16px 圆角 + 双层阴影</code>，<code>transform: translateY(100%+28px) scale(.97) → 0 scale(1)</code> + opacity 淡入，<code>360ms cubic-bezier(.16,1,.3,1)</code>，顶部有 36px 拖动手柄装饰。</p><p><strong>待你确认：</strong>① 圆角 16px 是否合适还是要更小(12px)？② 卡片宽度 min(760px, 92vw) 是否过宽？③ 阴影是否过重？④ 是否需要点击卡片外部不关闭、仅手动操作？</p>'},
+  q6:{title:'Q6 · 部署反馈与双底坞实现', html:'<p>原型为双独立底坞 `#bottomDockOrganize / #bottomDockDeploy` 互斥显隐，非单容器双 body。</p><p><strong>待确认：</strong>① 落地到 `site/index.html` 时是否也用双独立容器？② 部署成功用底坞闪橙色提示是否足够，还是需要持久 toast？③ `localStorage` 键是否沿用 `skill-hub-deploy-root/dir`？</p>'},
+};
+function openQ(id){
+  const d=qData[id]; if(!d) return;
+  const body=qs('#qPanelBody'); body.innerHTML=`<div class="q-item"><h4>${d.title}</h4>${d.html}<div class="q-actions"><button class="admin-chip primary" onclick="answerQ('${id}','认可')">认可</button><button class="admin-chip" onclick="answerQ('${id}','需调整')">需调整</button></div></div>`;
+  qs('#qPanel').hidden=false;
+}
+window.answerQ=(id, ans)=>{
+  const item=qs('#qPanelBody .q-item'); if(item) item.insertAdjacentHTML('beforeend', `<div style="padding:8px;background:rgba(58,125,107,.08);border:1px solid var(--line);font-family:var(--mono);font-size:11px">已记录：${ans} · ${id}</div>`);
+};
+qsa('[data-q]').forEach(el=> el.addEventListener('click', ()=> openQ(el.dataset.q)));
+qs('#qToggle').addEventListener('click', ()=>{ const p=qs('#qPanel'); if(p.hidden) openQ('q1'); else p.hidden=true; });
+qs('#qClose').addEventListener('click', ()=> qs('#qPanel').hidden=true);
+document.addEventListener('click', e=>{ if(e.target.closest('.drawer-backdrop')) closeDrawers(); });
+
+// init
+renderCats(); renderGrid();
+// expose for debugging
+window._state=()=>({mode, filterCat, selected:[...selected], skillSelected:[...skillSelected]});
+</script>
+</body>
+</html>

@@ -1,4 +1,0 @@
-interface:
-  display_name: "SkillHub Ingest"
-  short_description: "Standardize Skills-Hub intake"
-  default_prompt: "Use $skillhub-ingest to add GitHub skill repositories to this Skills-Hub project."
