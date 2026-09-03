@@ -344,6 +344,10 @@ class AdminHandler(BaseHTTPRequestHandler):
         except Exception as e:
             return _json(self, {"error": f"cannot create targetRoot: {e}"}, 400)
         dest_base = target_path / skill_dir
+        # Agent 技能根目录（.claude/.codex/.agents/.pi）下，SKILL.md 统一放在 skills/<名字>/ 子目录
+        # 例如 .pi → .pi/skills/eli5/SKILL.md；若用户已输入 .pi/skills 等含 skills 的路径则不重复追加
+        if Path(skill_dir).name in (".claude", ".codex", ".agents", ".pi"):
+            dest_base = dest_base / "skills"
         try:
             dest_base.mkdir(parents=True, exist_ok=True)
         except Exception as e:
