@@ -12,7 +12,10 @@
 // document order. Transitions are NOT written here — the transitions injector
 // mutates this file afterward (data-start/duration/track-index + GSAP).
 //
-// Track lanes (same-track time-overlap is illegal — lint timeline_track_too_dense):
+// Track lanes. Same-track time-overlap is this workflow's own assembly convention,
+// not a framework rule: the render never reads data-track-index, and no lint rule
+// checks overlap (timeline_track_too_dense counts elements per lane for readability).
+// The convention exists because the frame injector below ping-pongs 0/1 for overlaps:
 //   1      frame sub-comp clips (sequential; the injector 0/1-ping-pongs for overlaps)
 //   2      captions sub-comp clip (full-duration overlay, on top of frames)
 //   10     per-frame voice <audio>
@@ -89,7 +92,10 @@ function ensureBgmCovers(relPath, hyperframesDir, total) {
   if (!Number.isFinite(dur) || dur <= 0)
     return { looped: false, short: false, reason: "unreadable duration" };
   if (dur >= total - 0.1) return { looped: false, short: false, dur }; // already covers
-  const relOut = relPath.replace(/\.([^./]+)$/, ".loop.$1");
+  // Always emit .mp3: the encode below is libmp3lame regardless of the source
+  // extension, so preserving relPath's own extension (e.g. "bgm.wav") would
+  // smuggle an MP3 stream into a .wav-named file (PRINFRA-309).
+  const relOut = relPath.replace(/\.([^./]+)$/, ".loop.mp3");
   const absOut = join(hyperframesDir, relOut);
   const fadeOut = Math.max(0, total - 1.5);
   const ff = spawnSync(
@@ -215,7 +221,7 @@ function guardFrame(html, label) {
     for (let i = 1; i < list.length; i++) {
       if (list[i].start < list[i - 1].end - EPS) {
         errors.push(
-          `${label}: clips on track ${track} overlap (one ends at ${r3(list[i - 1].end)}s, the next starts at ${r3(list[i].start)}s) — same-track time-overlap causes a render conflict. Put them on distinct data-track-index lanes or fix their windows.`,
+          `${label}: clips on track ${track} overlap (one ends at ${r3(list[i - 1].end)}s, the next starts at ${r3(list[i].start)}s). This workflow's injector assumes one clip per lane at a time. The render itself tolerates the overlap; put them on distinct data-track-index lanes or fix their windows.`,
         );
         break; // one report per track is enough
       }

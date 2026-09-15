@@ -45,7 +45,10 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-function mountResizeHandler(animations: GsapAnimation[]) {
+function mountResizeHandler(
+  animations: GsapAnimation[],
+  targetAnimations: GsapAnimation[] = animations,
+) {
   const element = document.createElement("div");
   const selection = { element, id: "clip", selector: "#clip" } as unknown as DomEditSelection;
   const fallback = vi.fn().mockResolvedValue(undefined);
@@ -66,7 +69,7 @@ function mountResizeHandler(animations: GsapAnimation[]) {
       previewIframeRef: { current: null },
       showToast: vi.fn(),
       bumpGsapCache: vi.fn(),
-      makeFetchFallback: () => vi.fn().mockResolvedValue(animations),
+      makeFetchFallback: () => vi.fn().mockResolvedValue(targetAnimations),
       trackGsapInteractionFailure: vi.fn(),
       handleDomBoxSizeCommit: fallback,
       addGsapAnimation: vi.fn(),
@@ -112,6 +115,31 @@ function mountGroupHandler({
 }
 
 describe("useGsapAwareEditing anchored resize", () => {
+  it("uses the explicit target's animations instead of the human selection cache", async () => {
+    const humanAnimation = { id: "human", propertyGroup: "scale" } as GsapAnimation;
+    const targetAnimation = { id: "target", propertyGroup: "size" } as GsapAnimation;
+    mocks.resize.mockResolvedValue({ status: "persisted" });
+    const h = mountResizeHandler([humanAnimation], [targetAnimation]);
+    const target = {
+      ...h.selection,
+      element: document.createElement("div"),
+      id: "agent-target",
+      selector: "#agent-target",
+    } as DomEditSelection;
+
+    await act(() => h.resize(target, { width: 300, height: 200 }));
+
+    expect(mocks.resize).toHaveBeenCalledWith(
+      target,
+      { width: 300, height: 200 },
+      [targetAnimation],
+      null,
+      expect.any(Function),
+      expect.any(Function),
+    );
+    act(() => h.root.unmount());
+  });
+
   it("rejects a blocked resize instead of falling through to a competing DOM write", async () => {
     mocks.resize.mockResolvedValue({ status: "blocked", reason: "source-uneditable" });
     const h = mountResizeHandler([]);
@@ -301,6 +329,42 @@ describe("useGsapAwareEditing anchored resize", () => {
     act(() => root.unmount());
   });
 
+  it("reports only the first group preflight failure in input order", async () => {
+    const failures = [new Error("first blocked"), new Error("second blocked")];
+    const trackGsapInteractionFailure = vi.fn();
+    const priorDragImplementation = mocks.drag.getMockImplementation();
+    mocks.drag.mockImplementation(async (selection) => {
+      throw selection.id === "a" ? failures[0] : failures[1];
+    });
+    const { groupCommit, root } = mountGroupHandler({
+      gsapCommitMutation: vi.fn().mockResolvedValue(undefined),
+      makeFetchFallback: () => vi.fn().mockResolvedValue([]),
+      trackGsapInteractionFailure,
+    });
+    const updates = [
+      {
+        selection: { element: document.createElement("div"), id: "a", selector: "#a" },
+        next: { x: 10, y: 10 },
+      },
+      {
+        selection: { element: document.createElement("div"), id: "b", selector: "#b" },
+        next: { x: 20, y: 20 },
+      },
+    ] as unknown as DomEditGroupPathOffsetCommit[];
+
+    await expect(groupCommit(updates)).rejects.toBe(failures[0]);
+    expect(trackGsapInteractionFailure).toHaveBeenCalledOnce();
+    expect(trackGsapInteractionFailure).toHaveBeenCalledWith(
+      failures[0],
+      updates[0]?.selection,
+      "drag",
+      "Move animated layer (group)",
+    );
+    mocks.drag.mockReset();
+    if (priorDragImplementation) mocks.drag.mockImplementation(priorDragImplementation);
+    act(() => root.unmount());
+  });
+
   it("restores once when resize persistence fails", async () => {
     const error = new Error("resize failed");
     const restore = vi.fn();
@@ -313,13 +377,30 @@ describe("useGsapAwareEditing anchored resize", () => {
     act(() => h.root.unmount());
   });
 
-  it("does not apply the anchor twice when scale route already settles the drop point", async () => {
-    mocks.resize.mockResolvedValue({ status: "persisted" });
+  it("does not apply the anchor twice when the resize already settled the drop point", async () => {
+    mocks.resize.mockResolvedValue({ status: "persisted", ownsDragOffset: true });
     const scale = { propertyGroup: "scale" } as GsapAnimation;
     const h = mountResizeHandler([scale]);
     await act(() => h.resize(h.selection, { width: 300, height: 200 }, { x: -50, y: -25 }));
     expect(mocks.drag).not.toHaveBeenCalled();
     expect(h.fallback).not.toHaveBeenCalled();
+    act(() => h.root.unmount());
+  });
+
+  /**
+   * The same element, and the resize says it did NOT settle the drop point.
+   *
+   * This is the shape that broke: an element whose scale is an instant hold has
+   * a scale-group tween and still commits width/height. Reading the tweens said
+   * "scale route, it settles its own position", so the offset was withheld,
+   * nobody wrote it, and the element snapped back on every drag.
+   */
+  it("applies the anchor when the resize leaves the drop point to the caller", async () => {
+    mocks.resize.mockResolvedValue({ status: "persisted" });
+    const scale = { propertyGroup: "scale" } as GsapAnimation;
+    const h = mountResizeHandler([scale]);
+    await act(() => h.resize(h.selection, { width: 300, height: 200 }, { x: -50, y: -25 }));
+    expect(mocks.drag).toHaveBeenCalledTimes(1);
     act(() => h.root.unmount());
   });
 });

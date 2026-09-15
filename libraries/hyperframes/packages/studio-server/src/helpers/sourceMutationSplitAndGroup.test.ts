@@ -123,6 +123,36 @@ describe("splitElementInHtml", () => {
     expect(result.html).toMatch(/id="box-split"[^>]*data-playback-start="2"/);
   });
 
+  it.each(["audio", "video"])(
+    "seeds the second %s half with a media in-point when the source starts at zero",
+    (tag) => {
+      const mediaSource = `<!DOCTYPE html><html><body><div data-composition-id="root"><${tag} id="media" class="clip" src="asset.mp4" data-start="1" data-duration="6"></${tag}></div></body></html>`;
+
+      const result = splitElementInHtml(mediaSource, { id: "media" }, 3, "media-split");
+      const { document } = parseHTML(result.html);
+
+      expect(result.matched).toBe(true);
+      expect(document.getElementById("media")?.getAttribute("data-media-start")).toBe("0");
+      expect(document.getElementById("media-split")?.getAttribute("data-media-start")).toBe("2");
+    },
+  );
+
+  it("advances a zero-based media in-point by playback rate", () => {
+    const mediaSource = `<!DOCTYPE html><html><body><div data-composition-id="root"><video id="media" class="clip" src="asset.mp4" data-start="1" data-duration="6" data-playback-rate="2"></video></div></body></html>`;
+
+    const result = splitElementInHtml(mediaSource, { id: "media" }, 3, "media-split");
+    const { document } = parseHTML(result.html);
+
+    expect(document.getElementById("media-split")?.getAttribute("data-media-start")).toBe("4");
+  });
+
+  it("does not add a media in-point to non-media elements", () => {
+    const result = splitElementInHtml(source, { id: "box" }, 3, "box-split");
+
+    expect(result.html).not.toContain("data-media-start");
+    expect(result.html).not.toContain("data-playback-start");
+  });
+
   it("stamps a legacy composition offset and advances the second half by playback rate", () => {
     const result = splitElementInHtml(source, { id: "box" }, 3, "box-split", {
       start: 1,
@@ -166,6 +196,32 @@ describe("wrapElementsInHtml / unwrapElementsFromHtml", () => {
     if (!element) throw new Error(`Expected ${selector} to match`);
     return element;
   }
+
+  it.each([
+    ["Group 1", "group-1"],
+    [" --HELLO___World!! ", "hello-world"],
+    ["a---b---c", "a-b-c"],
+    ["--123--", "123"],
+    ["", "group"],
+    [" --- ", "group"],
+    ["你好", "group"],
+    ["-".repeat(100_000) + "Title" + "-".repeat(100_000), "title"],
+  ])("preserves normalized group IDs and collision suffixes (case %#)", (name, id) => {
+    const source = FIXTURE.replace(
+      "</body>",
+      `<div id="${id}"></div><div id="${id}-2"></div></body>`,
+    );
+    const result = wrapElementsInHtml(source, TARGETS, name, BBOX, REBASES);
+    expect(result.matched).toBe(true);
+    const { document } = parseHTML(result.html);
+    const group = document.getElementById(`${id}-3`);
+    expect(group?.getAttribute("data-hf-group")).toBe(name);
+    expect(Array.from(group?.children ?? []).map((child) => child.id)).toEqual([
+      "title",
+      "logo",
+      "badge",
+    ]);
+  });
 
   it("wraps members in a data-hf-group div, preserving order and rebasing left/top", () => {
     const { html, matched, groupId } = wrapElementsInHtml(

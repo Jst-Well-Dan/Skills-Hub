@@ -30,6 +30,15 @@ declare global {
   interface Window {
     __timelines: Record<string, RuntimeTimelineLike>;
     __player?: PlayerAPI;
+    __hyperframes?: {
+      registerRuntimeDataHandler?: (
+        channel: string,
+        handler: (payload: unknown) => void,
+      ) => () => void;
+      setRuntimeData?: (channel: string, payload: unknown, requestId?: number) => void;
+      clearRuntimeData?: (channel: string) => void;
+      [key: string]: unknown;
+    };
     __clipManifest?: RuntimeTimelineMessage;
     __clipTree?: ClipTree;
     __hf?: {
@@ -37,6 +46,10 @@ declare global {
       onSwallowed?: (label: string, err: unknown) => void;
       seek?: (timeSeconds: number, options?: RuntimeSeekOptions) => void;
       duration?: number;
+      /** Borrow an element's playback while the transport clock is paused, so the
+       *  runtime's paused-side enforcement leaves it alone. Always release. */
+      leasePausedMedia?: (el: HTMLMediaElement) => void;
+      releasePausedMedia?: (el: HTMLMediaElement) => void;
     };
     __playerReady?: boolean;
     __renderReady?: boolean;
@@ -97,13 +110,15 @@ declare global {
     };
     THREE?: ThreeLike;
     /**
-     * Global anime.js instance (set by including the anime.iife.min.js script).
-     * The adapter uses `anime.running` for auto-discovery.
+     * Global Anime.js v4 namespace (set by the UMD or IIFE bundle).
+     * Register returned instances on `window.__hfAnime`; v4 has no
+     * `anime.running` auto-discovery registry.
      */
     anime?: {
-      (params: unknown): unknown;
-      timeline?: (params?: unknown) => unknown;
-      running: unknown[];
+      animate?: (targets: unknown, params?: unknown) => unknown;
+      createTimeline?: (params?: unknown) => unknown;
+      /** Legacy v3 registry retained for backward-compatible discovery. */
+      running?: unknown[];
     };
     /**
      * anime.js instances registered by compositions.

@@ -1,0 +1,15 @@
+已自动选择空闲端口 8080
+Skills-Hub 工作台已启动 http://127.0.0.1:8080/index.html?admin=1
+  前端: http://127.0.0.1:8080/index.html?admin=1
+  API : http://127.0.0.1:8080/api/health
+[admin] "GET /api/health HTTP/1.1" 200 -
+[admin] "GET /index.html?admin=1 HTTP/1.1" 200 -
+[admin] "GET /api/browse HTTP/1.1" 200 -
+[admin] "GET /index.html?admin=1 HTTP/1.1" 200 -
+[admin] "GET /api/browse HTTP/1.1" 200 -
+[admin] "GET /api/browse?path=E%3A%5C HTTP/1.1" 200 -
+[admin] "GET /api/browse?path=E%3A%5CPython_Doc HTTP/1.1" 200 -
+[admin] "GET /api/browse?path=E%3A%5CPython_Doc%5CXiYa2 HTTP/1.1" 200 -
+[admin] "GET /api/browse?path=E%3A%5CPython_Doc%5CXiYa2%5C20260901%20n8n%E5%8A%9F%E8%83%BD%E8%BD%AC%E5%8C%96 HTTP/1.1" 200 -
+[admin] "GET /api/browse?path=E%3A%5CPython_Doc%5CXiYa2%5C20260901%20n8n%E5%8A%9F%E8%83%BD%E8%BD%AC%E5%8C%96%5C%E6%80%9D%E7%BB%B4%E5%AF%BC%E5%9B%BE%2B%E7%9F%A5%E8%AF%86%E5%8D%A1%E7%89%87 HTTP/1.1" 200 -
+[admin] "POST /api/deploy HTTP/1.1" 200 -

@@ -1,5 +1,5 @@
 export { createStudioApi } from "./createStudioApi.js";
-export { createProjectSignature } from "./helpers/projectSignature.js";
+export { createProjectSignature, affectsProjectSignature } from "./helpers/projectSignature.js";
 export type {
   StudioApiAdapter,
   ResolvedProject,
@@ -15,6 +15,7 @@ export type { PreviewApiAdapter } from "./helpers/mediaProxyPreview.js";
 export { getMimeType, MIME_TYPES } from "./helpers/mime.js";
 export {
   consumeFileWriteReceipt,
+  identifyFileWrite,
   fileContentVersion,
   type FileWriteReceipt,
 } from "./helpers/fileVersion.js";

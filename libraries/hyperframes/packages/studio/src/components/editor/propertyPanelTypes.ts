@@ -44,7 +44,7 @@ export interface PropertyPanelProps {
   copiedAgentPrompt: boolean;
   onClearSelection: () => void;
   onUngroup?: () => void;
-  onSetStyle: (prop: string, value: string) => void | Promise<void>;
+  onSetStyle: (prop: string, value: string) => void | Promise<unknown>;
   onPreviewStyle?: (prop: string, value: string) => void;
   onSetAttribute: (attr: string, value: string) => void | Promise<void>;
   /** Commits several data-* attributes on the SAME element in ONE atomic
@@ -58,6 +58,11 @@ export interface PropertyPanelProps {
     value: string | null,
     onSettled?: (ok: boolean) => void,
   ) => void | Promise<void>;
+  /** Persists without reloading the preview, but re-reads the selection after —
+   *  for attributes the runtime applies to the live graph itself, where a reload
+   *  would only interrupt playback, and where the panel still has to see the
+   *  value it just wrote to compute the next edit from. */
+  onSetAttributeQuiet?: (attr: string, value: string | null) => void | Promise<void>;
   onApplyColorGradingScope?: (
     scope: "source-file" | "project",
     value: string | null,
@@ -87,6 +92,8 @@ export interface PropertyPanelProps {
   onRemoveTextField: (fieldKey: string) => void;
   onAskAgent: () => void;
   onToggleElementHidden?: (elementKey: string, hidden: boolean) => void | Promise<void>;
+  /** B6: group two or more picked voice clips, atomically, one undo entry. */
+  onAutoGroupCarveSources?: (clipIds: readonly string[], groupId: string) => Promise<void>;
   onImportAssets?: (files: FileList, dir?: string) => Promise<string[]>;
   onAddMediaOverlay?: AddMediaOverlayHandler;
   fontAssets?: ImportedFontAsset[];

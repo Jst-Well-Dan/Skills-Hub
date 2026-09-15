@@ -1,81 +1,67 @@
 ---
 name: yichen-unified-search
-description: 逸尘自用的统一网页与社交平台搜索编排器。用于关键词驱动的实时公共网页检索、并行批量搜索、金融/学术/法律/安全等垂直搜索，以及 GitHub、微信公众号、小红书、抖音、今日头条、Twitter/X、B站、YouTube、小宇宙等平台的公开内容发现；可对本次搜索所得候选做原文核验和轻量富化，并把不同后端结果统一交接为候选记录。AnySearch 负责公共网页、批量与垂直搜索，平台原生/OpenCLI 只作对应平台适配器。不用于读取或下载用户直接给出的已知 URL、URL 文件或已确认候选；此类任务使用 yichen-content-archive。
+description: 统一编排关键词驱动的公共网页、AI 最新动态、垂直领域和社交平台搜索，返回标准化候选；支持有界 X Research、显式站点 Map，以及本次搜索所得候选的轻量核验。不用于读取或下载用户直接给出的已知 URL，此类任务使用 yichen-content-archive。
 ---
 
 # 逸尘统一搜索
 
-把搜索拆成“定范围 → 选后端 → 取候选 → 标准化 → 核验”。只编排现有工具，不复制搜索、抓取或登录实现。
+按“确定范围 → 离线路由 → 执行候选搜索 → 标准化与核验”处理任务。保留用户指定的平台、关键词和时间，不把候选当成已核实事实。
 
 ## 固定边界
 
-1. 只搜索和读取用户当轮目标所需的公开内容；不发帖、不评论、不点赞、不关注、不私信、不改变账号状态。
-2. 绝对不得操控微信桌面端或移动端 UI。微信公众号只走匿名公共搜索；需要公众号后台或非公开数据时停止并说明此 Skill 不处理。
-3. 不读取、同步或搜索私人收藏、书签、个人 Feed、群组、通知、私信、草稿或后台数据。
-4. 不下载媒体、不归档、不建立长期数据库、不运行定时监控。用户要读取、下载、转写或归档已审核 URL 清单时，交给 `$yichen-content-archive` 并重新确认动作与范围。
-5. 不绕过验证码、登录墙、限流或风控。缺失字段写 `null`，零结果只表示本次后端未返回候选。
-6. 用户直接给出已知 URL、URL 文件，或要求读取/下载/归档已确认候选时，停止搜索并交给 `$yichen-content-archive`。只有用户明确要求“搜索引用、讨论或关联这个 URL 的其他公开内容”时，才把 URL 标记为 `--input-kind url-seed`；该模式只把 URL 当发现线索，不读取或归档 URL 本身。
-7. 公共网页搜索词、候选核验 URL 和垂直参数会发给 AnySearch；X 公共搜索词首先发给官方 Grok CLI 原生 `x_search`，只有明确额度耗尽时才会发给匿名 FxTwitter。不得提交密码、Cookie、个人数据、商业秘密或其他敏感查询。
+- 只处理当轮目标所需的公开内容。不发帖、评论、点赞、关注、私信或改变账号状态；不读取、同步或搜索私人收藏、书签、个人 Feed、群组、通知、私信、草稿或后台。
+- 绝对不得操控微信桌面或移动端 UI。公众号只走匿名公共搜索。
+- 不下载媒体、不归档、不建长期数据库、不运行定时监控。用户给出已知 URL、URL 文件或要求读取/下载/归档已确认候选时，交给 `$yichen-content-archive`，传递动作、范围和输出位置，并重新确认动作与范围；搜索不授予下载、私域、登录态或费用权限。
+- 不绕过验证码、登录墙或风控。以下明确列出的只读登录态路线以外，不升级账号访问。后端失败与零结果分开报告；未知字段保留 `null`。
+- 查询和候选 URL 会发送给计划指定的服务。不得包含密码、Cookie、个人数据、商业秘密或其他敏感内容；凭证处理与各服务的数据流见 [访问与凭证边界](references/access-boundaries.md)。
 
-## 路由
+## 离线路由
 
-先运行离线路由器检查计划；它不联网，也不执行后端：
+下文 `SKILL_DIR` 指本 Skill 的安装目录，`YICHEN_SKILLS_ROOT` 指同级 Skills 根目录；使用前按实际安装位置设置并导出这两个变量。
 
 ```bash
-python3 ~/.agents/skills/yichen-unified-search/scripts/route_search.py \
+python3 "${SKILL_DIR}/scripts/route_search.py" \
   --query "检索词" --platform auto --mode search --limit 10
 ```
 
-把 URL 当作公开搜索种子而不是已知内容读取时，必须显式标记：
+路由器不联网。执行前检查 `status`、`authorization`、`steps` 和 `limitations`。`invalid_request` 无可执行步骤，CLI 退出码为 2；依据提示在已授权范围内调整参数，不把它当成零结果。范围清楚时直接执行，不要求用户逐项重复确认。
 
-```bash
-python3 ~/.agents/skills/yichen-unified-search/scripts/route_search.py \
-  --query "搜索引用 https://example.com/research 的公开报道" \
-  --platform web --input-kind url-seed --limit 10
-```
+| 目标 | 路线与使用方式 |
+|---|---|
+| 普通网页、概念/教程、批量关键词、垂直领域 | AnySearch；`anysearch_adapter.py` 输出统一 envelope，垂直域先发现子域与全部必填参数 |
+| AI 主题且具有新闻/最近/发布意图 | AI HOT 精选；明确“日报”才用日报，明确“全部”才用全量 |
+| 指定平台站内搜索 | 平台意图优先于 AI HOT；使用计划中的平台适配器 |
+| 多平台或多个关键词 | 每个原始查询必须有执行或拆分记录，不能丢弃；不同平台意图返回 `query_routes`，按平台拆分并显式传 `--platform` |
+| 公开站点链接枚举 | 仅显式 `--mode site-map`，Firecrawl 最多 100 条同源且位于种子路径范围内的候选，不读正文 |
+| 本次搜索所得候选核验 | 默认 AnySearch；仅显式 `--verify-backend firecrawl` 才用 Firecrawl |
 
-按以下优先级执行：
+“微博公司财报”是搜索对象，不等于微博站内搜索。自动识别有歧义时，根据当前任务直接显式选择平台；只有无法判断用户意图时才询问。普通 `issue` 不触发 GitHub 路线。
 
-1. 明确要求公共网页、新闻、多个独立关键词、`site:` 查询或垂直领域发现时，使用 AnySearch。
-2. 垂直领域先执行 AnySearch `get_sub_domains`，再带齐所有必填参数搜索；不确定是否垂直时，用 `batch_search` 并行一条通用查询和若干垂直查询。
-3. 明确要求某平台的站内/原生覆盖时，才使用该平台适配器。不要把平台适配器当成通用网页兜底。
-4. 明确要求批量跨关键词时，优先使用 AnySearch；平台限定批量改成公共 `site:` 查询，并标明它不是站内全量结果。
-5. 只有需要核验或轻量富化本次搜索刚返回的候选时，才对该候选使用 AnySearch `extract`。不得用它读取用户直接给出的已知 URL。
-6. AnySearch 不可用时说明错误；只有用户同意后才改用其他公共网页搜索。不要静默切换到读取账号登录态的后端。
+- YouTube、GitHub、B站、公众号、小红书、抖音、头条、小宇宙的原生 `search` 一次只接收一个查询；多查询应分别运行，或明确选 `batch` 使用公共 `site:` 索引。知乎和微博有各自的显式原生 batch；X Quick 支持重复 `--query`。具体能力见 [路由契约](references/routes.md)，单查询限制集中在 `scripts/search_policy.py`。
+- AI HOT items 最多 7 天；路由器同时检查自然语言和显式 `--days`，后者优先。超过范围的自动请求走 AnySearch，显式 AI HOT 报范围错误。多主题最多 5 个，适配器分别检索、合并去重并记录 `matched_topics` 与逐主题 coverage。数量不足或主题失败必须如实交付。日期、日报与滚动窗口不同，严格时间任务还需核对原文时间。
+- AnySearch 通用路线不直接落实 `--days`，必须在查询中保留时间范围，交付前核对日期。长窗口转到 AnySearch 不代表已完成确定性日期筛选。
+- URL 仅在用户明确要求搜索其引用/讨论时作为 `--input-kind url-seed`；不读取种子本身。站点 Map 和明确 YouTube 频道浏览是发现容器例外；普通已知 URL 仍交归档层。
 
-完整后端、命令形状和登录门槛见 [references/routes.md](references/routes.md)。
+## 执行与核验
 
-## 登录与安全门
+1. 根据路由读取 [references/routes.md](references/routes.md) 中对应后端的参数与限制；不要默认加载全部平台细节。X、多后端或登录态路线先运行 `${YICHEN_SKILLS_ROOT}/yichen-web-research/scripts/doctor_yichen.py`；OpenCLI 路线再运行 `opencli doctor`。命令存在不等于可用，不回调总路由 Skill。
+2. 只执行计划中的后端。AnySearch 使用 `anysearch_adapter.py`（读取现有 runtime.conf），AI HOT 使用 `aihot_search.py`，知乎使用 `zhihu_adapter.py search|hot`，微博使用 `weibo_adapter.py search --session-mode auto`，YouTube 使用 `youtube_search.py`；不复制 CLI、硬编码代理或 Key。
+3. AI HOT、AnySearch、显式 Firecrawl 不可用时报告错误，只有用户同意后才改换公共网页后端。已有明确登录态例外见下一节；不要扩大例外。
+4. 按 [candidate-schema.md](references/candidate-schema.md) 交接候选、routes、coverage、errors。非空原始结果无法解析必须记为错误；保留真实后端、原始 URL、时间限制和登录态。AI HOT 异常条目计入 rejected_count，全部异常为 failed，部分异常为 partial，不能冒充成功零结果。
+5. X 按 tweet_id、再 canonical URL 去重；其他平台按 URL 去重，并保留命中查询与来源。标题/作者/时间均高度一致才合并近重复；互动量不能证明事实。
+6. 搜索卡片、AI HOT 的 AI 摘要都只是线索。最终引用前打开原文核验具体主张。本轮 AnySearch 核验必须向 `anysearch_adapter.py verify --candidate-from-search` 提供带有效 HMAC 回执的完整 candidate JSON 或 `@file`；明确选择 Firecrawl 时交给 `firecrawl_adapter.py scrape`。不接受裸 URL 或自行拼接候选，打开页面本身也不等于事实核验。
 
-- 小红书、抖音站内搜索：执行前说明平台、原始关键词和预计条数，取得用户当轮明确授权读取 Chrome 登录态；一次授权不扩展到其他关键词、平台或后续任务。
-- Twitter/X：所有关键词搜索第一层固定为官方 Grok CLI 账号 OAuth + 原生 `x_search`。只有输出明确证明账号额度或使用上限耗尽时，才进入匿名 FxTwitter；未登录、401/403、权限、输入、超时、网络和服务错误都必须停止，不能冒充额度错误。FxTwitter 仍失败或零结果时，才按既有只读链进入 OpenCLI → xreach；只有明确进入浏览器登录态适配器时，才按对应工具提示取得当轮授权。
-- B站、YouTube、微信、今日头条和小宇宙公共发现：先匿名。出现登录限定时停止；本 Skill 不升级为登录读取。
-- AnySearch API Key：匿名额度可直接使用。收到新 Key 时先询问，用户明确同意后才能保存；不要让用户在聊天中粘贴 Key。
+## 登录态与 X Research
 
-## 标准流程
+- 小红书、抖音：允许有界公开只读搜索自动复用现有 Chrome 会话；后台临时会话、一次一个关键词、串行且间隔至少 5 秒，单次分别最多 20/30 条。不复制或输出 Cookie。
+- 微博：临时匿名访客会话优先，仅访问门失败后自动执行一次有界 OpenCLI 只读搜索；网络错误不触发回退。每次最多 3 页、最多 20 条，批量最多 5 次且串行间隔至少 5 秒。
+- 知乎只走另行安装的 Open Platform CLI 兼容运行时 与其 Keychain，不接收 Secret。B站、YouTube、微信公众号、头条、小宇宙先匿名，登录限定时停止。
+- X 一律先官方 Grok CLI OAuth + 原生 `x_search`。只有明确额度耗尽才能转 FxTwitter；随后失败或零结果才进入 OpenCLI → xreach，使用浏览器登录态前按工具要求取得当轮授权。未登录、401/403、超时、网络、服务错误和主链零结果都不能当成额度耗尽。
+- X Quick 每个查询独立调用，单次最多 20 条、1–7 天。`--depth research` 至少 3 个独立聚焦查询；只执行当前 ready 波次，归一化并合并后才解锁后续波次。最多 40 次外层搜索、最多补搜一轮，达到目标、预算耗尽、无缺口、补搜无新增或主链非额度故障时停止。详见路由契约的 X 节。
+- 每次 Grok 输出必须经过 `grok_x_result_adapter.py`，只映射 `<x_post_time_verification>.matched`，排除 `excluded_outside_window`，然后用 `x_research_merge.py`。Grok `criteria` 只是检索约束；作者、语言、互动阈值和转评类型只对实际结构化字段筛选，缺失时保留未知，不能声称已验证。
 
-1. 复述范围：关键词、平台、时间范围、条数、是否需要原生站内覆盖。
-2. 运行 `route_search.py`；检查 `status`、`authorization`、`steps` 和 `limitations`。
-3. X 搜索先运行 `python3 ~/.agents/skills/yichen-web-research/scripts/doctor_yichen.py`，确认 `$yichen-grok-consult`、Grok CLI OAuth 与原生 `x_search` 可用，再调用该工具。工具内部固定执行 Grok CLI → 仅明确额度耗尽时 FxTwitter → OpenCLI → xreach；不得因零结果、超时、网络或服务错误提前跳到 FxTwitter。其他多后端或登录态任务也运行该 doctor；OpenCLI 路线再运行 `opencli doctor`。不要回调总路由 Skill，也不要把命令存在当成可用。
-4. 仅调用计划中的既有后端。AnySearch 从 `~/.agents/skills/anysearch/runtime.conf` 读取当前 `Command`，不要复制 CLI，也不要硬编码代理或 Key。
-5. 把每个后端输出映射到 [references/candidate-schema.md](references/candidate-schema.md)；保持原始 URL、来源平台、后端和限制。
-6. 先 URL 去重，再按标题/作者/发布时间做近重复合并；不要把互动量当成事实正确性。
-7. 对最终将引用的本轮搜索候选，可用 AnySearch `extract` 打开原文核验或补少量正文线索。搜索卡片和摘要只能作发现线索；不要把核验扩展成下载或归档。
-8. 交付候选与覆盖说明；标明每个平台的登录态使用、失败、截断、时间筛选和索引局限。
+X 的浏览器回退默认关闭。只有取得当轮明确授权后才传 `--login-approved`；路由器据此设置 `allow_authenticated_fallback=true`，未授权时保持 false。知乎路线使用 `zhihu-open-platform-cli`，Keychain 认证访问公开内容并标记 `authenticated_public` / `login_state_used=true`；不以官方身份背书。
 
-## 最小交付
+## 交付
 
-返回一个候选交接包：
-
-```json
-{
-  "schema_version": "1.0",
-  "request": {},
-  "routes": [],
-  "candidates": [],
-  "coverage": [],
-  "errors": []
-}
-```
-
-若用户只要答案，可用 Markdown 展示精选候选，但内部仍保留同一字段语义。不要把候选列表冒充完整、穷尽或已核验事实。
+返回 `{schema_version, request, routes, candidates, coverage, errors}`。用户只要答案时用 Markdown 展示精选结果，保留相同字段语义。说明各平台覆盖、失败、截断、日期与登录态限制，不宣称穷尽或把候选当事实。上游许可见 [THIRD_PARTY_NOTICES.md](references/THIRD_PARTY_NOTICES.md)。

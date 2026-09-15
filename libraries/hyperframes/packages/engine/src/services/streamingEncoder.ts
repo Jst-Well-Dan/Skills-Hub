@@ -13,6 +13,7 @@
  *      exposes an async `writeFrame(buffer)` + `close()` API.
  */
 
+import { jpegInputError } from "../utils/jpegInput.js";
 import { spawn, type ChildProcess } from "child_process";
 import { once } from "events";
 import { trackChildProcess } from "../utils/processTracker.js";
@@ -27,15 +28,17 @@ import {
   type GpuEncoder,
   getCachedGpuEncoder,
   getGpuEncoderName,
+  buildVideoToolboxRateControlArgs,
   mapPresetForGpuEncoder,
 } from "../utils/gpuEncoder.js";
-import { formatFfmpegError } from "../utils/runFfmpeg.js";
+import { formatFfmpegError, isExternalFfmpegInterruption } from "../utils/runFfmpeg.js";
 import { getFfmpegBinary } from "../utils/ffmpegBinaries.js";
 import { getHdrEncoderColorParams } from "../utils/hdr.js";
 import { withEvenDimensionPad } from "../utils/evenDimensions.js";
 import { DEFAULT_CONFIG, type EngineConfig } from "../config.js";
-import { fpsToFfmpegArg, type Fps } from "@hyperframes/core";
+import { fpsToFfmpegArg, fpsToNumber, type Fps } from "@hyperframes/core";
 import { appendVp9CpuUsedArg } from "./vp9Options.js";
+import { appendRenderProvenanceArgs } from "../utils/renderProvenance.js";
 
 // Re-export EncoderOptions so callers can reference the type via this module.
 export type { EncoderOptions } from "./chunkEncoder.types.js";
@@ -158,6 +161,8 @@ export interface StreamingEncoderResult {
   durationMs: number;
   fileSize: number;
   error?: string;
+  /** Stable machine-readable cause for failures safe to retry on a fresh host. */
+  failureReason?: "external_interruption";
 }
 
 export interface StreamingEncoder {
@@ -178,6 +183,8 @@ export interface StreamingEncoder {
    * unsupported codec, disk full) instead of a bare "encoder exited" message.
    */
   getExitError: () => string | undefined;
+  /** Machine-readable cause available after FFmpeg exits unexpectedly mid-write. */
+  getExitFailureReason?: () => "external_interruption" | undefined;
 }
 
 /**
@@ -265,12 +272,15 @@ export function buildStreamingArgs(
           else args.push("-cq", String(quality));
           break;
         case "videotoolbox":
-          if (bitrate) args.push("-b:v", bitrate);
-          else {
-            const vtQuality = Math.max(0, Math.min(100, 100 - quality * 2));
-            args.push("-q:v", String(vtQuality));
-          }
-          args.push("-allow_sw", "1");
+          args.push(
+            ...buildVideoToolboxRateControlArgs({
+              bitrate,
+              width: options.width,
+              height: options.height,
+              fps: fpsToNumber(fps),
+              quality,
+            }),
+          );
           break;
         case "vaapi":
           args.unshift("-vaapi_device", "/dev/dri/renderD128");
@@ -350,6 +360,7 @@ export function buildStreamingArgs(
   } else if (codec === "prores") {
     args.push("-c:v", "prores_ks", "-profile:v", preset, "-vendor", "apl0");
     args.push("-pix_fmt", pixelFormat);
+    appendRenderProvenanceArgs(args, outputPath);
     return [...args, "-y", outputPath];
   }
 
@@ -428,6 +439,8 @@ export function buildStreamingArgs(
   // for the full explanation; same playback compatibility class.
   args.push("-avoid_negative_ts", "make_zero");
 
+  appendRenderProvenanceArgs(args, outputPath);
+
   args.push("-y", outputPath);
   return args;
 }
@@ -453,12 +466,15 @@ export async function spawnStreamingEncoder(
 
   const ffmpeg: ChildProcess = spawn(getFfmpegBinary(), args, {
     stdio: ["pipe", "pipe", "pipe"],
+    // See runFfmpeg.ts: keeps a console window off the user's desktop on Windows.
+    windowsHide: true,
   });
   trackChildProcess(ffmpeg);
 
   let exitStatus: "running" | "success" | "error" = "running";
   let stderr = "";
   let exitCode: number | null = null;
+  let exitSignal: NodeJS.Signals | null = null;
   let terminationReason: ManagedProcessTerminationReason = "exit";
 
   ffmpeg.stdin?.on("error", () => {});
@@ -480,6 +496,7 @@ export async function spawnStreamingEncoder(
   });
   const exitPromise = managed.wait().then((outcome) => {
     exitCode = outcome.exitCode;
+    exitSignal = outcome.signal;
     stderr = outcome.stderr;
     terminationReason = outcome.reason;
     exitStatus = outcome.reason === "exit" && outcome.exitCode === 0 ? "success" : "error";
@@ -521,10 +538,19 @@ export async function spawnStreamingEncoder(
     }
   };
 
+  let inputFrameIndex = 0;
   const encoder: StreamingEncoder = {
     writeFrame: async (buffer: Buffer): Promise<boolean> => {
       const stdin = ffmpeg.stdin;
-      if (exitStatus !== "running" || !stdin || stdin.destroyed) {
+      if (exitStatus !== "running") {
+        return false;
+      }
+      if (!stdin || stdin.destroyed) {
+        // The OS can close the pipe (EPIPE) before Node delivers the child
+        // process `close` event. Wait for the shared exit settlement so the
+        // caller can synchronously inspect getExitFailureReason() instead of
+        // losing a host-interruption signal in this narrow race.
+        await exitPromise;
         return false;
       }
       // Copy the buffer before writing — Node streams hold a reference to the
@@ -533,7 +559,12 @@ export async function spawnStreamingEncoder(
       // so without this copy the pipe would read partially-overwritten data
       // and flicker.
       const copy = Buffer.from(buffer);
+      if (!options.rawInputFormat && (options.imageFormat ?? "jpeg") === "jpeg") {
+        const error = jpegInputError(copy);
+        if (error) throw new Error(`Invalid JPEG input at frame ${inputFrameIndex}: ${error}`);
+      }
       const accepted = stdin.write(copy);
+      inputFrameIndex++;
       // Reset inactivity timer immediately ONLY on `accepted === true`. `true`
       // means the write went through to the kernel pipe without buffering in
       // Node — proof FFmpeg is actually consuming. `false` means Node's writable
@@ -598,6 +629,14 @@ export async function spawnStreamingEncoder(
           durationMs,
           fileSize: 0,
           error: `${formatFfmpegError(exitCode, stderr)}${inactivitySuffix}`,
+          failureReason: isExternalFfmpegInterruption({
+            exitCode,
+            signal: exitSignal,
+            stderr,
+            terminationReason,
+          })
+            ? "external_interruption"
+            : undefined,
         };
       }
 
@@ -611,6 +650,18 @@ export async function spawnStreamingEncoder(
     getExitError: () => {
       if (exitStatus !== "error") return undefined;
       return formatFfmpegError(exitCode, stderr);
+    },
+
+    getExitFailureReason: () => {
+      if (exitStatus !== "error") return undefined;
+      return isExternalFfmpegInterruption({
+        exitCode,
+        signal: exitSignal,
+        stderr,
+        terminationReason,
+      })
+        ? "external_interruption"
+        : undefined;
     },
   };
 

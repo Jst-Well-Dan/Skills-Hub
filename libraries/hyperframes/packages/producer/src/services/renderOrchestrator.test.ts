@@ -3,7 +3,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { join, win32 } from "node:path";
 import { tmpdir } from "node:os";
 import type { CaptureOptions, EngineConfig, ExtractedFrames } from "@hyperframes/engine";
-import { executeParallelCapture, mergeWorkerFrames } from "@hyperframes/engine";
+import {
+  DEFAULT_CONFIG,
+  DrawElementCaptureError,
+  executeParallelCapture,
+  mergeWorkerFrames,
+} from "@hyperframes/engine";
 import type { CompiledComposition } from "./htmlCompiler.js";
 
 // Replace only the two engine functions the adaptive-retry loop uses to touch
@@ -34,15 +39,21 @@ import {
   resolveParallelRouterRetryPlan,
   resetCaptureAttemptProgress,
   shouldRetryViaPinnedFallback,
+  isDeRendererStallError,
+  isSequentialCaptureStallError,
   countElementTags,
   envInt,
+  isDeParallelRouterEnabled,
   mergeWorkerInitObservability,
   resolveCompositionElementCount,
   resolveDeShortBand,
+  shouldClampDefaultDrawElement,
   shouldPreferParallelDrawElement,
   shouldPreferSingleWorkerDrawElement,
   shouldStreamParallelCapture,
   shouldUseStreamingEncode,
+  resolveObservedCaptureMode,
+  createCaptureObservabilityUpdater,
 } from "./renderOrchestrator.js";
 import { probeRequiresBrowser } from "./render/stages/probeStage.js";
 import { ensureFrameWritten } from "./render/stages/captureHdrFrameShared.js";
@@ -203,6 +214,40 @@ describe("executeDiskCaptureWithAdaptiveRetry — zero-progress bail (integratio
     vi.mocked(mergeWorkerFrames).mockReset();
   });
 
+  it("propagates an untrusted drawElement frame even if all disk frames exist", async () => {
+    const workDir = mkdtempSync(join(tmpdir(), "hf-de-untrusted-"));
+    const framesDir = join(workDir, "frames");
+    mkdirSync(framesDir);
+    const error = new Error("capture stage failed", {
+      cause: new DrawElementCaptureError(0, "No cached paint record"),
+    });
+    vi.mocked(executeParallelCapture).mockRejectedValueOnce(error);
+    vi.mocked(mergeWorkerFrames).mockImplementationOnce(async () => {
+      writeFileSync(join(framesDir, "frame_000000.jpg"), Buffer.alloc(100));
+    });
+    try {
+      await expect(
+        executeDiskCaptureWithAdaptiveRetry({
+          serverUrl: "http://localhost:0",
+          workDir,
+          framesDir,
+          totalFrames: 1,
+          initialWorkerCount: 1,
+          allowRetry: true,
+          frameExt: "jpg",
+          captureOptions: { width: 64, height: 64, fps: { num: 30, den: 1 } },
+          createBeforeCaptureHook: () => null,
+          cfg: DEFAULT_CONFIG,
+          log: makeLog(),
+          dedupPerfs: [],
+        }),
+      ).rejects.toBe(error);
+      expect(executeParallelCapture).toHaveBeenCalledTimes(1);
+    } finally {
+      rmSync(workDir, { recursive: true, force: true });
+    }
+  });
+
   it("runs exactly one attempt (no worker-halving retries) when an attempt captures zero frames", async () => {
     // Capture writes nothing -> framesDir stays empty -> every frame still missing.
     vi.mocked(executeParallelCapture).mockResolvedValue([]);
@@ -257,18 +302,27 @@ describe("executeDiskCaptureWithAdaptiveRetry — transient Target-closed single
     vi.mocked(mergeWorkerFrames).mockReset();
   });
 
-  it("retries ONCE at the same worker count on a transient Target closed with zero progress", async () => {
+  // Both shapes classify as transient_browser: the tab dying mid-capture, and a
+  // CDP refusal of the capture call itself (no timeout wording, so it used to
+  // fall through to the fatal "authoring" bucket and was never retried).
+  it.each([
+    ["a transient Target closed", "Protocol error (Page.captureScreenshot): Target closed"],
+    [
+      "a non-timeout captureScreenshot protocol refusal",
+      "[Parallel] Capture failed: Worker 0: Protocol error (Page.captureScreenshot): Unable to capture screenshot",
+    ],
+  ])("retries ONCE at the same worker count on %s with zero progress", async (_label, message) => {
     const workDir = mkdtempSync(join(tmpdir(), "hf-transient-work-"));
     const framesDir = mkdtempSync(join(tmpdir(), "hf-transient-frames-"));
     const log = makeLog();
     let call = 0;
-    // First attempt: the tab dies before any frame is captured (frame 0) — zero
-    // forward progress, which the worker-halving retry deliberately bails on.
-    // The transient retry recovers it without changing the worker count.
+    // First attempt fails before any frame is captured (frame 0) — zero forward
+    // progress, which the worker-halving retry deliberately bails on. The
+    // transient retry recovers it without changing the worker count.
     vi.mocked(executeParallelCapture).mockImplementation(async () => {
       call++;
       if (call === 1) {
-        throw new Error("Protocol error (Page.captureScreenshot): Target closed");
+        throw new Error(message);
       }
       writeAllFrames(framesDir, 4);
       return [];
@@ -307,43 +361,43 @@ describe("executeDiskCaptureWithAdaptiveRetry — transient Target-closed single
     }
   });
 
-  it("does NOT retry a transient error when the render was aborted", async () => {
-    const workDir = mkdtempSync(join(tmpdir(), "hf-transient-abort-work-"));
-    const framesDir = mkdtempSync(join(tmpdir(), "hf-transient-abort-frames-"));
+  it("retries Network.enable startup timeout once with fewer workers and zero progress", async () => {
+    const workDir = mkdtempSync(join(tmpdir(), "hf-transient-work-"));
+    const framesDir = mkdtempSync(join(tmpdir(), "hf-transient-frames-"));
     const log = makeLog();
-    const controller = new AbortController();
-    // Cancellation tears the browser down, surfacing as a transient-looking
-    // "Target closed" — but an aborted render must fail immediately, not retry.
+    let call = 0;
     vi.mocked(executeParallelCapture).mockImplementation(async () => {
-      controller.abort();
-      throw new Error("Target closed");
+      call++;
+      if (call === 1) {
+        throw new Error("[Parallel] Capture failed: Worker 0: Network.enable timed out");
+      }
+      writeAllFrames(framesDir, 4);
+      return [];
     });
     vi.mocked(mergeWorkerFrames).mockResolvedValue(undefined);
 
     try {
-      await expect(
-        executeDiskCaptureWithAdaptiveRetry({
-          serverUrl: "http://localhost:0",
-          workDir,
-          framesDir,
-          totalFrames: 4,
-          initialWorkerCount: 2,
-          allowRetry: true,
-          frameExt: "jpg",
-          captureOptions: {} as CaptureOptions,
-          createBeforeCaptureHook: () => null,
-          abortSignal: controller.signal,
-          cfg: {} as EngineConfig,
-          log,
-          dedupPerfs: [],
-        }),
-      ).rejects.toThrow(/Target closed/);
+      const attempts = await executeDiskCaptureWithAdaptiveRetry({
+        serverUrl: "http://localhost:0",
+        workDir,
+        framesDir,
+        totalFrames: 4,
+        initialWorkerCount: 4,
+        allowRetry: true,
+        frameExt: "jpg",
+        captureOptions: { width: 64, height: 64, fps: { num: 30, den: 1 } },
+        createBeforeCaptureHook: () => null,
+        cfg: DEFAULT_CONFIG,
+        log,
+        dedupPerfs: [],
+      });
 
-      // Exactly one attempt — no transient retry burned on a cancelled render.
-      expect(vi.mocked(executeParallelCapture)).toHaveBeenCalledTimes(1);
-      expect(log.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining("Transient browser failure"),
-        expect.anything(),
+      expect(vi.mocked(executeParallelCapture)).toHaveBeenCalledTimes(2);
+      expect(attempts.map((a) => a.workers)).toEqual([4, 2]);
+      expect(attempts.map((a) => a.reason)).toEqual(["initial", "retry"]);
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining("Browser initialization timed out"),
+        expect.objectContaining({ fromWorkers: 4, toWorkers: 2 }),
       );
     } finally {
       rmSync(workDir, { recursive: true, force: true });
@@ -351,40 +405,90 @@ describe("executeDiskCaptureWithAdaptiveRetry — transient Target-closed single
     }
   });
 
-  it("gives up after MAX_TRANSIENT_CAPTURE_RETRIES when the tab keeps dying", async () => {
-    const workDir = mkdtempSync(join(tmpdir(), "hf-transient2-work-"));
-    const framesDir = mkdtempSync(join(tmpdir(), "hf-transient2-frames-"));
-    const log = makeLog();
-    vi.mocked(executeParallelCapture).mockRejectedValue(new Error("Session closed"));
-    vi.mocked(mergeWorkerFrames).mockResolvedValue(undefined);
+  it.each(["Target closed", "Network.enable timed out"])(
+    "does NOT retry %s after cancellation",
+    async (message) => {
+      const workDir = mkdtempSync(join(tmpdir(), "hf-transient-abort-work-"));
+      const framesDir = mkdtempSync(join(tmpdir(), "hf-transient-abort-frames-"));
+      const log = makeLog();
+      const controller = new AbortController();
+      // Cancellation tears the browser down, surfacing as a transient-looking
+      // "Target closed" — but an aborted render must fail immediately, not retry.
+      vi.mocked(executeParallelCapture).mockImplementation(async () => {
+        controller.abort();
+        throw new Error(message);
+      });
+      vi.mocked(mergeWorkerFrames).mockResolvedValue(undefined);
 
-    try {
-      await expect(
-        executeDiskCaptureWithAdaptiveRetry({
-          serverUrl: "http://localhost:0",
-          workDir,
-          framesDir,
-          totalFrames: 4,
-          initialWorkerCount: 1,
-          allowRetry: true,
-          frameExt: "jpg",
-          captureOptions: {} as CaptureOptions,
-          createBeforeCaptureHook: () => null,
-          cfg: {} as EngineConfig,
-          log,
-          dedupPerfs: [],
-        }),
-      ).rejects.toThrow(/Session closed/);
+      try {
+        await expect(
+          executeDiskCaptureWithAdaptiveRetry({
+            serverUrl: "http://localhost:0",
+            workDir,
+            framesDir,
+            totalFrames: 4,
+            initialWorkerCount: 2,
+            allowRetry: true,
+            frameExt: "jpg",
+            captureOptions: {} as CaptureOptions,
+            createBeforeCaptureHook: () => null,
+            abortSignal: controller.signal,
+            cfg: {} as EngineConfig,
+            log,
+            dedupPerfs: [],
+          }),
+        ).rejects.toThrow(message);
 
-      // 1 initial attempt + exactly MAX_TRANSIENT_CAPTURE_RETRIES retries.
-      expect(vi.mocked(executeParallelCapture)).toHaveBeenCalledTimes(
-        1 + MAX_TRANSIENT_CAPTURE_RETRIES,
-      );
-    } finally {
-      rmSync(workDir, { recursive: true, force: true });
-      rmSync(framesDir, { recursive: true, force: true });
-    }
-  });
+        // Exactly one attempt — no transient retry burned on a cancelled render.
+        expect(vi.mocked(executeParallelCapture)).toHaveBeenCalledTimes(1);
+        expect(log.warn).not.toHaveBeenCalledWith(
+          expect.stringContaining("Transient browser failure"),
+          expect.anything(),
+        );
+      } finally {
+        rmSync(workDir, { recursive: true, force: true });
+        rmSync(framesDir, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.each(["Session closed", "Network.enable timed out"])(
+    "bounds repeated %s failures",
+    async (message) => {
+      const workDir = mkdtempSync(join(tmpdir(), "hf-transient2-work-"));
+      const framesDir = mkdtempSync(join(tmpdir(), "hf-transient2-frames-"));
+      const log = makeLog();
+      vi.mocked(executeParallelCapture).mockRejectedValue(new Error(message));
+      vi.mocked(mergeWorkerFrames).mockResolvedValue(undefined);
+
+      try {
+        await expect(
+          executeDiskCaptureWithAdaptiveRetry({
+            serverUrl: "http://localhost:0",
+            workDir,
+            framesDir,
+            totalFrames: 4,
+            initialWorkerCount: 1,
+            allowRetry: true,
+            frameExt: "jpg",
+            captureOptions: {} as CaptureOptions,
+            createBeforeCaptureHook: () => null,
+            cfg: {} as EngineConfig,
+            log,
+            dedupPerfs: [],
+          }),
+        ).rejects.toThrow(message);
+
+        // 1 initial attempt + exactly MAX_TRANSIENT_CAPTURE_RETRIES retries.
+        expect(vi.mocked(executeParallelCapture)).toHaveBeenCalledTimes(
+          1 + MAX_TRANSIENT_CAPTURE_RETRIES,
+        );
+      } finally {
+        rmSync(workDir, { recursive: true, force: true });
+        rmSync(framesDir, { recursive: true, force: true });
+      }
+    },
+  );
 });
 
 describe("describeMemoryExhaustion", () => {
@@ -1523,7 +1627,21 @@ describe("adaptive missing-frame retry helpers", () => {
     expect(
       isRecoverableParallelCaptureError(
         new Error(
+          "[Parallel] Capture failed: Worker 2: Page.captureScreenshot timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed.",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      isRecoverableParallelCaptureError(
+        new Error(
           "[Parallel] Capture failed: Worker 0: drawElement worker encode timed out (frame 42)",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      isRecoverableParallelCaptureError(
+        new Error(
+          "[Parallel] Capture failed: Worker 0: Protocol error (Page.captureScreenshot): Unable to capture screenshot",
         ),
       ),
     ).toBe(true);
@@ -1595,14 +1713,14 @@ describe("resolveDeviceScaleFactor", () => {
     ).toThrow(/hdrMode='force-hdr'/);
   });
 
-  it("rejects alpha + outputResolution (the alpha capture path doesn't apply DPR yet)", () => {
-    expect(() =>
+  it("returns the requested DPR for alpha + outputResolution", () => {
+    expect(
       resolveDeviceScaleFactor({
         ...defaults,
         outputResolution: "landscape-4k",
         alphaRequested: true,
       }),
-    ).toThrow(/alpha output/);
+    ).toBe(2);
   });
 
   it("rejects orientation mismatch (landscape comp → portrait-4k)", () => {
@@ -2266,6 +2384,27 @@ describe("resolveInversionRetryPlan (self-verify retry rollback)", () => {
   });
 });
 
+describe("isDeParallelRouterEnabled (kill switch parsing)", () => {
+  it("defaults ON when unset or set-but-empty", () => {
+    expect(isDeParallelRouterEnabled({})).toBe(true);
+    expect(isDeParallelRouterEnabled({ HF_DE_PARALLEL_ROUTER: "" })).toBe(true);
+    expect(isDeParallelRouterEnabled({ HF_DE_PARALLEL_ROUTER: "   " })).toBe(true);
+  });
+
+  it("honours every conventional spelling of off — an opt-out must never fail OPEN", () => {
+    // A naive `!== "false"` would enable the router for all of these, handing
+    // 3-worker parallel DE to a user who explicitly asked for none.
+    for (const v of ["false", "FALSE", "False", "0", "off", "OFF", "no", "No", " false "]) {
+      expect(isDeParallelRouterEnabled({ HF_DE_PARALLEL_ROUTER: v })).toBe(false);
+    }
+  });
+
+  it("treats any other value as enabled", () => {
+    expect(isDeParallelRouterEnabled({ HF_DE_PARALLEL_ROUTER: "true" })).toBe(true);
+    expect(isDeParallelRouterEnabled({ HF_DE_PARALLEL_ROUTER: "1" })).toBe(true);
+  });
+});
+
 describe("shouldPreferParallelDrawElement (DE parallel router)", () => {
   const eligible = {
     workerCount: 5,
@@ -2433,6 +2572,80 @@ describe("resolveParallelRouterRetryPlan (self-verify retry rollback)", () => {
 });
 
 describe("shouldRetryViaPinnedFallback (widen the self-verify retry to generic capture failures, including OOM)", () => {
+  it.each([
+    [false, false, true],
+    [true, false, false],
+    [false, true, false],
+  ])(
+    "routes an untrusted drawElement page unless cancelled/interrupted",
+    (isCancellation, isEncoderInterrupted, expected) => {
+      expect(
+        shouldRetryViaPinnedFallback({
+          isVerifyError: false,
+          isDeCaptureError: true,
+          isCancellation,
+          isEncoderInterrupted,
+          deWorkerInversion: undefined,
+          deParallelRouter: undefined,
+        }),
+      ).toBe(expected);
+    },
+  );
+
+  // PRINFRA-488: a wedged renderer must be retryable on ANY routing. Before this,
+  // a comp that engaged drawElement on the ordinary single-worker path had no
+  // whole-render fallback, so one stalled frame failed the entire render.
+  it("retries a drawElement renderer stall even with no pinned routing", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: false,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isDeRendererStall: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("still does NOT retry a generic capture failure with no pinned routing", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: false,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isDeRendererStall: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("never retries a cancellation, even for a renderer stall", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: true,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isDeRendererStall: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("recognizes the engine's stall error across the package boundary", () => {
+    const byName = new Error("whatever");
+    byName.name = "DeFrameTimeoutError";
+    expect(isDeRendererStallError(byName)).toBe(true);
+    expect(
+      isDeRendererStallError(
+        new Error(
+          "drawElement frame 50 exceeded 15000ms (renderer stopped scheduling; see PRINFRA-488)",
+        ),
+      ),
+    ).toBe(true);
+    expect(isDeRendererStallError(new Error("some other capture failure"))).toBe(false);
+    expect(isDeRendererStallError("not an error")).toBe(false);
+  });
+
   it("always retries a drawElement self-verify failure, pinned or not", () => {
     expect(
       shouldRetryViaPinnedFallback({
@@ -2539,6 +2752,96 @@ describe("shouldRetryViaPinnedFallback (widen the self-verify retry to generic c
       }),
     ).toBe(false);
   });
+
+  it("never hides an encoder host interruption behind the same-host pinned fallback", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: false,
+        isEncoderInterrupted: true,
+        deWorkerInversion: "inverted",
+        deParallelRouter: undefined,
+      }),
+    ).toBe(false);
+  });
+
+  // --low-memory-mode is single-worker with no drawElement, so nothing ever
+  // pins a count and that mode had no whole-render fallback at all.
+  it("retries a transient capture-call refusal even with no pinned routing", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: false,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isTransientCaptureError: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("never retries a transient capture-call refusal after cancellation", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: true,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isTransientCaptureError: true,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("sequential capture stall recovery", () => {
+  it("retries a typed stall on an explicit unpinned one-worker route", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: false,
+        isEncoderInterrupted: false,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isDeRendererStall: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("retries a typed screenshot stall on an unpinned low-memory route", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: false,
+        isEncoderInterrupted: false,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isSequentialCaptureStall: true,
+      }),
+    ).toBe(true);
+  });
+
+  it("does not retry a screenshot stall after parent cancellation", () => {
+    expect(
+      shouldRetryViaPinnedFallback({
+        isVerifyError: false,
+        isCancellation: true,
+        isEncoderInterrupted: false,
+        deWorkerInversion: undefined,
+        deParallelRouter: undefined,
+        isSequentialCaptureStall: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("recognizes a wrapped screenshot watchdog error across the stage boundary", () => {
+    expect(
+      isSequentialCaptureStallError(
+        new Error(
+          "[Render] Sequential screenshot capture stalled: no frame progress for 60000ms (stuck at frame 99/135).",
+        ),
+      ),
+    ).toBe(true);
+    expect(isSequentialCaptureStallError(new Error("ordinary screenshot failure"))).toBe(false);
+  });
 });
 
 describe("shouldStreamParallelCapture (non-DE parallel streaming router)", () => {
@@ -2578,6 +2881,94 @@ describe("shouldStreamParallelCapture (non-DE parallel streaming router)", () =>
 
   it("skips HDR-layered and shader-transition routes", () => {
     expect(shouldStreamParallelCapture({ ...eligible, layeredOrEffectRoute: true })).toBe(false);
+  });
+});
+
+describe("shouldClampDefaultDrawElement (default-on drawElement clamp)", () => {
+  const unverifiedParallel = {
+    useDrawElement: true,
+    fastCaptureExplicitOptIn: false,
+    useStreamingEncode: false,
+    workerCount: 2,
+    deParallelStreamVerified: false,
+  };
+
+  it("clamps default-on drawElement for unverified multi-worker capture", () => {
+    expect(shouldClampDefaultDrawElement(unverifiedParallel)).toBe(true);
+  });
+
+  it("leaves useDrawElement alone once it is already false", () => {
+    expect(shouldClampDefaultDrawElement({ ...unverifiedParallel, useDrawElement: false })).toBe(
+      false,
+    );
+  });
+
+  it("an explicit opt-in overrides the clamp", () => {
+    expect(
+      shouldClampDefaultDrawElement({ ...unverifiedParallel, fastCaptureExplicitOptIn: true }),
+    ).toBe(false);
+  });
+
+  it("does not clamp a verified multi-worker streaming render", () => {
+    expect(
+      shouldClampDefaultDrawElement({ ...unverifiedParallel, deParallelStreamVerified: true }),
+    ).toBe(false);
+  });
+
+  it("clamps a single-worker render with streaming off (the disk-path case)", () => {
+    expect(shouldClampDefaultDrawElement({ ...unverifiedParallel, workerCount: 1 })).toBe(true);
+  });
+
+  it("leaves a single-worker streaming render unclamped (self-verified by the drain)", () => {
+    expect(
+      shouldClampDefaultDrawElement({
+        ...unverifiedParallel,
+        workerCount: 1,
+        useStreamingEncode: true,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("default-on drawElement clamp feeds the non-DE parallel-stream router", () => {
+  // The router requires the drawElement clamp's OUTPUT, not its input. Both
+  // predicates below are individually correct; a caller wiring them together
+  // in the wrong order still reproduces the bug these two tests bound.
+  const macOsDefaultOnMultiWorker = {
+    useDrawElement: true,
+    fastCaptureExplicitOptIn: false,
+    useStreamingEncode: false,
+    workerCount: 2,
+    deParallelStreamVerified: false,
+  };
+
+  it("routes once the clamp's post-clamp value feeds the router", () => {
+    const clamped = shouldClampDefaultDrawElement(macOsDefaultOnMultiWorker);
+    const postClampUseDrawElement = clamped ? false : macOsDefaultOnMultiWorker.useDrawElement;
+
+    expect(
+      shouldStreamParallelCapture({
+        routerEnabled: true,
+        workerCount: macOsDefaultOnMultiWorker.workerCount,
+        useDrawElement: postClampUseDrawElement,
+        outputFormat: "mp4",
+        streamingOk: true,
+        layeredOrEffectRoute: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("never routes if the router instead reads the PRE-clamp value (the bug)", () => {
+    expect(
+      shouldStreamParallelCapture({
+        routerEnabled: true,
+        workerCount: macOsDefaultOnMultiWorker.workerCount,
+        useDrawElement: macOsDefaultOnMultiWorker.useDrawElement,
+        outputFormat: "mp4",
+        streamingOk: true,
+        layeredOrEffectRoute: false,
+      }),
+    ).toBe(false);
   });
 });
 
@@ -2636,5 +3027,73 @@ describe("closeOrphanedProbeForRetry (probe cleanup before verify-triggered retr
 
     expect(log.warn).toHaveBeenCalledTimes(1);
     expect((log.warn.mock.calls[0][1] as { error: string }).error).toBe("string-only rejection");
+  });
+});
+
+// BeginFrame is Linux-only in both real entry points, but the observability
+// field derived its mode from `forceScreenshot` alone. That mislabelled 30,625
+// Windows renders as `beginframe` over 14 days — a fifth of the fast-capture
+// dashboard's capture-mode data — for captures that were really screenshot.
+describe("resolveObservedCaptureMode", () => {
+  it("only ever reports beginframe on linux", () => {
+    expect(resolveObservedCaptureMode(false, "linux")).toBe("beginframe");
+    expect(resolveObservedCaptureMode(false, "win32")).toBe("screenshot");
+    expect(resolveObservedCaptureMode(false, "darwin")).toBe("screenshot");
+  });
+
+  // The case the old code got right, kept so a future simplification back to
+  // a bare boolean fails here rather than in production telemetry.
+  it("reports screenshot whenever screenshot was forced, linux included", () => {
+    expect(resolveObservedCaptureMode(true, "linux")).toBe("screenshot");
+    expect(resolveObservedCaptureMode(true, "win32")).toBe("screenshot");
+  });
+});
+
+// The blocker found in review: seeding `captureMode` at construction is not
+// enough. `updateCaptureObservability` fires at 23 sites, and the post-compile
+// `{ forceScreenshot }` patch runs on EVERY render — the old closure re-derived
+// from `forceScreenshot` alone and put `beginframe` back before capture began,
+// so both telemetry emits read the reverted value. These go through the closure
+// rather than the helper, which is the only way to catch that.
+describe("createCaptureObservabilityUpdater", () => {
+  const seed = (platform: NodeJS.Platform, forceScreenshot: boolean) => {
+    const observability = {
+      forceScreenshot,
+      captureMode: resolveObservedCaptureMode(forceScreenshot, platform),
+      browserGpuMode: "hardware" as const,
+    } as Parameters<typeof createCaptureObservabilityUpdater>[0];
+    return { observability, update: createCaptureObservabilityUpdater(observability, platform) };
+  };
+
+  // The exact production case: Windows, hardware GPU, screenshot not forced.
+  it("keeps screenshot on win32 across an unrelated patch", () => {
+    const { observability, update } = seed("win32", false);
+    expect(observability.captureMode).toBe("screenshot");
+    update({ transientRetries: 1 });
+    expect(observability.captureMode).toBe("screenshot");
+  });
+
+  // The unconditional post-compile patch — the one that guaranteed the revert.
+  it("keeps screenshot on win32 when forceScreenshot is re-patched false", () => {
+    const { observability, update } = seed("win32", false);
+    update({ forceScreenshot: false });
+    expect(observability.captureMode).toBe("screenshot");
+  });
+
+  // Linux must still be able to report beginframe, or the fix would have
+  // silently disabled the field everywhere instead of correcting it.
+  it("still reports beginframe on linux, and honours a later force", () => {
+    const { observability, update } = seed("linux", false);
+    expect(observability.captureMode).toBe("beginframe");
+    update({ transientRetries: 2 });
+    expect(observability.captureMode).toBe("beginframe");
+    update({ forceScreenshot: true });
+    expect(observability.captureMode).toBe("screenshot");
+  });
+
+  it("applies the patch itself, not only the derived mode", () => {
+    const { observability, update } = seed("win32", false);
+    update({ workerCount: 4 });
+    expect(observability.workerCount).toBe(4);
   });
 });

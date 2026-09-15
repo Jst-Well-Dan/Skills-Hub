@@ -35,6 +35,10 @@ describe("runEnvironmentChecks", () => {
     expect(result.outcomes.find((outcome) => outcome.name === "FFprobe")?.ok).toBe(true);
     expect(result.ffmpegPath).toBe(process.execPath);
     expect(result.ffprobePath).toBe(process.execPath);
+    expect(execFileSync).toHaveBeenCalledTimes(2);
+    for (const call of execFileSync.mock.calls) {
+      expect(call[2]).toEqual(expect.objectContaining({ windowsHide: true }));
+    }
   });
 
   it("reports ffprobe as a render-blocking error when the explicit path is missing", async () => {
@@ -118,6 +122,41 @@ describe("runEnvironmentChecks", () => {
       expect(result.browser).toBeUndefined();
     } finally {
       spy.mockRestore();
+    }
+  });
+
+  it.each([
+    { failure: { status: 133, signal: "SIGTRAP" }, detail: "SIGTRAP" },
+    { failure: { code: "EACCES" }, detail: "EACCES" },
+    { failure: { code: "ETIMEDOUT", signal: "SIGKILL" }, detail: "ETIMEDOUT" },
+  ])("rejects an existing browser that fails --version: $detail", async ({ failure, detail }) => {
+    execFileSync.mockImplementation((_path, args) => {
+      if (args[0] === "--version") throw Object.assign(new Error("cannot execute"), failure);
+      return "ffmpeg version 7.1.1\n";
+    });
+    const findBrowser = vi.spyOn(manager, "findBrowser").mockResolvedValue({
+      executablePath: process.execPath,
+      source: "cache",
+    });
+    try {
+      for (const browserPath of [undefined, process.execPath]) {
+        const result = await runEnvironmentChecks({ includeBrowser: true, browserPath });
+        const chrome = result.outcomes.find((outcome) => outcome.name === "Chrome");
+        expect(chrome).toMatchObject({ ok: false, level: "error", title: "Chrome cannot start" });
+        expect(chrome?.detail).toContain(detail);
+        expect(result.browser).toBeUndefined();
+      }
+      expect(execFileSync).toHaveBeenCalledWith(
+        process.execPath,
+        ["--version"],
+        expect.objectContaining({
+          timeout: 5000,
+          killSignal: "SIGKILL",
+          windowsHide: true,
+        }),
+      );
+    } finally {
+      findBrowser.mockRestore();
     }
   });
 

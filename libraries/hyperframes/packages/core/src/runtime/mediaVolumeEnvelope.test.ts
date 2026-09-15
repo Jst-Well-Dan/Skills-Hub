@@ -1,8 +1,30 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from "vitest";
-import { probeAndCacheElementVolume, probeElementVolumeKeyframes } from "./mediaVolumeEnvelope";
+import {
+  interpolateVolumeGain,
+  probeAndCacheElementVolume,
+  probeElementVolumeKeyframes,
+} from "./mediaVolumeEnvelope";
 
 describe("probeElementVolumeKeyframes", () => {
+  it("treats trailing-garbage duration as unknown instead of truncating preview sampling", () => {
+    const audio = document.createElement("audio");
+    audio.dataset.start = "0";
+    audio.dataset.duration = "5s";
+    audio.dataset.volume = "0";
+
+    const keyframes = probeElementVolumeKeyframes(
+      audio,
+      (time) => {
+        audio.volume = time < 7 ? 0 : 1;
+      },
+      10,
+      1,
+    );
+
+    expect(keyframes).toContainEqual({ time: 7, volume: 1 });
+  });
+
   it("retains the last plateau sample before a short volume change", () => {
     const audio = document.createElement("audio");
     audio.dataset.start = "0";
@@ -142,5 +164,132 @@ describe("probeAndCacheElementVolume", () => {
     expect(cache.get(audio)).toEqual(
       expect.arrayContaining([expect.objectContaining({ volume: 0 })]),
     );
+  });
+
+  it("caches a track-relative envelope for a clip that starts after t=0", () => {
+    // The probe stamps timeline seek times. A clip starting at 2s therefore
+    // yields keyframes at 2.0+, and reading them with track-relative time landed
+    // before the first keyframe and clamped to its volume — 0 for a fade-in, so
+    // the preview stayed silent for the whole clip while the render was correct.
+    const audio = document.createElement("audio");
+    audio.dataset.start = "2";
+    audio.dataset.duration = "1";
+    audio.dataset.volume = "1";
+    document.body.append(audio);
+
+    const timeline = {
+      totalTime(next?: number) {
+        if (next !== undefined) {
+          // 0.05s linear fade-in at the clip's start (timeline t=2).
+          audio.volume = Math.max(0, Math.min(1, (next - 2) / 0.05));
+        }
+        return 0;
+      },
+    };
+    const cache = new WeakMap<HTMLMediaElement, { time: number; volume: number }[]>();
+
+    probeAndCacheElementVolume(audio, timeline, 3, cache);
+
+    const envelope = cache.get(audio);
+    if (!envelope) throw new Error("Expected a cached envelope");
+    expect(envelope[0]).toEqual({ time: 0, volume: 0 });
+    expect(envelope.at(-1)?.time).toBeCloseTo(1, 5);
+
+    // Silent at the clip's start, full once the fade is done, and it stays there.
+    expect(interpolateVolumeGain(envelope, 0)).toBeCloseTo(0, 5);
+    expect(interpolateVolumeGain(envelope, 0.05)).toBeCloseTo(1, 5);
+    expect(interpolateVolumeGain(envelope, 0.5)).toBeCloseTo(1, 5);
+    expect(interpolateVolumeGain(envelope, 1)).toBeCloseTo(1, 5);
+  });
+  it("uses the clip's absolute start, not its composition-local data-start", () => {
+    // Same fade as above, but the clip lives in a host composition that begins
+    // at t=2, so its `data-start="1"` means timeline t=3. Reading the attribute
+    // directly probed [1,2] — a window the clip is not even on screen for — and
+    // rebased the envelope 2s early.
+    const host = document.createElement("div");
+    host.setAttribute("data-composition-id", "scene-a");
+    host.dataset.start = "2";
+    document.body.append(host);
+    const audio = document.createElement("audio");
+    audio.dataset.start = "1";
+    audio.dataset.duration = "1";
+    audio.dataset.volume = "1";
+    host.append(audio);
+
+    const timeline = {
+      totalTime(next?: number) {
+        if (next !== undefined) {
+          // 0.05s linear fade-in at the clip's real start (timeline t=3).
+          audio.volume = Math.max(0, Math.min(1, (next - 3) / 0.05));
+        }
+        return 0;
+      },
+    };
+    const cache = new WeakMap<HTMLMediaElement, { time: number; volume: number }[]>();
+
+    probeAndCacheElementVolume(audio, timeline, 4, cache);
+
+    const envelope = cache.get(audio);
+    if (!envelope) throw new Error("Expected a cached envelope");
+    expect(interpolateVolumeGain(envelope, 0)).toBeCloseTo(0, 5);
+    expect(interpolateVolumeGain(envelope, 0.05)).toBeCloseTo(1, 5);
+    expect(interpolateVolumeGain(envelope, 1)).toBeCloseTo(1, 5);
+  });
+
+  it("keeps a fade that starts from an above-unity authored gain", () => {
+    const audio = document.createElement("audio");
+    audio.dataset.start = "0";
+    audio.dataset.duration = "2";
+    audio.dataset.volume = "1.949845"; // +5.8 dB
+
+    // A GSAP tween reads the seeded value as its FROM. Through the spec's
+    // [0,1] clamp on `HTMLMediaElement.volume` that read back as 1, so the
+    // whole authored boost was thrown away by the mere presence of a fade.
+    const keyframes = probeElementVolumeKeyframes(
+      audio,
+      (time) => {
+        audio.volume = 1.949845 * Math.max(0, 1 - time / 2);
+      },
+      2,
+      10,
+    );
+
+    expect(keyframes?.[0]?.volume).toBeCloseTo(1.949845, 5);
+    expect(audio.volume).toBeLessThanOrEqual(1);
+  });
+
+  it("carries an above-unity tween target through to the envelope", () => {
+    const audio = document.createElement("audio");
+    audio.dataset.start = "0";
+    audio.dataset.duration = "1";
+    audio.dataset.volume = "1";
+
+    const keyframes = probeElementVolumeKeyframes(
+      audio,
+      (time) => {
+        audio.volume = 1 + time;
+      },
+      1,
+      10,
+    );
+
+    expect(keyframes?.at(-1)?.volume).toBeCloseTo(2, 5);
+  });
+
+  it("restores the native accessor once the probe is done", () => {
+    const audio = document.createElement("audio");
+    audio.dataset.start = "0";
+    audio.dataset.duration = "1";
+    audio.dataset.volume = "2";
+
+    probeElementVolumeKeyframes(audio, () => {}, 1, 10);
+
+    // The own accessor is gone and the spec setter is back in charge: it
+    // rejects an out-of-range volume rather than silently taking it.
+    expect(Object.getOwnPropertyDescriptor(audio, "volume")).toBeUndefined();
+    expect(audio.volume).toBe(1);
+    expect(() => {
+      audio.volume = 5;
+    }).toThrow();
   });
 });

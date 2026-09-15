@@ -22,10 +22,35 @@ describe("usePlayerStore", () => {
       expectResettableDefaults(state);
       expect(state.playbackRate).toBe(1);
       expect(state.audioMuted).toBe(false);
+      expect(state.audioVolume).toBe(1);
       expect(state.loopEnabled).toBe(false);
       expect(state.zoomMode).toBe("fit");
       expect(state.manualZoomPercent).toBe(100);
       expect(state.expandedClipIds).toEqual(new Set());
+    });
+  });
+
+  describe("thumbnail content revision", () => {
+    it("advances once per accepted persisted file event", () => {
+      const before = usePlayerStore.getState().thumbnailContentRevision;
+
+      usePlayerStore.getState().bumpThumbnailContentRevision();
+
+      expect(usePlayerStore.getState().thumbnailContentRevision).toBe(before + 1);
+    });
+
+    it("remains monotonic across soft resets while project identity stays with the session epoch", () => {
+      const store = usePlayerStore.getState();
+      store.beginTimelineSession("project-a");
+      store.bumpThumbnailContentRevision();
+      const revision = usePlayerStore.getState().thumbnailContentRevision;
+      const firstEpoch = usePlayerStore.getState().timelineSessionEpoch;
+
+      store.reset();
+      expect(usePlayerStore.getState().thumbnailContentRevision).toBe(revision);
+      store.beginTimelineSession("project-b");
+      expect(usePlayerStore.getState().thumbnailContentRevision).toBe(revision);
+      expect(usePlayerStore.getState().timelineSessionEpoch).toBe(firstEpoch + 1);
     });
   });
 
@@ -173,6 +198,19 @@ describe("usePlayerStore", () => {
     it("updates audioMuted", () => {
       usePlayerStore.getState().setAudioMuted(true);
       expect(usePlayerStore.getState().audioMuted).toBe(true);
+    });
+  });
+
+  describe("setAudioVolume", () => {
+    it("updates and clamps audioVolume", () => {
+      usePlayerStore.getState().setAudioVolume(0.35);
+      expect(usePlayerStore.getState().audioVolume).toBe(0.35);
+
+      usePlayerStore.getState().setAudioVolume(2);
+      expect(usePlayerStore.getState().audioVolume).toBe(1);
+
+      usePlayerStore.getState().setAudioVolume(-1);
+      expect(usePlayerStore.getState().audioVolume).toBe(0);
     });
   });
 
@@ -557,10 +595,26 @@ describe("usePlayerStore", () => {
       expectResettableDefaults(usePlayerStore.getState());
     });
 
-    it("does not reset playbackRate, audioMuted, loopEnabled, zoomMode, or manualZoomPercent", () => {
+    it("drops an automation time selection on reset and on a project switch", () => {
+      const sel = { elementKey: "bgm", target: "volume", t0: 1, t1: 2 };
+
+      usePlayerStore.getState().setAutomationSelection(sel);
+      usePlayerStore.getState().reset();
+      expect(usePlayerStore.getState().automationSelection).toBeNull();
+
+      // The switch matters more than reset(): a stale elementKey can match a
+      // same-keyed clip in the new project and redirect a paste to its old t0.
+      usePlayerStore.getState().beginTimelineSession("project-a");
+      usePlayerStore.getState().setAutomationSelection(sel);
+      usePlayerStore.getState().beginTimelineSession("project-b");
+      expect(usePlayerStore.getState().automationSelection).toBeNull();
+    });
+
+    it("does not reset playbackRate, audioMuted, audioVolume, loopEnabled, zoomMode, or manualZoomPercent", () => {
       const store = usePlayerStore.getState();
       store.setPlaybackRate(2);
       store.setAudioMuted(true);
+      store.setAudioVolume(0.4);
       store.setLoopEnabled(true);
       store.setZoomMode("manual");
       store.setManualZoomPercent(200);
@@ -571,6 +625,7 @@ describe("usePlayerStore", () => {
       // reset() only resets the fields explicitly listed in the reset function
       expect(state.playbackRate).toBe(2);
       expect(state.audioMuted).toBe(true);
+      expect(state.audioVolume).toBe(0.4);
       expect(state.loopEnabled).toBe(true);
       expect(state.zoomMode).toBe("manual");
       expect(state.manualZoomPercent).toBe(200);

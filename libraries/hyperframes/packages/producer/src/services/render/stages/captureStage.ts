@@ -36,6 +36,7 @@
  * the stages can import them without reaching back into the orchestrator.
  */
 
+import { statfsSync } from "node:fs";
 import {
   type BeforeCaptureHook,
   type CaptureOptions,
@@ -136,6 +137,68 @@ export function shouldAllowAdaptiveCaptureRetry(
   return workerCount > 1;
 }
 
+export function estimateDiskCaptureBytes(
+  totalFrames: number,
+  captureOptions: CaptureOptions,
+): number {
+  const scale = captureOptions.deviceScaleFactor ?? 1;
+  const outputWidth = Math.ceil(captureOptions.width * scale);
+  const outputHeight = Math.ceil(captureOptions.height * scale);
+  return Math.ceil(totalFrames) * outputWidth * outputHeight * 4;
+}
+
+/**
+ * Unknown free space (`freeBytes: null`) counts as available: the gate can
+ * only reject when it has a measurement.
+ */
+export type DiskCaptureHeadroom =
+  | { available: true; estimatedBytes: number; freeBytes: number | null }
+  | { available: false; estimatedBytes: number; freeBytes: number };
+
+/** Shared 90% disk gate used by both fallback planning and disk execution. */
+export function inspectDiskCaptureHeadroom(
+  framesDir: string,
+  totalFrames: number,
+  captureOptions: CaptureOptions,
+  freeDiskBytes: (path: string) => number | null = (path) => {
+    try {
+      const stat = statfsSync(path);
+      return stat.bavail * stat.bsize;
+    } catch {
+      return null;
+    }
+  },
+): DiskCaptureHeadroom {
+  const freeBytes = freeDiskBytes(framesDir);
+  const estimatedBytes = estimateDiskCaptureBytes(totalFrames, captureOptions);
+  if (freeBytes === null || estimatedBytes <= freeBytes * 0.9) {
+    return { available: true, estimatedBytes, freeBytes };
+  }
+  return { available: false, estimatedBytes, freeBytes };
+}
+
+export function assertDiskCaptureHeadroom(
+  framesDir: string,
+  totalFrames: number,
+  captureOptions: CaptureOptions,
+  freeDiskBytes?: (path: string) => number | null,
+): void {
+  const headroom = inspectDiskCaptureHeadroom(
+    framesDir,
+    totalFrames,
+    captureOptions,
+    freeDiskBytes,
+  );
+  if (headroom.available) return;
+  throw new Error(
+    `Disk capture may need ~${(headroom.estimatedBytes / 1e6).toFixed(1)} MB of temporary frame storage, ` +
+      `but only ${(headroom.freeBytes / 1e6).toFixed(1)} MB is free at ${framesDir}. ` +
+      "Re-run with --low-memory-mode to stream frames, raise " +
+      "PRODUCER_STREAMING_ENCODE_MAX_DURATION_SECONDS if streaming is supported, " +
+      "or free up disk space.",
+  );
+}
+
 export async function runCaptureStage(input: CaptureStageInput): Promise<CaptureStageResult> {
   const {
     fileServer,
@@ -194,6 +257,9 @@ export async function runCaptureStage(input: CaptureStageInput): Promise<Capture
     }
   }
 
+  const captureOptions = buildCaptureOptions();
+  assertDiskCaptureHeadroom(framesDir, totalFrames, captureOptions);
+
   if (workerCount > 1) {
     // Parallel capture. When `frameRange` is set (distributed chunk), pass
     // `frameRangeStart` so workers land on absolute composition frame indices
@@ -206,7 +272,7 @@ export async function runCaptureStage(input: CaptureStageInput): Promise<Capture
       initialWorkerCount: workerCount,
       allowRetry: shouldAllowAdaptiveCaptureRetry(workerCount, job.config.workers !== undefined),
       frameExt: needsAlpha ? "png" : "jpg",
-      captureOptions: buildCaptureOptions(),
+      captureOptions,
       createBeforeCaptureHook: createRenderVideoFrameInjector,
       abortSignal,
       frameRangeStart: frameRange?.startFrame,
@@ -252,7 +318,7 @@ export async function runCaptureStage(input: CaptureStageInput): Promise<Capture
       (await createCaptureSession(
         fileServer.url,
         framesDir,
-        buildCaptureOptions(),
+        captureOptions,
         videoInjector,
         captureCfg,
       ));

@@ -1,6 +1,7 @@
 // fallow-ignore-file code-duplication
-import { createContext, useCallback, useContext, useMemo, useRef, type ReactNode } from "react";
 import type { useDomEditSession } from "../hooks/useDomEditSession";
+import { useCallback, useContext, useMemo, useRef, type ReactNode } from "react";
+import { createStableContext } from "../utils/hmrStableContext";
 
 type DomEditValue = ReturnType<typeof useDomEditSession>;
 
@@ -13,8 +14,10 @@ export interface DomEditActionsValue extends Pick<
   | "applyDomSelection"
   | "clearDomSelection"
   | "handleDomStyleCommit"
+  | "handleDomStyleCommitForSelection"
   | "handleDomAttributeCommit"
   | "handleDomAttributeLiveCommit"
+  | "handleDomAttributeQuietCommit"
   | "handleDomHtmlAttributeCommit"
   | "handleDomAttributesCommit"
   | "handleDomPathOffsetCommit"
@@ -24,9 +27,12 @@ export interface DomEditActionsValue extends Pick<
   | "handleDomRotationCommit"
   | "handleDomManualEditsReset"
   | "handleDomTextCommit"
+  | "handleDomTextCommitForSelection"
+  | "handleDomRichTextCommit"
   | "handleDomTextFieldStyleCommit"
   | "handleDomAddTextField"
   | "handleDomRemoveTextField"
+  | "getGsapAnimationsForSelection"
   | "handleAskAgent"
   | "handleAgentModalSubmit"
   | "handleBlockedDomMove"
@@ -91,8 +97,14 @@ export interface DomEditSelectionValue extends Pick<
   | "agentPromptSelectionContext"
 > {}
 
-const DomEditActionsContext = createContext<DomEditActionsValue | null>(null);
-const DomEditSelectionContext = createContext<DomEditSelectionValue | null>(null);
+const DomEditActionsContext = createStableContext<DomEditActionsValue | null>(
+  "DomEditActionsContext",
+  null,
+);
+const DomEditSelectionContext = createStableContext<DomEditSelectionValue | null>(
+  "DomEditSelectionContext",
+  null,
+);
 
 export function useDomEditActionsContext(): DomEditActionsValue {
   const ctx = useContext(DomEditActionsContext);
@@ -113,6 +125,13 @@ export function useDomEditSelectionContext(): DomEditSelectionValue {
   const ctx = useContext(DomEditSelectionContext);
   if (!ctx) throw new Error("useDomEditSelectionContext must be used within DomEditProvider");
   return ctx;
+}
+
+/** Optional counterpart to useDomEditActionsContextOptional — same reason: the
+ *  player package's own components mount outside a provider in standalone and
+ *  test trees, where "no dom-edit selection" is the correct answer. */
+export function useDomEditSelectionContextOptional(): DomEditSelectionValue | null {
+  return useContext(DomEditSelectionContext);
 }
 
 /** @deprecated Prefer useDomEditActionsContext or useDomEditSelectionContext. */
@@ -137,8 +156,10 @@ export function DomEditProvider({
     applyDomSelection,
     clearDomSelection,
     handleDomStyleCommit,
+    handleDomStyleCommitForSelection,
     handleDomAttributeCommit,
     handleDomAttributeLiveCommit,
+    handleDomAttributeQuietCommit,
     handleDomHtmlAttributeCommit,
     handleDomAttributesCommit,
     handleDomPathOffsetCommit,
@@ -149,9 +170,12 @@ export function DomEditProvider({
     handleDomManualEditsReset,
 
     handleDomTextCommit,
+    handleDomTextCommitForSelection,
+    handleDomRichTextCommit,
     handleDomTextFieldStyleCommit,
     handleDomAddTextField,
     handleDomRemoveTextField,
+    getGsapAnimationsForSelection,
     handleAskAgent,
     handleAgentModalSubmit,
     handleBlockedDomMove,
@@ -225,8 +249,10 @@ export function DomEditProvider({
       applyDomSelection,
       clearDomSelection,
       handleDomStyleCommit,
+      handleDomStyleCommitForSelection,
       handleDomAttributeCommit,
       handleDomAttributeLiveCommit,
+      handleDomAttributeQuietCommit,
       handleDomHtmlAttributeCommit,
       handleDomAttributesCommit,
       handleDomPathOffsetCommit,
@@ -236,9 +262,12 @@ export function DomEditProvider({
       handleDomRotationCommit,
       handleDomManualEditsReset,
       handleDomTextCommit,
+      handleDomTextCommitForSelection,
+      handleDomRichTextCommit,
       handleDomTextFieldStyleCommit,
       handleDomAddTextField,
       handleDomRemoveTextField,
+      getGsapAnimationsForSelection,
       handleAskAgent,
       handleAgentModalSubmit,
       handleBlockedDomMove,
@@ -294,8 +323,10 @@ export function DomEditProvider({
       applyDomSelection,
       clearDomSelection,
       handleDomStyleCommit,
+      handleDomStyleCommitForSelection,
       handleDomAttributeCommit,
       handleDomAttributeLiveCommit,
+      handleDomAttributeQuietCommit,
       handleDomHtmlAttributeCommit,
       handleDomAttributesCommit,
       handleDomPathOffsetCommit,
@@ -305,9 +336,12 @@ export function DomEditProvider({
       handleDomRotationCommit,
       handleDomManualEditsReset,
       handleDomTextCommit,
+      handleDomTextCommitForSelection,
+      handleDomRichTextCommit,
       handleDomTextFieldStyleCommit,
       handleDomAddTextField,
       handleDomRemoveTextField,
+      getGsapAnimationsForSelection,
       handleAskAgent,
       handleAgentModalSubmit,
       handleBlockedDomMove,

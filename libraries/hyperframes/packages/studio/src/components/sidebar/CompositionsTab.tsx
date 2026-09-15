@@ -1,7 +1,10 @@
+import { buildProjectApiPath } from "../../utils/projectRouting";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { setPreviewMediaMuted } from "../../player/lib/timelineIframeHelpers";
 import { buildCompositionThumbnailUrl } from "../../player/components/CompositionThumbnail";
+import { setPreviewMediaMuted } from "../../player/lib/timelineIframeHelpers";
+import { usePlayerStore } from "../../player/store/playerStore";
 import { TIMELINE_COMPOSITION_MIME } from "../../utils/timelineCompositionDrop";
+import { Tooltip } from "../ui/Tooltip";
 
 interface CompositionsTabProps {
   projectId: string;
@@ -119,6 +122,7 @@ function CompCard({
   isRendering,
   lintInfo,
   onAddToTimeline,
+  contentRevision,
 }: {
   projectId: string;
   comp: string;
@@ -128,11 +132,12 @@ function CompCard({
   isRendering?: boolean;
   lintInfo?: { count: number; messages: string[] };
   onAddToTimeline?: () => void;
+  contentRevision: number;
 }) {
   const [hovered, setHovered] = useState(false);
   const [stageSize, setStageSize] = useState(DEFAULT_PREVIEW_STAGE);
   const [livePreviewLoaded, setLivePreviewLoaded] = useState(false);
-  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const [failedThumbnailUrl, setFailedThumbnailUrl] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -169,13 +174,15 @@ function CompCard({
     setLivePreviewLoaded(false);
   };
   const name = comp.replace(/^compositions\//, "").replace(/\.html$/, "");
-  const previewUrl = `/api/projects/${projectId}/preview/comp/${comp}`;
+  const previewUrl = buildProjectApiPath(projectId, `/preview/comp/${comp}`);
   const thumbnailUrl = buildCompositionThumbnailUrl({
     previewUrl,
     seekTime: THUMBNAIL_SEEK_TIME_SECONDS,
     duration: 0,
     origin: window.location.origin,
+    contentRevision,
   });
+  const thumbnailFailed = failedThumbnailUrl === thumbnailUrl;
   const previewScale = resolveCompositionPreviewScale({
     cardWidth: CARD_W,
     cardHeight: CARD_H,
@@ -201,6 +208,8 @@ function CompCard({
       role="button"
       tabIndex={0}
       draggable
+      aria-label={`Open composition ${name}`}
+      aria-pressed={isActive}
       onDragStart={(event) => {
         draggedRef.current = true;
         event.dataTransfer.effectAllowed = "copy";
@@ -215,6 +224,8 @@ function CompCard({
         if (!draggedRef.current) onSelect();
       }}
       onKeyDown={(event) => {
+        // Only when the row itself is focused — keydowns bubbling from the
+        // inner controls (play button) must keep their native activation.
         if (event.target !== event.currentTarget) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -223,7 +234,7 @@ function CompCard({
       }}
       onPointerEnter={handleEnter}
       onPointerLeave={handleLeave}
-      className={`group/card w-full select-none text-left px-2 py-1.5 flex items-center gap-2.5 transition-colors cursor-grab active:cursor-grabbing ${
+      className={`group/card w-full select-none text-left px-2 py-1.5 flex items-center gap-2.5 transition-colors cursor-grab active:cursor-grabbing outline-none focus-visible:bg-neutral-800/60 ${
         isActive
           ? "bg-studio-accent/10 border-l-2 border-studio-accent"
           : "border-l-2 border-transparent hover:bg-neutral-800/50"
@@ -241,7 +252,7 @@ function CompCard({
             draggable={false}
             loading="lazy"
             decoding="async"
-            onError={() => setThumbnailFailed(true)}
+            onError={() => setFailedThumbnailUrl(thumbnailUrl)}
             className={`absolute inset-0 h-full w-full object-contain transition-opacity ${
               livePreviewLoaded ? "opacity-0" : "opacity-100"
             }`}
@@ -288,7 +299,12 @@ function CompCard({
         <div className="flex items-center gap-1">
           <span className="text-[11px] font-medium text-neutral-300 truncate">{name}</span>
           {lintInfo && lintInfo.count > 0 && (
-            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-400" />
+            <span
+              aria-label={`${lintInfo.count} lint finding${lintInfo.count === 1 ? "" : "s"}`}
+              className="flex-shrink-0 min-w-[16px] text-center rounded-full bg-amber-500/20 px-1 text-[8px] font-bold text-amber-400"
+            >
+              {lintInfo.count}
+            </span>
           )}
         </div>
         <span className="text-[9px] text-neutral-600 truncate block">{comp}</span>
@@ -308,39 +324,41 @@ function CompCard({
         </button>
       )}
       {onRender && (
-        <button
-          type="button"
-          title={isRendering ? "Rendering..." : `Render ${name}`}
-          aria-label={isRendering ? "Rendering..." : `Render ${name}`}
-          disabled={isRendering}
-          onClick={(e) => {
-            e.stopPropagation();
-            onRender();
-          }}
-          // h-6 w-6 = the 24x24 WCAG 2.2 (2.5.8) minimum target; the 14px glyph
-          // is unchanged, only the box grows. The sibling "+" button is h-8 w-8,
-          // so the card row already has the room.
-          className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors ${
-            isRendering
-              ? "text-neutral-600 cursor-not-allowed"
-              : "text-neutral-600 hover:text-studio-accent hover:bg-neutral-800"
-          }`}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <Tooltip label={isRendering ? "A render is already in progress" : `Render ${name}`}>
+          <button
+            type="button"
+            aria-label={isRendering ? "A render is already in progress" : `Render ${name}`}
+            disabled={isRendering}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRender();
+            }}
+            // h-6 w-6 = the 24x24 WCAG 2.2 (2.5.8) minimum target; the 14px glyph
+            // is unchanged, only the box grows. The sibling "+" button is h-8 w-8,
+            // so the card row already has the room.
+            className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors ${
+              isRendering
+                ? "text-neutral-600 cursor-not-allowed"
+                : "text-neutral-600 hover:text-studio-accent hover:bg-neutral-800"
+            }`}
           >
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-        </button>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
+        </Tooltip>
       )}
     </div>
   );
@@ -356,6 +374,7 @@ export const CompositionsTab = memo(function CompositionsTab({
   isRendering,
   lintFindingsByFile,
 }: CompositionsTabProps) {
+  const contentRevision = usePlayerStore((state) => state.thumbnailContentRevision);
   if (compositions.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center px-4">
@@ -377,6 +396,7 @@ export const CompositionsTab = memo(function CompositionsTab({
           onAddToTimeline={onAddToTimeline ? () => onAddToTimeline(comp) : undefined}
           isRendering={isRendering}
           lintInfo={lintFindingsByFile?.get(comp)}
+          contentRevision={contentRevision}
         />
       ))}
     </div>

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Forge"
+  short_description: "Operate SmolForge repositories and Deploy/Sites"

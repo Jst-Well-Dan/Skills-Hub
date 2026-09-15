@@ -206,6 +206,8 @@ export class HyperframesRenderStack extends Construct {
       "PLAN_V2_INTEGRITY_UNRECOVERABLE",
       "VIDEO_SOURCE_UNRENDERABLE",
       "INVALID_VIDEO_METADATA",
+      "NOT_MEDIA_PAYLOAD",
+      "NotMediaPayloadError",
       "PlanV2IntegrityError",
       "PLAN_ARTIFACT_DIGEST_MISMATCH",
       "FORMAT_NOT_SUPPORTED_IN_DISTRIBUTED",
@@ -245,6 +247,7 @@ export class HyperframesRenderStack extends Construct {
       lambdaFunction: this.renderFunction,
       payload: sfn.TaskInput.fromObject({
         Action: "plan",
+        PlanProtocol: "v1",
         "ProjectS3Uri.$": "$.ProjectS3Uri",
         "PlanOutputS3Prefix.$": "$.PlanOutputS3Prefix",
         "Config.$": "$.Config",
@@ -317,6 +320,7 @@ export class HyperframesRenderStack extends Construct {
       lambdaFunction: this.renderFunction,
       payload: sfn.TaskInput.fromObject({
         Action: "renderChunk",
+        PlanProtocol: "v1",
         "ChunkIndex.$": "$.ChunkIndex",
         "PlanS3Uri.$": "$.PlanS3Uri",
         "PlanHash.$": "$.PlanHash",
@@ -359,6 +363,7 @@ export class HyperframesRenderStack extends Construct {
       lambdaFunction: this.renderFunction,
       payload: sfn.TaskInput.fromObject({
         Action: "assemble",
+        PlanProtocol: "v1",
         "PlanS3Uri.$": "$.Plan.PlanS3Uri",
         "ChunkS3Uris.$": "$.Chunks[*].ChunkS3Uri",
         "AudioS3Uri.$": "$.Plan.AudioS3Uri",
@@ -471,13 +476,13 @@ export class HyperframesRenderStack extends Construct {
 
     const unsupportedPlanProtocol = new sfn.Fail(this, "UnsupportedPlanProtocol", {
       error: "PLAN_PROTOCOL_UNSUPPORTED",
-      cause: 'PlanProtocol must be "v1", "v2", or absent (defaults to v1).',
+      cause: 'PlanProtocol must be "v1", "v2", or absent (defaults to v2).',
     });
     return new sfn.Choice(this, "SelectPlanProtocol")
       .when(sfn.Condition.stringEquals("$.PlanProtocol", "v2"), planV2)
       .when(sfn.Condition.stringEquals("$.PlanProtocol", "v1"), plan)
       .when(sfn.Condition.isPresent("$.PlanProtocol"), unsupportedPlanProtocol)
-      .otherwise(plan);
+      .otherwise(planV2);
   }
 }
 

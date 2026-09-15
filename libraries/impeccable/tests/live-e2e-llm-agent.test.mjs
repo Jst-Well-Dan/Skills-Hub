@@ -7,24 +7,50 @@ import {
   MANUAL_EDIT_SYSTEM_INSTRUCTIONS,
   VARIANT_SYSTEM_INSTRUCTIONS,
   createLlmAgent,
+  llmRequestSettings,
   parseManualEditResponse,
   parseVariantResponse,
+  progressiveVariantGuidance,
   resolveLlmAgentConfig,
   validateManualEditCoverage,
   validateManualEditPlanningCoverage,
   validateVariantMaterialChange,
+  validateVariantCount,
+  validateProgressiveVariantOutput,
   validateVariantVisibleCopy,
 } from './live-e2e/agents/llm-agent.mjs';
 
+describe('live-e2e LLM request settings', () => {
+  it('explicitly selects low-effort DeepSeek thinking for bounded JSON edit requests', () => {
+    assert.deepEqual(llmRequestSettings('deepseek'), {
+      thinking: { type: 'enabled' }, output_config: { effort: 'low' },
+    });
+  });
+
+  it('leaves other providers unchanged', () => {
+    assert.deepEqual(llmRequestSettings('anthropic'), {});
+    assert.deepEqual(llmRequestSettings('openai'), {});
+  });
+});
+
 describe('live-e2e LLM agent provider config', () => {
-  it('defaults to Anthropic and Claude Haiku when no keys are present', () => {
+  it('defaults to OpenAI gpt-5.6-terra at medium reasoning effort', () => {
     const config = resolveLlmAgentConfig({}, {});
+
+    assert.equal(config.provider, 'openai');
+    assert.equal(config.model, 'gpt-5.6-terra');
+    assert.equal(config.reasoningEffort, 'medium');
+    assert.equal(config.requiredEnv, 'OPENAI_API_KEY');
+    assert.equal(config.apiKey, undefined);
+    assert.equal(config.baseURL, undefined);
+  });
+
+  it('still resolves Anthropic when explicitly selected', () => {
+    const config = resolveLlmAgentConfig({}, { IMPECCABLE_E2E_LLM_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'k' });
 
     assert.equal(config.provider, 'anthropic');
     assert.equal(config.model, 'claude-haiku-4-5');
     assert.equal(config.requiredEnv, 'ANTHROPIC_API_KEY');
-    assert.equal(config.apiKey, undefined);
-    assert.equal(config.baseURL, undefined);
   });
 
   it('prefers Anthropic when both provider keys are present', () => {
@@ -1459,6 +1485,19 @@ describe('live-e2e LLM agent manual edit coverage validation', () => {
 });
 
 describe('live-e2e LLM agent variant prompt', () => {
+  it('makes progressive phase boundaries and lazy parameters explicit', () => {
+    const first = progressiveVariantGuidance({ count: 1, progressive: { phase: 'first' } });
+    const remaining = progressiveVariantGuidance({
+      count: 3,
+      progressive: { phase: 'remaining', omitFirstVariantCss: true },
+    });
+    assert.match(first, /params: \[\]/);
+    assert.match(first, /materially different/);
+    assert.match(remaining, /complete final set of exactly 3 variants/);
+    assert.match(remaining, /Keep its innerHtml exactly unchanged/);
+    assert.match(remaining, /Do not repeat or modify any scopedCss rule/);
+  });
+
   it('tells the model not to nest duplicate picked containers', () => {
     assert.match(VARIANT_SYSTEM_INSTRUCTIONS, /replacement root itself/);
     assert.match(VARIANT_SYSTEM_INSTRUCTIONS, /do not wrap a duplicate/);
@@ -1481,9 +1520,62 @@ describe('live-e2e LLM agent variant prompt', () => {
     assert.match(VARIANT_SYSTEM_INSTRUCTIONS, /bare text element/);
     assert.match(VARIANT_SYSTEM_INSTRUCTIONS, /Accept persists a real source change/);
   });
+
+  it('uses permanent styling hooks outside the reserved live-runtime namespace', () => {
+    assert.match(VARIANT_SYSTEM_INSTRUCTIONS, /data-design-variant/);
+    assert.doesNotMatch(VARIANT_SYSTEM_INSTRUCTIONS, /add[^\n]*data-impeccable-e2e-variant/);
+    assert.match(VARIANT_SYSTEM_INSTRUCTIONS, /Never invent data-impeccable-\*/);
+  });
 });
 
 describe('live-e2e LLM agent variant copy validation', () => {
+  it('enforces the exact requested variant count', () => {
+    const parsed = { scopedCss: '', variants: [{ innerHtml: '<h1>One</h1>', params: [] }] };
+    assert.match(validateVariantCount(parsed, { count: 2 }), /expected exactly 2 variants, received 1/);
+    assert.equal(validateVariantCount(parsed, { count: 1 }), null);
+  });
+
+  it('defers progressive params and preserves the visible first variant', () => {
+    const firstHtml = '<h1 class="hero-title"><span>One</span></h1>';
+    assert.match(
+      validateProgressiveVariantOutput(
+        { variants: [{ innerHtml: firstHtml, params: [{ id: 'weight' }] }] },
+        { progressive: { phase: 'first' } },
+      ),
+      /defer params/,
+    );
+    assert.equal(
+      validateProgressiveVariantOutput(
+        { variants: [{ innerHtml: firstHtml, params: [] }] },
+        { progressive: { phase: 'remaining', firstVariant: { innerHtml: firstHtml } } },
+      ),
+      null,
+    );
+    assert.match(
+      validateProgressiveVariantOutput(
+        { variants: [{ innerHtml: '<h1>Changed</h1>', params: [] }] },
+        { progressive: { phase: 'remaining', firstVariant: { innerHtml: firstHtml } } },
+      ),
+      /preserve variant 1/,
+    );
+    assert.match(
+      validateProgressiveVariantOutput(
+        {
+          scopedCss: '@scope ([data-impeccable-variant="1"]) { .hero-title { color: red; } }',
+          variants: [{ innerHtml: firstHtml, params: [] }],
+        },
+        {
+          progressive: {
+            phase: 'remaining',
+            firstVariant: { innerHtml: firstHtml },
+            omitFirstVariantCss: true,
+          },
+        },
+      ),
+      /omit already-published variant 1 CSS/,
+    );
+  });
+
   it('allows variants that preserve the picked element text', () => {
     const result = validateVariantVisibleCopy(
       {

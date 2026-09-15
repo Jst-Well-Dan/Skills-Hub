@@ -3,7 +3,12 @@ import type { CanvasResolution, OutputResolutionIssueKind } from "@hyperframes/c
 import { c } from "../../ui/colors.js";
 import { errorBox, formatBytes } from "../../ui/format.js";
 import { formatLintFindings } from "../../utils/lintFormat.js";
-import { lintProject, shouldBlockRender } from "../../utils/lintProject.js";
+import {
+  hasDefinitiveEntryMismatch,
+  lintProject,
+  shouldBlockRender,
+  type ProjectLintResult,
+} from "../../utils/lintProject.js";
 import { normalizeErrorMessage } from "../../utils/errorMessage.js";
 import { failCommand, setCommandExitCode } from "../../utils/commandResult.js";
 import {
@@ -34,11 +39,21 @@ export interface RenderExecutionDependencies {
 }
 
 // Exported only through render.ts so command tests can lock the user-facing guidance.
-// fallow-ignore-next-line unused-export
 export function renderLintContinuationHint(strictErrors: boolean): string {
   return strictErrors
     ? "  Continuing render despite lint warnings. Use --strict-all to block warnings."
     : "  Continuing render despite lint issues. Use --strict to block errors.";
+}
+
+function renderLintShouldAbort(
+  strictErrors: boolean,
+  strictAll: boolean,
+  lintResult: ProjectLintResult,
+): boolean {
+  return (
+    hasDefinitiveEntryMismatch(lintResult) ||
+    shouldBlockRender(strictErrors, strictAll, lintResult.totalErrors, lintResult.totalWarnings)
+  );
 }
 
 /** Execute a validated plan. Output and process lifecycle stay outside parsing. */
@@ -86,6 +101,7 @@ export async function executeRenderPlan(
     fps: plan.fps,
     quality: plan.quality,
     authoringSkill: plan.authoringSkill,
+    catalogUsage: plan.catalogUsage,
     format: plan.format,
     gifLoop: plan.gifLoop,
     workers: plan.workers,
@@ -109,7 +125,7 @@ export async function executeRenderPlan(
     protocolTimeout: plan.protocolTimeout,
     playerReadyTimeout: plan.playerReadyTimeout,
     exitAfterComplete: true,
-    enableDeParallelRouterTrial: true,
+    manageDeParallelRouterBreaker: true,
   };
   if (plan.useDocker) {
     options.pageSideCompositing = plan.pageSideCompositing;
@@ -159,22 +175,19 @@ async function ensureRenderBrowser(plan: RenderPlan): Promise<string> {
 }
 
 // fallow-ignore-next-line complexity
-async function runRenderLint(plan: RenderPlan): Promise<void> {
+export async function runRenderLint(
+  plan: RenderPlan,
+  runLint: (projectDir: string, entryFile?: string) => Promise<ProjectLintResult> = lintProject,
+): Promise<void> {
   // lintProject's explicit-entry contract is an absolute source path;
   // entryFile remains project-relative for the producer.
   const explicitEntry = plan.entryFile ? plan.renderTarget : undefined;
-  const lintResult = await lintProject(plan.project.dir, explicitEntry);
+  const lintResult = await runLint(plan.project.dir, explicitEntry);
   if (lintResult.totalErrors === 0 && lintResult.totalWarnings === 0) return;
   presentRenderLintFindings(lintResult, plan.effectiveQuiet);
-  if (
-    shouldBlockRender(
-      plan.strictErrors,
-      plan.strictAll,
-      lintResult.totalErrors,
-      lintResult.totalWarnings,
-    )
-  ) {
-    presentRenderLintAbort(plan);
+  const definitiveEntryMismatch = hasDefinitiveEntryMismatch(lintResult);
+  if (renderLintShouldAbort(plan.strictErrors, plan.strictAll, lintResult)) {
+    presentRenderLintAbort(plan, definitiveEntryMismatch);
     failCommand();
   }
   presentRenderLintContinuation(plan);
@@ -189,11 +202,16 @@ function presentRenderLintFindings(
   for (const line of formatLintFindings(lintResult, { errorsFirst: true })) console.log(line);
 }
 
-function presentRenderLintAbort(plan: RenderPlan): void {
+function presentRenderLintAbort(plan: RenderPlan, definitiveEntryMismatch: boolean): void {
   if (plan.effectiveQuiet) return;
-  const mode = plan.strictAll ? "--strict-all" : "--strict";
   console.log("");
-  console.log(c.error(`  Aborting render due to lint issues (${mode} mode).`));
+  console.log(
+    c.error(
+      definitiveEntryMismatch
+        ? "  Aborting render because the default index.html entry is blank."
+        : `  Aborting render due to lint issues (${plan.strictAll ? "--strict-all" : "--strict"} mode).`,
+    ),
+  );
   console.log("");
 }
 
@@ -237,7 +255,9 @@ async function executeBatchRender(
     fps: plan.fps,
     quality: plan.quality,
     authoringSkill: plan.authoringSkill,
+    catalogUsage: plan.catalogUsage,
     format: plan.format,
+    gifLoop: plan.gifLoop,
     workers: plan.workers,
     gpu: plan.useGpu,
     browserGpuMode: plan.browserGpuMode,
@@ -245,6 +265,7 @@ async function executeBatchRender(
     crf: plan.crf,
     vp9CpuUsed: plan.vp9CpuUsed,
     videoBitrate: plan.videoBitrate,
+    videoFrameFormat: plan.videoFrameFormat,
     quiet: batchQuiet,
     browserPath,
     entryFile: plan.entryFile,
@@ -259,7 +280,7 @@ async function executeBatchRender(
     exitAfterComplete: false,
     throwOnError: true,
     skipFeedback: true,
-    enableDeParallelRouterTrial: plan.batchConcurrency <= 1,
+    manageDeParallelRouterBreaker: plan.batchConcurrency <= 1,
   };
   const manifest = await batchModule.runBatchRender({
     prepared: preparedBatch,

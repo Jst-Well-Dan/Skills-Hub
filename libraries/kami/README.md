@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/images/logo.svg" width="120" />
+  <img src="skills/kami/assets/images/logo.svg" width="120" />
   <h1>Kami</h1>
   <p><b>Good content deserves good paper.</b></p>
   <a href="https://github.com/tw93/kami/stargazers"><img src="https://img.shields.io/github/stars/tw93/kami?style=flat-square" alt="Stars"></a>
@@ -10,57 +10,57 @@
 
 ## Why
 
-Kami (紙, かみ) means paper in Japanese: the surface where a finished idea lands. AI can produce documents better than most humans do manually. The missing piece is not capability but constraint: without a design system, every session drifts into generic gray and inconsistent layouts.
+Kami gives AI agents templates and layout rules for documents and landing pages. Create PDFs and PNGs, or export slides as editable PowerPoint files.
 
-Kami fills that gap: one constraint language, eight document templates plus a landing-page system, simple enough for agents to run reliably, strict enough that every output is something you actually want to ship.
+Kami (紙, かみ) means paper in Japanese. It includes eight document templates, a landing-page system, and checks for content and layout.
 
 Part of a trilogy: [Kaku](https://github.com/tw93/Kaku) (書く) writes code, [Waza](https://github.com/tw93/Waza) (技) drills habits, [Kami](https://github.com/tw93/Kami) (紙) delivers documents.
 
 ## Showcase
 
-Real PDFs from one constraint set, across templates and languages. Click any preview to open it.
+Sample PDFs in several formats and languages. Click any preview to open it.
 
 <table>
 <tr>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-musk-resume.pdf"><img src="assets/demos/demo-musk-resume.png" alt="Founder resume"></a>
+    <a href="site/assets/demos/demo-musk-resume.pdf"><img src="site/assets/demos/demo-musk-resume.png" alt="Founder resume"></a>
     <br><b>Resume</b> · English
     <br><sub>Founder resume, 2 pages</sub>
   </td>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-kami-print.pdf"><img src="assets/demos/demo-kami-print.png" alt="Kami print one-pager"></a>
+    <a href="site/assets/demos/demo-kami-print.pdf"><img src="site/assets/demos/demo-kami-print.png" alt="Kami print one-pager"></a>
     <br><b>One-Pager</b> · 中文
     <br><sub>Kami 介绍 · 白底打印版</sub>
   </td>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-tesla.pdf"><img src="assets/demos/demo-tesla.png" alt="Tesla equity report"></a>
+    <a href="site/assets/demos/demo-tesla.pdf"><img src="site/assets/demos/demo-tesla.png" alt="Tesla equity report"></a>
     <br><b>Equity Report</b> · 中文
     <br><sub>Tesla Q1 2026 财报点评</sub>
   </td>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-agent-slides.pdf"><img src="assets/demos/demo-agent-slides.png" alt="Agent keynote slides" /></a>
+    <a href="site/assets/demos/demo-agent-slides.pdf"><img src="site/assets/demos/demo-agent-slides.png" alt="Agent keynote slides" /></a>
     <br><b>Slides</b> · English
     <br><sub>Agent keynote, 8 slides</sub>
   </td>
 </tr>
 <tr>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-mole.pdf"><img src="assets/demos/demo-mole.png" alt="Mole product brief"></a>
+    <a href="site/assets/demos/demo-mole.pdf"><img src="site/assets/demos/demo-mole.png" alt="Mole product brief"></a>
     <br><b>One-Pager</b> · English
     <br><sub>Mole product brief, 1 page</sub>
   </td>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-letter.pdf"><img src="assets/demos/demo-letter.png" alt="Recommendation letter"></a>
+    <a href="site/assets/demos/demo-letter.pdf"><img src="site/assets/demos/demo-letter.png" alt="Recommendation letter"></a>
     <br><b>Letter</b> · 中文
     <br><sub>推荐信, 1 页</sub>
   </td>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-changelog.pdf"><img src="assets/demos/demo-changelog.png" alt="Mole release notes"></a>
+    <a href="site/assets/demos/demo-changelog.pdf"><img src="site/assets/demos/demo-changelog.png" alt="Mole release notes"></a>
     <br><b>Changelog</b> · English
     <br><sub>Mole v1.7.1 release notes</sub>
   </td>
   <td align="center" width="25%">
-    <a href="assets/demos/demo-kaku.pdf"><img src="assets/demos/demo-kaku.png" alt="Kaku portfolio"></a>
+    <a href="site/assets/demos/demo-kaku.pdf"><img src="site/assets/demos/demo-kaku.png" alt="Kaku portfolio"></a>
     <br><b>Portfolio</b> · 日本語
     <br><sub>Kaku ターミナル作品集 · 7 ページ</sub>
   </td>
@@ -69,50 +69,35 @@ Real PDFs from one constraint set, across templates and languages. Click any pre
 
 ## Install
 
-**Claude Code**, v2.1.142 or newer
+**Claude Code, Codex, Cursor, and other agents**
 
 ```bash
-/plugin marketplace add tw93/kami
-/plugin install kami@kami
+npx skills add tw93/kami -a claude-code codex cursor -g -y
 ```
 
-The marketplace points Claude Code at the generated lightweight plugin bundle, not the whole website and release archive tree.
+One copy lands in `~/.agents/skills`, the shared skills directory. Claude Code is symlinked in; Codex, Cursor, and every other agent that reads that directory picks Kami up as `/kami`. Update with `npx skills update -g -y`.
 
-**Codex plugin marketplace**
+**Host plugin**, if you prefer the host's own update command (namespaced as `/kami:kami`; Claude Code v2.1.142 or newer)
 
 ```bash
+# Claude Code (update: claude plugin update kami)
+/plugin marketplace add tw93/kami
+/plugin install kami@kami
+
+# Codex (update: codex plugin marketplace upgrade kami, then codex plugin add kami@kami)
 codex plugin marketplace add tw93/kami
 codex plugin add kami@kami
 ```
 
-This installs Kami as a Codex plugin from the repo marketplace, so future updates can use `codex plugin marketplace upgrade kami` followed by `codex plugin add kami@kami`.
+**Claude Desktop**: download the release asset [kami.zip](https://github.com/tw93/kami/releases/latest/download/kami.zip), not GitHub's source ZIP, open Customize > Skills > "+" > Create skill, and upload it. To update, click "..." on the skill card, choose Replace, and upload the latest ZIP.
 
-**Generic agents** for tools that read from `~/.agents/`
+Large CJK fonts stay out of every package: `scripts/ensure-fonts.sh` recovers missing Chinese or Korean fonts into the user font directory, and in a repository checkout it copies the tracked fonts into the skill so templates load them locally before falling back to the jsDelivr CDN.
 
-```bash
-npx skills add tw93/kami/plugins/kami -a universal -g -y
-```
-
-The plugin path exposes the generated lightweight skill bundle. A bare `tw93/kami` would install only `SKILL.md`, because the repo root doubles as the website source and the `skills` CLI treats a root-level skill as a single file.
-
-**Claude Desktop**
-
-Download the release asset [kami.zip](https://github.com/tw93/kami/releases/latest/download/kami.zip), not GitHub's source-code ZIP. Open Customize > Skills > "+" > Create skill, and upload the ZIP directly, no need to unzip.
-
-The ZIP is lightweight and contains a `kami/` skill folder. Large CJK fonts are excluded from the package: in a repo checkout they load from local font files first, then jsDelivr CDN; in an installed skill, `scripts/ensure-fonts.sh` recovers missing Chinese or Korean fonts into the user font directory.
-
-**Update**
-
-- Claude Code: `claude plugin update kami`
-- Codex: `codex plugin marketplace upgrade kami`, then `codex plugin add kami@kami` to refresh the installed snapshot
-- Claude Desktop: download the latest [kami.zip](https://github.com/tw93/kami/releases/latest/download/kami.zip), click "..." on the skill card, choose Replace, upload
-- Generic agents: re-run the `npx skills add tw93/kami/plugins/kami -a universal -g -y` command, which overwrites the existing copy. Avoid `npx skills update` for now: it can mis-detect repo subpath installs while the repo root also has `SKILL.md` (vercel-labs/skills#1517).
-
-Kami also runs a quiet version check at most once a day and tells you in chat when a newer version is out; it only reads a public version file, sends no data, and is skipped when offline.
+Kami also runs a quiet version check at most once a day and tells you in chat when a newer published release is out. It writes a marker in the local XDG cache directory, then resolves GitHub's latest public release; it uploads no user document or task content and fails silently when offline or when no cache home is available.
 
 ## Use
 
-The skill auto-triggers from natural requests, no slash command needed. Optimized for English and Chinese; Japanese and Korean are supported via best-effort CJK paths with visual QA before delivery.
+The skill auto-triggers from natural requests, no slash command needed. Optimized for English and Chinese; Japanese and Korean are supported via language-specific font fallbacks and layout adjustments, with output checked individually.
 
 Example prompts by language:
 
@@ -123,56 +108,58 @@ Example prompts by language:
 
 **Brand profile** (optional)
 
-Create `~/.config/kami/brand.md` to persist identity, brand, defaults, and writing habits. See [brand.example.md](references/brand.example.md) for a full template.
+Create `~/.config/kami/brand.md` to persist identity, brand, defaults, and writing habits. See [brand.example.md](skills/kami/references/brand.example.md) for a full template.
 
-The file has YAML frontmatter for structured fields like name, role, email, brand color, language, page size, and tone, plus a Markdown body for freeform notes. Kami treats it as the lowest-resolution context: applied only when the current request is ambiguous, and always overridable by what the specific document needs. The goal is to feel familiar across your work without making every output look the same.
+The file has YAML frontmatter for structured fields like name, role, email, brand color, language, page size, and tone, plus a Markdown body for freeform notes. Kami uses these settings where the current request leaves a choice open; explicit instructions always take priority. Use it to avoid repeating your preferences for each document.
 
 ## Design
 
-Warm parchment canvas `#f5f4ed`, ink blue `#1B365D` as the sole accent, serif carries hierarchy, no hard shadows or flashy palettes. Not a UI framework; a constraint system for printed matter. Documents should read as composed pages, not dashboards.
+The defaults are a warm parchment background (`#f5f4ed`), ink-blue accents (`#1B365D`), and serif fonts. Templates use type size and spacing to separate titles, body text, and notes. You can adjust the defaults for your brand.
 
 - **Templates.** Eight document templates: One-Pager, Long Doc, Letter, Portfolio, Resume, Slides, Equity Report, and Changelog, plus a Landing Page system, in EN, CN, and KO.
 - **Diagrams.** Eighteen inline SVG types, including a report-scale architecture board. Sequence, class, and ER can be authored from Mermaid text: [beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid) renders the SVG and `scripts/mermaid_normalize.py` re-themes it to the Kami palette and makes it WeasyPrint-safe, no Node bundled.
 - **Slides.** Three rendering paths: WeasyPrint HTML to PDF by default, python-pptx for editable PPTX on request, and a Marp variant in `assets/templates/marp/` for Markdown-first decks.
 - **Code.** Pygments-based syntax highlighting when `Pygments` is installed; without it, PDFs still render and code stays monochrome.
-- **Print.** Parchment is the default canvas; an opt-in white-paper variant flips any document to a white background for home or office printers, sinking the warmth into cards and tables so the hierarchy still reads. The [one-page Kami intro](assets/demos/demo-kami-print.pdf) (Chinese) is rendered with this variant; recipe in [production.md](references/production.md).
+- **Verification.** Content schemas check structure before layout; coverage checks look for content missing from the filled page. A structured brief records the audience and requirements, and page images support the final visual review.
+- **MCP.** A zero-dependency MCP server (`skills/kami/scripts/mcp_server.py`) exposes capability diagnosis, render, structured check, and screenshot tools, so any MCP-capable agent can drive Kami as an engine without loading the full skill prompt. Render only trusted local HTML: referenced file, HTTP, and HTTPS resources load with the MCP process's permissions.
+- **Print.** Parchment is the default canvas; an opt-in white-paper variant flips any document to a white background for home or office printers, keeping warm backgrounds in cards and tables. The [one-page Kami intro](site/assets/demos/demo-kami-print.pdf) (Chinese) is rendered with this variant; recipe in [production.md](skills/kami/references/production.md).
 
 Kami picks the right variant based on the language you write in.
 
 **Fonts**: Each language uses a single serif font for the entire page. Chinese: TsangerJinKai02. Japanese: YuMincho. Korean: Source Han Serif K. English: Charter. See [License](#license) for font terms.
 
-Full spec: [design.md](references/design.md). Cheatsheet: [CHEATSHEET.md](CHEATSHEET.md).
+Full spec: [design.md](skills/kami/references/design.md). Cheatsheet: [CHEATSHEET.md](skills/kami/CHEATSHEET.md).
 
 ## Beyond Documents
 
-One constraint set, applied past the page: it lays out deployable websites and briefs AI image renderers, so both come back in the Kami look.
+The same layout rules also work for landing pages and prompts for AI image tools.
 
 <table>
 <tr>
   <td align="center" width="25%" valign="top">
-    <a href="https://kami.tw93.fun"><img src="assets/showcase/kami-landing.png" alt="Kami landing page" height="150"></a>
+    <a href="https://kami.tw93.fun"><img src="site/assets/showcase/kami-landing.png" alt="Kami landing page" height="150"></a>
     <br><b>Kami</b> · landing page
     <br><sub>Design system homepage</sub>
   </td>
   <td align="center" width="25%" valign="top">
-    <a href="https://mole.fit"><img src="assets/showcase/mole-landing.png" alt="Mole landing page" height="150"></a>
+    <a href="https://mole.fit"><img src="site/assets/showcase/mole-landing.png" alt="Mole landing page" height="150"></a>
     <br><b>Mole</b> · landing page
     <br><sub>macOS system utility</sub>
   </td>
   <td align="center" width="25%" valign="top">
-    <img src="assets/illustrations/travel-spatialvla.png" alt="SpatialVLA architecture redraw" height="150">
+    <img src="site/assets/illustrations/travel-spatialvla.png" alt="SpatialVLA architecture redraw" height="150">
     <br><b>Architecture redraw</b> · English
     <br><sub>SpatialVLA Figure 1, schematic</sub>
   </td>
   <td align="center" width="25%" valign="top">
-    <img src="assets/illustrations/travel-tesla-optimus.png" alt="Tesla Optimus patent overview" height="150">
+    <img src="site/assets/illustrations/travel-tesla-optimus.png" alt="Tesla Optimus patent overview" height="150">
     <br><b>Evidence layout</b> · 中文
     <br><sub>Tesla Optimus 专利图一览</sub>
   </td>
 </tr>
 </table>
 
-Landing pages ship as deployable multilingual sites. Illustrations are drawn by the host's own image model: where the host can generate images, like ChatGPT, it renders directly; where it cannot, like Claude or Codex, it outputs the brief for you to paste into any image model.
+Landing pages ship as deployable multilingual sites. Illustrations use the host's own image generation when that capability is available; otherwise Kami outputs the same complete brief for use in an image model.
 
 ```text
 Redraw this as a clean editorial diagram. Background: warm parchment (#f5f4ed), never pure white. One accent only, ink blue (#1B365D); everything else in warm gray with a yellow-brown undertone, no other colors. Thin single-line geometric strokes and simple flat icons. No gradients, no drop shadows, no 3D. Labels in a serif typeface. Generous whitespace, calm and composed, like a figure in a well-typeset report.
@@ -184,13 +171,13 @@ Redraw this as a clean editorial diagram. Background: warm parchment (#f5f4ed), 
 
 I like investing in US equities and ask Claude to write research reports all the time. Every output landed in the same default-doc look: gray, flat, a different layout each session. The structure was hard to scan, the formatting felt dated, and nothing about the page made me want to keep reading. So I started fixing the typography, the palette, the spacing, one rule at a time, until the report became a page I actually enjoyed.
 
-Later I needed to present "The Agent You Don't Know: Principles, Architecture and Engineering Practice." I already had the document and didn't want to build slides from scratch, so I used Claude Design to lay it out in my own style, tweaked it round after round, and eventually got it to a place I was happy with. That process added inline SVG charts, a unified warm palette, and a tighter editorial rhythm. It kept growing until it covered every document I regularly ship, so I kept abstracting the process, and it became kami: one quiet design system I can hand to any agent and trust the output.
+Later I needed to present "The Agent You Don't Know: Principles, Architecture and Engineering Practice." I already had the document and didn't want to build slides from scratch, so I used Claude Design to lay it out in my own style, tweaked it round after round, and eventually got it to a place I was happy with. That process added inline SVG charts, a unified warm palette, and a tighter editorial rhythm. It kept growing until it covered every document I regularly ship, so I collected the templates and rules into Kami.
 
 ## Support
 
 - The most direct way to support me is getting [Mole for Mac](https://mole.fit), my paid Mac cleanup app.
 - If Kami helped you, give it a star, [share it](https://twitter.com/intent/tweet?url=https://github.com/tw93/kami&text=Kami%20-%20A%20quiet%20design%20system%20for%20professional%20documents.), or open an issue or PR.
-- I have two cats, TangYuan and Coke. If you think kami delights your life, you can feed them <a href="https://cats.tw93.fun?name=Kami" target="_blank">canned food 🥩</a>.
+- I have two cats, TangYuan and Coke. If Kami has been useful, you can feed them <a href="https://cats.tw93.fun?name=Kami" target="_blank">canned food 🥩</a>.
 
 <details>
 <summary>These lovely people already did 🐱</summary>

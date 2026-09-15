@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visual Playtest"
+  short_description: "Proportional browser QA for visual regressions"
+  default_prompt: "Use $visual-playtest to reproduce and inspect the relevant visual states, loading specialized references only when needed."

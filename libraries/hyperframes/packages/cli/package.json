@@ -1,6 +1,6 @@
 {
   "name": "@hyperframes/cli",
-  "version": "0.7.94",
+  "version": "0.8.40",
   "description": "HyperFrames CLI — create, preview, and render HTML video compositions",
   "license": "Apache-2.0",
   "repository": {
@@ -9,7 +9,8 @@
     "directory": "packages/cli"
   },
   "bin": {
-    "hyperframes": "./bin/hyperframes.mjs"
+    "hyperframes": "./bin/hyperframes.mjs",
+    "hyperframes-localize-fonts": "./bin/hyperframes-localize-fonts.mjs"
   },
   "files": [
     "bin",
@@ -30,10 +31,11 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.0.5",
-    "@puppeteer/browsers": "^3.0.6",
+    "@puppeteer/browsers": "^3.2.1",
     "adm-zip": "^0.6.0",
     "citty": "^0.2.1",
     "compare-versions": "^6.1.1",
+    "css-tree": "^3.2.1",
     "debug": "^4.4.0",
     "esbuild": "^0.25.12",
     "fontkit": "^2.0.4",
@@ -44,7 +46,7 @@
     "open": "^10.0.0",
     "postcss": "^8.5.8",
     "prettier": "^3.8.1",
-    "puppeteer-core": "^25.2.1",
+    "puppeteer-core": "^25.8.0",
     "sharp": "^0.35.0"
   },
   "devDependencies": {
@@ -58,15 +60,17 @@
     "@hyperframes/producer": "workspace:*",
     "@hyperframes/studio": "workspace:*",
     "@hyperframes/studio-server": "workspace:*",
+    "@types/css-tree": "^3.2.0",
     "@types/fontkit": "^2.0.9",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^25.0.10",
+    "ajv": "^8.20.0",
     "linkedom": "^0.18.12",
     "picocolors": "^1.1.1",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.11"
   },
   "optionalDependencies": {
     "@google/genai": "^1.50.1"

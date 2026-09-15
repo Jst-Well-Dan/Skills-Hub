@@ -1,8 +1,8 @@
 {
   "name": "rnskill",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "owner": "Pluviobyte",
-  "description": "雪踏乌云的 AI Agent Skills 集合 — 写作精修 + 动效制作 + 参考复刻 + 全帧质检",
+  "description": "雪踏乌云的 AI Agent Skills 集合 — 写作精修 + 动效制作 + 参考复刻 + 全帧质检 + 图片风格生成",
   "repository": "https://github.com/Pluviobyte/rnskill",
   "license": "CC-BY-NC-4.0",
   "plugins": [
@@ -35,6 +35,16 @@
       "category": "video-production",
       "keywords": ["参考视频", "动效复刻", "HyperFrames", "motion", "replica", "editable"],
       "skills": ["./skills/rn-motion-replica"]
+    },
+    {
+      "name": "rn-human-motion-extractor",
+      "description": "从获授权的真人参考视频提取逐帧人体与双手轨迹，输出匿名骨架视频、关键点数据和置信度证据。\nExtract anonymized frame-by-frame body and hand trajectories with skeleton previews and confidence evidence.\nTrigger: /rn-human-motion-extractor, 提取博主动作, 提取人体动作轨迹, 生成骨架视频",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "video-production",
+      "keywords": ["人体动作", "骨架", "关键点", "pose", "motion capture", "avatar"],
+      "skills": ["./skills/rn-human-motion-extractor"]
     },
     {
       "name": "rn-replica-qc",
@@ -75,6 +85,16 @@
       "category": "design",
       "keywords": ["封面", "编辑设计", "图解", "cover", "editorial", "diagram"],
       "skills": ["./skills/rn-cover-skill"]
+    },
+    {
+      "name": "rn-niulai-style-image",
+      "description": "把实拍或电影画面转成《牛来》正片那种粗粝充气人偶 3D。默认学公开正片截帧，不学水墨海报。\nTransform photos or film stills into the observed rough film-3D grammar of 《牛来》.\nTrigger: /rn-niulai-style-image, 牛来风格, 把这张改成牛来",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "category": "image-generation",
+      "keywords": ["牛来", "风格转换", "3D", "生图", "niulai", "style-transfer", "image"],
+      "skills": ["./skills/rn-niulai-style-image"]
     }
   ]
 }

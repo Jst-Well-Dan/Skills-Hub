@@ -4,7 +4,7 @@
 
 AI Agent Skills by 雪踏乌云 for Codex, Claude Code, and other `SKILL.md`-compatible agents.
 
-Currently **54 skills** in two categories:
+Currently **57 skills** in two categories:
 
 ### 🎬 Content Creation (Video / Image / Article)
 
@@ -13,6 +13,19 @@ With this skill set + Codex + HyperFrames + HeyGen + IndexTTS2, I spent less tha
 ### 💻 Coding & Development
 
 General-purpose coding skills, more coming soon.
+
+## ❤️ Sponsor
+
+<table>
+<tr>
+<td width="180" align="center"><a href="https://www.packyapi.com/register?aff=cSVG"><img src="https://raw.githubusercontent.com/farion1231/cc-switch/main/assets/partners/logos/packycode.png" alt="PackyCode" width="150"></a></td>
+<td>
+<p>Access leading AI models through PackyCode with one API endpoint and one API key. Enjoy fast, reliable access with automatic failover and dedicated high-speed routes for Codex and Claude Code.</p>
+<p>Get started with $1 in free credits, a discount on your first top-up, and savings of up to 80% on eligible routes. Pay in RMB with no currency conversion markups or extra top-up fees.</p>
+<p><strong><a href="https://www.packyapi.com/register?aff=cSVG">Sign up through the link and start building today.</a></strong></p>
+</td>
+</tr>
+</table>
 
 ## RN Cover Skill
 
@@ -73,6 +86,12 @@ cp -R skills/ra-人话 <project>/.claude/skills/ra-人话
 
 Skills marked `⬡` are from or adapted from external open-source projects — see the Source column and [Credits](#credits-and-adaptations) below.
 
+### Agent & Tool Invocation
+
+| Skill | Description | Source |
+|-------|-------------|--------|
+| [`grok-build-cli`](skills/grok-build-cli/) | Let Codex invoke the local Grok Build CLI: verify login and models, choose single-turn or agentic mode, monitor long calls, and return results reliably | Original |
+
 ### Topic & Planning
 
 | Skill | Description | Source |
@@ -81,6 +100,7 @@ Skills marked `⬡` are from or adapted from external open-source projects — s
 | [`ra-实操策划`](skills/ra-实操策划/) | Practical long-form planning: test prompts, timeline structure, on-camera script, screen-recording checklist | Original |
 | [`ra-hook`](skills/ra-hook/) | Short video hook selection: 7 types × 3 categories, with prerequisites, templates, and common mistakes | Original |
 | [`ra-video-title`](skills/ra-video-title/) | Video title generation: lock theme → analyze benchmarks → 8-12 two-part candidates + Top 3 picks | Original |
+| [`孙宇晨`](skills/孙宇晨/) (alias [`孙割`](skills/孙割/)) | Distills Justin Sun's public decision patterns into 6 modes — attention buying, narrative override, identity leverage, audience switching, replication+premium, money-as-solvent — to sandbox your own topic/publish/PR calls; analysis only, no roleplay | Original |
 
 ### Content Writing
 
@@ -134,6 +154,7 @@ Skills marked `⬡` are from or adapted from external open-source projects — s
 | [`skill-cover`](skills/skill-cover/) | Cover generation with registered styles and dual-ratio assets | Original |
 | [`editorial-dot-cover`](skills/editorial-dot-cover/) | Editorial dot-grid cover: warm gray paper + oversized Chinese title + whitespace + dotted vector icon → SVG + PNG | Original |
 | [`editorial-collage-motion`](skills/editorial-collage-motion/) | Halftone paper collage motion: decode reference → generate stills → assemble-from-empty animation | ⬡ Inspired by [Vikash Kumar / Arcads Collage Motion](https://buldrr.com/arcads-collage-motion-skill/), local free edition |
+| [`rn-niulai-style-image`](skills/rn-niulai-style-image/) | Rebuild photos or film stills in the observed rough inflatable-suit 3D grammar of 《牛来》. Default is film-3D; ink-poster mode is explicit only | Original |
 
 ### Article to Image
 
@@ -154,6 +175,7 @@ Skills marked `⬡` are from or adapted from external open-source projects — s
 |-------|-------------|--------|
 | [`rn-motion-director`](skills/rn-motion-director/) | Motion-first AI video director: topic → motion concept, visual metaphors, beat graph, anti-PPT QC | Original |
 | [`rn-motion-replica`](skills/rn-motion-replica/) | Reference motion study: builds original editable HyperFrames project from authorized reference + QC | Original |
+| [`rn-human-motion-extractor`](skills/rn-human-motion-extractor/) | Human-motion extraction: reference video → frame-level body/hand keypoints, anonymized skeleton video, and confidence QC | Original |
 | [`rn-dark-saas-video`](skills/rn-dark-saas-video/) | Dark cinematic SaaS product video: 8 scene blueprints, 3 timing presets | Original |
 | [`rn-bw-text-opener`](skills/rn-bw-text-opener/) | Black-white typed text opener with synced SFX, 3 timing presets, Python timing planner | Original |
 | [`rn-replica-qc`](skills/rn-replica-qc/) | Replica QA: 5 fidelity levels + asset/runtime/delivery full-frame gates | Original |
@@ -222,3 +244,7 @@ CC BY-NC 4.0 unless otherwise noted. See [LICENSE](LICENSE). Third-party compone
 ## Author
 
 雪踏乌云 · [@Pluvio9yte](https://x.com/Pluvio9yte)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Pluviobyte/rnskill&type=Date)](https://www.star-history.com/#Pluviobyte/rnskill&Date)

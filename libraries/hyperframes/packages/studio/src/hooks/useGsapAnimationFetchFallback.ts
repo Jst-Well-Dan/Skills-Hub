@@ -33,6 +33,12 @@ export type ElementAnimationsOutcome =
 export interface GsapAnimationFetchOptions {
   /** Refuse the edit when the parse endpoint is unavailable instead of treating it as no motion. */
   failOnFetchError?: boolean;
+  /** Ignore an overlapping pre-write parse and read the source after a durable write. */
+  fresh?: boolean;
+}
+
+export function gsapSourceFileForSelection(selection: DomEditSelection): string {
+  return selection.sourceFile || "index.html";
 }
 
 /**
@@ -56,11 +62,13 @@ async function fetchElementAnimationsWithRetry(
   gsapSourceFile: string,
   target: { id: string | null; selector: string | null },
   failOnFetchError: boolean,
+  fresh: boolean,
 ): Promise<GsapAnimation[]> {
   let coldAttempts = 0;
   let errorAttempts = 0;
   for (;;) {
-    const parsed = await fetchParsedAnimations(projectId, gsapSourceFile);
+    const parsed = await fetchParsedAnimations(projectId, gsapSourceFile, { fresh });
+    fresh = false;
     const outcome = selectElementAnimationsOrRetry(parsed, target);
     if (outcome.kind === "resolved") return outcome.animations;
     if (outcome.kind === "fetch-error") {
@@ -78,7 +86,7 @@ async function fetchElementAnimationsWithRetry(
   }
 }
 
-export function useGsapAnimationFetchFallback(projectId: string | null, gsapSourceFile: string) {
+export function useGsapAnimationFetchFallback(projectId: string | null) {
   return useCallback(
     (selection: DomEditSelection, options?: GsapAnimationFetchOptions) =>
       async (): Promise<GsapAnimation[]> => {
@@ -86,11 +94,12 @@ export function useGsapAnimationFetchFallback(projectId: string | null, gsapSour
         const target = { id: selection.id ?? null, selector: selection.selector ?? null };
         return fetchElementAnimationsWithRetry(
           projectId,
-          gsapSourceFile,
+          gsapSourceFileForSelection(selection),
           target,
           options?.failOnFetchError === true,
+          options?.fresh === true,
         );
       },
-    [projectId, gsapSourceFile],
+    [projectId],
   );
 }

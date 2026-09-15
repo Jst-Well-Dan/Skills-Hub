@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { CliUsageError } from "../../utils/commandResult.js";
@@ -37,6 +37,42 @@ describe("createRenderPlan", () => {
     expect(Object.isFrozen(plan.environment)).toBe(true);
   });
 
+  // The catalog join reaches the render event through the plan, so a plan that
+  // silently drops it would leave every render reporting no catalog items.
+  it("resolves catalog usage from the project manifest and the render entry", () => {
+    writeFileSync(
+      join(projectDir, "index.html"),
+      '<main data-composition-id="main" data-width="1920" data-height="1080" data-fps="24">' +
+        '<div data-composition-src="compositions/kept.html" data-duration="2"></div></main>',
+    );
+    mkdirSync(join(projectDir, "compositions"), { recursive: true });
+    // `<template>`-wrapped, as sub-compositions are actually authored: template
+    // content is inert, so a DOM scan of these files would find nothing.
+    for (const name of ["kept", "dropped"]) {
+      writeFileSync(
+        join(projectDir, "compositions", `${name}.html`),
+        `<template id="${name}-template"><div data-composition-id="${name}" data-width="1920" data-height="1080"></div></template>`,
+      );
+    }
+    writeFileSync(
+      join(projectDir, "hyperframes.json"),
+      JSON.stringify({
+        registry: "https://example.test",
+        registryItems: [
+          { name: "kept", type: "hyperframes:block", target: "compositions/kept.html" },
+          { name: "dropped", type: "hyperframes:block", target: "compositions/dropped.html" },
+        ],
+      }),
+    );
+
+    const plan = createRenderPlan({ dir: projectDir, output: "result.mp4" });
+    expect(plan.catalogUsage).toEqual({
+      installed: ["dropped", "kept"],
+      usedBlocks: ["kept"],
+      manifestUnreadable: false,
+    });
+  });
+
   it("preserves an explicit strict-readiness opt-in", () => {
     const plan = createRenderPlan({ dir: projectDir, "best-effort": false });
     expect(plan.bestEffort).toBe(false);
@@ -51,6 +87,53 @@ describe("createRenderPlan", () => {
 
   it("classifies malformed command input as a usage error", () => {
     expect(() => createRenderPlan({ dir: projectDir, quality: "maximum" })).toThrow(CliUsageError);
+  });
+
+  it("maps looks to standard encode with CRF 16, and delivery to high", () => {
+    expect(createRenderPlan({ dir: projectDir, quality: "looks" })).toMatchObject({
+      quality: "standard",
+      crf: 16,
+    });
+    expect(createRenderPlan({ dir: projectDir, quality: "delivery" })).toMatchObject({
+      quality: "high",
+      crf: undefined,
+    });
+    expect(createRenderPlan({ dir: projectDir })).toMatchObject({ quality: "standard", crf: 16 });
+  });
+
+  it("does not inject looks CRF when --crf or MOV is already set", () => {
+    expect(createRenderPlan({ dir: projectDir, quality: "looks", crf: "20" }).crf).toBe(20);
+    expect(
+      createRenderPlan({ dir: projectDir, format: "mov", quality: "looks" }).crf,
+    ).toBeUndefined();
+  });
+
+  it.each([
+    ["--crf", { crf: "18" }],
+    ["--video-bitrate", { "video-bitrate": "78M" }],
+  ])("rejects unsupported %s rate control for ProRes MOV", (flag, encoderArgs) => {
+    expect(() => createRenderPlan({ dir: projectDir, format: "mov", ...encoderArgs })).toThrow(
+      CliUsageError,
+    );
+    expect(vi.mocked(console.error).mock.calls.flat().join("\n")).toContain(flag);
+    expect(vi.mocked(console.error).mock.calls.flat().join("\n")).toContain(
+      "fixed alpha-preserving ProRes 4444",
+    );
+  });
+
+  it("keeps MOV quality tiers on the fixed alpha-preserving profile", () => {
+    const plan = createRenderPlan({ dir: projectDir, format: "mov", quality: "high" });
+
+    expect(plan).toMatchObject({ format: "mov", quality: "high" });
+    expect(plan.crf).toBeUndefined();
+    expect(plan.videoBitrate).toBeUndefined();
+  });
+
+  it("keeps MP4 and WebM rate controls available", () => {
+    expect(createRenderPlan({ dir: projectDir, format: "mp4", crf: "18" }).crf).toBe(18);
+    expect(
+      createRenderPlan({ dir: projectDir, format: "webm", "video-bitrate": "10M" }).videoBitrate,
+    ).toBe("10M");
   });
 
   it("rejects batch and single-render variables before execution", () => {

@@ -1,7 +1,17 @@
 // fallow-ignore-file code-duplication
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  ftruncateSync,
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+  writeSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { registerPreviewRoutes } from "./preview";
@@ -738,7 +748,14 @@ describe("hf-proxy negotiation and media codec map injection (U3)", () => {
       PROXY_PARAMS_VERSION: "v1",
       getProxyCachePath: () => "",
     }));
-    vi.doMock("../helpers/mediaCodecMap.js", () => ({
+    // Spread the real module first so the pre-warm gate (`shouldPrewarmProxy`
+    // and its codec table) is the production one — a hand-written copy of that
+    // rule would let the table and this suite drift apart. The explicit keys
+    // below still replace everything that would touch ffprobe or ffmpeg.
+    vi.doMock("../helpers/mediaCodecMap.js", async () => ({
+      ...(await vi.importActual<typeof import("../helpers/mediaCodecMap.js")>(
+        "../helpers/mediaCodecMap.js",
+      )),
       scanProjectMediaCodecMap: opts.scanMapImpl ?? (async () => ({})),
       createMediaCodecProbeCache: () => new Map(),
       probeAssetCodec:
@@ -851,6 +868,36 @@ describe("hf-proxy negotiation and media codec map injection (U3)", () => {
       expect(second.status).toBe(304);
       // The 304 shortcut never needs the proxy — no second transcode call.
       expect(resolveProxyMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("counts one proxy request per resolved proxy, not per HTTP request", async () => {
+      const projectDir = createProjectDir();
+      writeFileSync(join(projectDir, "clip.mp4"), "original-hevc-bytes");
+      const resolveProxyMock = vi.fn(async () => {
+        const proxyPath = join(projectDir, "proxy.mp4");
+        writeFileSync(proxyPath, "0123456789proxybytes");
+        return proxyPath;
+      });
+      const { registerPreviewRoutes: register } = await loadPreviewModule({
+        resolveProxyImpl: resolveProxyMock,
+      });
+      const { mediaProxyDemand } = await import("../helpers/mediaCodecMap.js");
+      const before = mediaProxyDemand().proxyRequests;
+
+      const app = new Hono();
+      register(app, createAdapter(projectDir));
+
+      const first = await app.request(
+        "http://localhost/projects/demo/preview/clip.mp4?hf-proxy=h264",
+      );
+      const etag = first.headers.get("ETag");
+      // A 304 revalidation is the same asset already served; counting it would
+      // put this on a different scale from `prewarmsRequested`.
+      await app.request("http://localhost/projects/demo/preview/clip.mp4?hf-proxy=h264", {
+        headers: { "If-None-Match": etag! },
+      });
+
+      expect(mediaProxyDemand().proxyRequests - before).toBe(1);
     });
 
     it("returns 404 without transcoding when the asset is missing", async () => {
@@ -1202,5 +1249,41 @@ describe("hf-proxy negotiation and media codec map injection (U3)", () => {
       expect(proxyRes.status).toBe(404);
       expect(resolveProxyMock).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("preview asset byte ranges", () => {
+  it("streams a slice of a media file too large to read whole", async () => {
+    // A sparse 3 GiB file costs no disk. readFileSync refuses anything over
+    // 2 GiB (ERR_FS_FILE_TOO_LARGE), so a route that buffers the whole file
+    // cannot serve a single byte of it; streaming the window must.
+    const projectDir = createProjectDir();
+    const size = 3 * 1024 * 1024 * 1024;
+    const fd = openSync(join(projectDir, "clip.mp4"), "w");
+    writeSync(fd, "WXYZ", 5_000_000);
+    ftruncateSync(fd, size);
+    closeSync(fd);
+
+    const app = new Hono();
+    registerPreviewRoutes(app, createAdapter(projectDir));
+    const res = await app.request("http://localhost/projects/demo/preview/clip.mp4", {
+      headers: { Range: "bytes=5000000-5000003" },
+    });
+    expect(res.status).toBe(206);
+    expect(res.headers.get("Content-Range")).toBe(`bytes 5000000-5000003/${size}`);
+    expect(res.headers.get("Content-Length")).toBe("4");
+    expect(await res.text()).toBe("WXYZ");
+  });
+
+  it("answers 416 for a range that starts past the end of the file", async () => {
+    const projectDir = createProjectDir();
+    writeFileSync(join(projectDir, "clip.mp4"), "abc");
+    const app = new Hono();
+    registerPreviewRoutes(app, createAdapter(projectDir));
+    const res = await app.request("http://localhost/projects/demo/preview/clip.mp4", {
+      headers: { Range: "bytes=99-200" },
+    });
+    expect(res.status).toBe(416);
+    expect(res.headers.get("Content-Range")).toBe("bytes */3");
   });
 });

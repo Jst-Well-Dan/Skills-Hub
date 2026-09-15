@@ -1,3 +1,5 @@
+import { LottieDiscovery } from "./lottieDiscovery.js";
+import { createCaptureDownloadBudget } from "./readBoundedResponse.js";
 /**
  * Website capture orchestrator.
  *
@@ -16,7 +18,15 @@ import { extractHtml } from "./htmlExtractor.js";
 // captureScreenshots removed — full-page screenshot replaces per-section shots
 import { extractTokens } from "./tokenExtractor.js";
 import { extractDesignStyles } from "./designStyleExtractor.js";
-import { downloadAssets, downloadAndRewriteFonts } from "./assetDownloader.js";
+import {
+  downloadAssets,
+  downloadAndRewriteFonts,
+  mergeDrops,
+  noDrops,
+  totalDrops,
+} from "./assetDownloader.js";
+import type { IconCandidate } from "./faviconRanker.js";
+import { CAPTURE_USER_AGENT } from "./userAgent.js";
 import { extractFontMetadata } from "./fontMetadataExtractor.js";
 import { normalizeErrorMessage } from "../utils/errorMessage.js";
 import { diag } from "../ui/diagnostics.js";
@@ -42,6 +52,14 @@ import {
 import type { VisionCaptionOutcome } from "./contentExtractor.js";
 import { loadEnvFile, generateProjectScaffold } from "./scaffolding.js";
 import { detectBlockedPage } from "./pageBlockDetection.js";
+import { writeResponseRecord } from "./responseRecord.js";
+import { navigateForCapture } from "./navigateForCapture.js";
+import {
+  captureProtocolTimeoutMs,
+  isDegradableEvaluateTimeoutError,
+  withRemainingBudget,
+} from "./captureTimeout.js";
+import { lazyScrollForCapture } from "./lazyScrollForCapture.js";
 import type { CaptureOptions, CapturePhase, CapturePhaseProgress, CaptureResult } from "./types.js";
 
 export type { CaptureOptions, CaptureResult } from "./types.js";
@@ -67,6 +85,7 @@ export async function captureWebsite(
     onPhase,
   } = opts;
 
+  const downloadByteBudget = createCaptureDownloadBudget();
   const warnings: string[] = [];
   const progress = (stage: string, detail?: string) => {
     onProgress?.(stage, detail);
@@ -122,6 +141,7 @@ export async function captureWebsite(
   const chromeBrowser = await puppeteer.default.launch({
     headless: true,
     executablePath: browser.executablePath,
+    protocolTimeout: captureProtocolTimeoutMs(timeout, budgetMs),
     args: [
       "--no-sandbox",
       "--disable-dev-shm-usage",
@@ -150,9 +170,7 @@ export async function captureWebsite(
 
     const page1 = await chromeBrowser.newPage();
     await page1.setViewport({ width: viewportWidth, height: viewportHeight });
-    await page1.setUserAgent(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    );
+    await page1.setUserAgent(CAPTURE_USER_AGENT);
 
     // Set up hooks BEFORE navigation
     await setupAnimationCapture(page1);
@@ -188,84 +206,90 @@ export async function captureWebsite(
 
     // Intercept network responses to detect Lottie JSON files
     const discoveredLotties: DiscoveredLottie[] = [];
+    const lottieDiscovery = new LottieDiscovery();
     // Layer 1 (passive video discovery): every direct-video URL the page fetches
     // over the whole session (load / scroll / carousel rotation), independent of
     // whether a <video> for it exists at snapshot time. captureVideoManifest
     // downloads these (guarded) and merges them into the manifest.
     const discoveredVideoUrls = new Set<string>();
     // fallow-ignore-next-line complexity
-    page1.on("response", async (response) => {
+    page1.on("response", (response) => {
       try {
         const responseUrl = response.url();
         if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(responseUrl)) {
           discoveredVideoUrls.add(responseUrl);
         }
-        const contentType = response.headers()["content-type"] || "";
-        const isJsonUrl = responseUrl.endsWith(".json");
-        const isLottieUrl = responseUrl.endsWith(".lottie");
-        const isJson =
-          contentType.includes("application/json") || contentType.includes("text/plain");
-
-        if (isLottieUrl) {
-          discoveredLotties.push({ url: responseUrl });
-          return;
-        }
-
-        if (isJsonUrl || isJson) {
-          // Check Content-Length before downloading to avoid OOM on huge responses
-          const cl = parseInt(response.headers()["content-length"] || "0", 10);
-          if (cl > 5_000_000) return;
-          const buffer = await response.buffer();
-          if (buffer.length < 100 || buffer.length > 5_000_000) return; // Skip tiny or huge
-          const text = buffer.toString("utf-8");
-          const json = JSON.parse(text);
-          // Validate Lottie structure: must have version, in/out points, layers, dimensions, framerate
-          if (
-            json &&
-            typeof json === "object" &&
-            ["v", "ip", "op", "layers", "w", "h", "fr"].every((k: string) => k in json)
-          ) {
-            discoveredLotties.push({
-              url: responseUrl,
-              data: json,
-              dimensions: { w: json.w, h: json.h },
-              frameRate: json.fr,
-            });
-          }
-        }
+        lottieDiscovery.collect(response);
       } catch {
         /* not JSON or parse error — skip */
       }
     });
 
-    // Use networkidle2 (allows 2 ongoing connections) instead of networkidle0 —
-    // modern SPAs often have persistent WebSocket/analytics connections that
-    // prevent networkidle0 from ever resolving.
-    const navigationResponse = await page1.goto(url, { waitUntil: "networkidle2", timeout });
+    const navigation = await navigateForCapture(page1, url, timeout);
+    const navigationResponse = navigation.response;
+    if (navigation.fellBackFromNetworkIdle) {
+      warnings.push(
+        `networkidle2 timed out after ${navigation.networkIdleTimeoutMs}ms; continued with domcontentloaded`,
+      );
+      progress(
+        "warn",
+        `networkidle2 timed out after ${navigation.networkIdleTimeoutMs}ms; continuing with domcontentloaded`,
+      );
+    }
     postNavigationDeadline = Date.now() + budgetMs;
     await new Promise((r) => setTimeout(r, settleTime));
 
-    // Check if the page loaded real content or an anti-bot challenge
-    // Combine structural evidence with the main response status/title. Low text
-    // alone stays non-fatal so image-led sites are not rejected.
-    const pageContentCheck = (await page1.evaluate(`(() => {
-      var text = (document.body.innerText || "").trim();
-      var title = document.title || "";
-      // Structural: Cloudflare Turnstile widget or challenge iframe
-      var hasCfTurnstile = !!document.querySelector('.cf-turnstile, [data-sitekey], iframe[src*="challenges.cloudflare.com"], #challenge-running, #challenge-form');
-      // Structural: page is almost empty (challenge pages have minimal DOM)
-      var bodyChildCount = document.body.children.length;
-      return { textLength: text.length, title: title, hasChallengeElement: hasCfTurnstile, bodyChildCount: bodyChildCount };
-    })()`)) as {
+    let pageContentCheck: {
       textLength: number;
       title: string;
       hasChallengeElement: boolean;
       bodyChildCount: number;
+    } = {
+      textLength: 0,
+      title: "",
+      hasChallengeElement: false,
+      bodyChildCount: Number.POSITIVE_INFINITY,
     };
+    let contentCheckTimedOut = false;
+    try {
+      pageContentCheck = (await withRemainingBudget(
+        page1.evaluate(`(() => {
+      var text = (document.body && document.body.innerText || "").trim();
+      var title = document.title || "";
+      var hasCfTurnstile = !!document.querySelector('.cf-turnstile, [data-sitekey], iframe[src*="challenges.cloudflare.com"], #challenge-running, #challenge-form');
+      var bodyChildCount = document.body ? document.body.children.length : 0;
+      return { textLength: text.length, title: title, hasChallengeElement: hasCfTurnstile, bodyChildCount: bodyChildCount };
+    })()`),
+        Math.min(5_000, remainingMs()),
+        "content-check",
+      )) as typeof pageContentCheck;
+    } catch (err) {
+      if (!isDegradableEvaluateTimeoutError(err)) {
+        throw err;
+      }
+      contentCheckTimedOut = true;
+      const message =
+        "post-navigation content check timed out; continuing with HTTP-status blocked-page detection only";
+      warnings.push(message);
+      progress("warn", message);
+    }
+
+    // Persisted before the blocked-page check, so a capture that reaches navigation always leaves
+    // a record of what the server said. That makes the file's ABSENCE mean "capture never got a
+    // response", which is a third state distinct from a status of 404 and from a status of null.
+    const httpStatus = navigationResponse?.status() ?? null;
+    writeResponseRecord(join(outputDir, "extracted"), { status: httpStatus });
 
     const blockedReason = detectBlockedPage({
-      httpStatus: navigationResponse?.status() ?? null,
-      ...pageContentCheck,
+      httpStatus,
+      ...(contentCheckTimedOut
+        ? {
+            title: "",
+            textLength: 0,
+            bodyChildCount: 0,
+            hasChallengeElement: false,
+          }
+        : pageContentCheck),
     });
     if (blockedReason) {
       phase("navigation", "degraded", "blocked");
@@ -275,7 +299,7 @@ export async function captureWebsite(
     phase("navigation", "completed");
     phase("core-extraction", "started");
 
-    if (pageContentCheck.textLength < 100) {
+    if (!contentCheckTimedOut && pageContentCheck.textLength < 100) {
       const reason =
         "Page has very little text content (" +
         pageContentCheck.textLength +
@@ -284,42 +308,18 @@ export async function captureWebsite(
       progress("warn", reason);
     }
 
-    // Scroll through page to trigger lazy-loaded images and Lottie animations
-    // Framer and other modern sites use IntersectionObserver — images only load
-    // when scrolled into view. We scroll the full page, then wait for all images
-    // to finish loading before proceeding.
     const lazyLoadBudgetMs = Math.min(15_000, remainingMs());
-    if (lazyLoadBudgetMs > 0) {
-      await page1.evaluate(`(async () => {
-      var lazyLoadDeadline = Date.now() + ${lazyLoadBudgetMs};
-      var h = document.body.scrollHeight;
-      for (var y = 0; y < h; y += window.innerHeight * 0.7) {
-        if (Date.now() >= lazyLoadDeadline) break;
-        window.scrollTo(0, y);
-        await new Promise(function(r) { setTimeout(r, 400); });
-      }
-      // Scroll to very bottom to catch footer lazy-loads
-      if (Date.now() < lazyLoadDeadline) {
-        window.scrollTo(0, document.body.scrollHeight);
-        await new Promise(function(r) { setTimeout(r, Math.min(800, Math.max(0, lazyLoadDeadline - Date.now()))); });
-      }
-      // Wait for all images to finish loading
-      var imgs = Array.from(document.querySelectorAll('img'));
-      var pending = imgs.filter(function(img) { return !img.complete; });
-      var imageWaitMs = Math.min(5000, Math.max(0, lazyLoadDeadline - Date.now()));
-      if (pending.length > 0 && imageWaitMs > 0) {
-        await Promise.race([
-          Promise.all(pending.map(function(img) {
-            return new Promise(function(r) { img.onload = r; img.onerror = r; });
-          })),
-          new Promise(function(r) { setTimeout(r, imageWaitMs); })
-        ]);
-      }
-      window.scrollTo(0, 0);
-    })()`);
+    const lazyScroll = await lazyScrollForCapture(page1, lazyLoadBudgetMs, {
+      onWarning: (message) => {
+        warnings.push(message);
+        progress("warn", message);
+      },
+    });
+    if (lazyScroll.timedOut && !lazyScroll.degraded) {
+      const message = `lazy-scroll stopped after ${lazyScroll.steps} steps (budget ${lazyLoadBudgetMs}ms)`;
+      warnings.push(message);
+      progress("warn", message);
     }
-
-    await page1.evaluate(`window.scrollTo(0, 0)`);
     await new Promise((r) => setTimeout(r, 300));
 
     // Save discovered Lottie animations
@@ -353,10 +353,16 @@ export async function captureWebsite(
       /* DOM scan failed — non-critical */
     }
 
+    for (const found of await lottieDiscovery.run(downloadByteBudget, remainingMs)) {
+      const existing = discoveredLotties.findIndex((item) => item.url === found.url);
+      if (existing < 0) discoveredLotties.push(found);
+      else discoveredLotties[existing] = found;
+    }
+
     if (discoveredLotties.length > 0 && remainingMs() > 0) {
       const lottieDir = join(outputDir, "assets", "lottie");
       mkdirSync(lottieDir, { recursive: true });
-      const lottieBudget = { remainingMs };
+      const lottieBudget = { remainingMs, byteBudget: downloadByteBudget };
       const savedCount = await saveLottieAnimations(discoveredLotties, lottieDir, lottieBudget);
       // Generate manifest + preview thumbnails so the agent can SEE what each animation is
       if (savedCount > 0 && remainingMs() > 0) {
@@ -426,15 +432,47 @@ export async function captureWebsite(
       warnings.push(`Design style extraction failed: ${errMsg}`);
     }
 
-    // Collect animation catalog
     progress("animations", "Cataloging animations...");
-    animationCatalog = await collectAnimationCatalog(page1, cdpAnims, cdp);
+    try {
+      const animationOutcome = await collectAnimationCatalog(page1, cdpAnims, cdp, {
+        scrollBudgetMs: Math.min(8_000, remainingMs()),
+        evaluateBudgetMs: Math.min(15_000, remainingMs()),
+      });
+      animationCatalog = animationOutcome.catalog;
+      if (animationOutcome.timedOut) {
+        const message =
+          "animation catalog evaluate timed out; continuing without animation catalog";
+        warnings.push(message);
+        progress("warn", message);
+      }
+    } catch (err) {
+      if (!isDegradableEvaluateTimeoutError(err)) {
+        throw err;
+      }
+      const message = "animation catalog evaluate timed out; continuing without animation catalog";
+      warnings.push(message);
+      progress("warn", message);
+      try {
+        await cdp.send("Animation.disable");
+      } catch {
+        /* ignore */
+      }
+    }
 
-    // Capture scroll-position viewport screenshots
     progress("screenshots", "Capturing scroll screenshots...");
     const { captureScrollScreenshots } = await import("./screenshotCapture.js");
-    const screenshots = await captureScrollScreenshots(page1, outputDir, { remainingMs });
-    progress("screenshots", `${screenshots.length} scroll screenshots captured`);
+    let screenshots: string[] = [];
+    try {
+      screenshots = await captureScrollScreenshots(page1, outputDir, { remainingMs });
+      progress("screenshots", `${screenshots.length} scroll screenshots captured`);
+    } catch (err) {
+      if (!isDegradableEvaluateTimeoutError(err)) {
+        throw err;
+      }
+      const message = "scroll screenshots timed out; continuing without screenshots";
+      warnings.push(message);
+      progress("warn", message);
+    }
 
     // Catalog all assets (must run before extractHtml which converts img src to data URLs)
     progress("design", "Cataloging assets...");
@@ -522,32 +560,42 @@ export async function captureWebsite(
     const visibleTextContent = await extractVisibleText(page1);
 
     // Extract favicon links before closing page (removed from tokens to reduce noise)
+    // `sizes` and `type` are the only evidence of icon quality: page.html on disk does not
+    // keep the <link> tags, and the bytes are only fetched for the candidate that wins, so
+    // dropping these attributes here makes the choice unrecoverable downstream.
     const faviconLinks = (await page1.evaluate(`(() => {
       var iconEls = Array.from(document.querySelectorAll('link[rel*="icon"], link[rel="apple-touch-icon"]'));
-      return iconEls.map(function(l) { return { rel: l.rel, href: l.href }; });
-    })()`)) as Array<{ rel: string; href: string }>;
+      return iconEls.map(function(l) {
+        return {
+          rel: l.rel,
+          href: l.href,
+          sizes: l.getAttribute('sizes'),
+          type: l.getAttribute('type'),
+        };
+      });
+    })()`)) as IconCandidate[];
 
     await page1.close();
 
     phase("core-extraction", "completed");
 
-    // Download fonts and rewrite URLs to local paths
-    if (remainingMs() > 0) {
-      phase("fonts", "started");
-      extracted.headHtml = await downloadAndRewriteFonts(extracted.headHtml, outputDir, {
-        remainingMs,
-      });
-      phase(
-        "fonts",
-        remainingMs() > 0 ? "completed" : "degraded",
-        remainingMs() > 0 ? undefined : "budget-exhausted",
-      );
-    } else {
-      warnings.push(
-        "Capture budget exhausted before font downloads; extracted font tokens were preserved.",
-      );
-      phase("fonts", "degraded", "budget-exhausted");
-    }
+    // Download fonts and rewrite URLs to local paths.
+    //
+    // Called even with the budget already gone, which is the point: its own loop is the only
+    // thing that knows how many faces the page declared, so letting it run and record
+    // `budget-exhausted` for every one of them replaces a warning string that could only ever
+    // say "some". A zero budget means it breaks on the first url, so this costs no network.
+    phase("fonts", "started");
+    const fontPass = await downloadAndRewriteFonts(extracted.headHtml, outputDir, {
+      remainingMs,
+      byteBudget: downloadByteBudget,
+    });
+    extracted.headHtml = fontPass.css;
+    phase(
+      "fonts",
+      remainingMs() > 0 ? "completed" : "degraded",
+      remainingMs() > 0 ? undefined : "budget-exhausted",
+    );
 
     // Identify each downloaded font by reading its OpenType name table.
     // Modern frameworks hash font filenames; this manifest tells the
@@ -604,24 +652,48 @@ export async function captureWebsite(
 
     // Download assets — single pass using the catalog for best image quality
     let assets: CaptureResult["assets"] = [];
+    let assetDrops = noDrops();
     if (!skipAssets) {
-      if (remainingMs() > 0) {
-        phase("assets", "started");
-        progress("assets", "Downloading assets...");
-        assets = await downloadAssets(tokens, outputDir, catalogedAssets, faviconLinks, {
-          remainingMs,
-        });
-        phase(
-          "assets",
-          remainingMs() > 0 ? "completed" : "degraded",
-          remainingMs() > 0 ? undefined : "budget-exhausted",
-        );
-      } else {
-        warnings.push("Capture budget exhausted before asset downloads; extraction continued.");
-        phase("assets", "degraded", "budget-exhausted");
-      }
+      // Called even with the budget already gone, for the reason the font pass is: the loop that
+      // skips an asset is the only thing that can say how many it skipped.
+      phase("assets", "started");
+      progress("assets", "Downloading assets...");
+      const assetPass = await downloadAssets(tokens, outputDir, catalogedAssets, faviconLinks, {
+        remainingMs,
+        byteBudget: downloadByteBudget,
+      });
+      assets = assetPass.assets;
+      assetDrops = assetPass.drops;
+      // Which icons the site declared, what each one is, and why one became favicon.<ext>.
+      // The brand-kit consumer needs the shape to decide which tile an icon belongs in; the
+      // reason is what stops a substituted headline from being silent again.
+      writeFileSync(
+        join(outputDir, "extracted", "icons-manifest.json"),
+        JSON.stringify(assetPass.icons, null, 2),
+        "utf-8",
+      );
+      phase(
+        "assets",
+        remainingMs() > 0 ? "completed" : "degraded",
+        remainingMs() > 0 ? undefined : "budget-exhausted",
+      );
     } else {
       phase("assets", "degraded", "disabled");
+    }
+    // One capture-wide tally, summed from the two passes that own the drops. The warning is
+    // DERIVED from it rather than written alongside it, so the prose and the number cannot
+    // disagree the way two separately-authored budget strings could.
+    const dropped = mergeDrops(fontPass.drops, assetDrops);
+    const droppedTotal = totalDrops(dropped);
+    if (droppedTotal > 0) {
+      const breakdown = Object.entries(dropped)
+        .filter(([, n]) => n > 0)
+        .map(([reason, n]) => `${n} ${reason}`)
+        .join(", ");
+      warnings.push(
+        `${droppedTotal} referenced asset(s) are not in this capture (${breakdown}). ` +
+          "A thin capture with no drops is a thin page; this one was truncated.",
+      );
     }
 
     // Join in-section media URLs → downloaded local paths, then re-write
@@ -710,15 +782,21 @@ export async function captureWebsite(
       const lines = generateAssetDescriptions(outputDir, tokens, catalogedAssets, geminiCaptions);
 
       if (lines.length > 0) {
+        // Mirrors the provider gate in contentExtractor: Vertex needs a project AND a service
+        // account, and is the configuration a server deployment actually has. Without it here the
+        // header claimed "GEMINI_API_KEY not set — descriptions are catalog-derived" on a capture
+        // whose captions Vertex had just generated, and that header is read downstream.
         const hasVisionKey = !!(
           !skipVision &&
           (process.env.OPENROUTER_API_KEY ||
             process.env.GEMINI_API_KEY ||
-            process.env.GOOGLE_API_KEY)
+            process.env.GOOGLE_API_KEY ||
+            (process.env.HYPERFRAMES_VERTEX_PROJECT_ID &&
+              process.env.HYPERFRAMES_VERTEX_SERVICE_ACCOUNT))
         );
         const header = hasVisionKey
           ? "# Asset Descriptions\n\nOne line per file. Read this instead of opening every image individually.\n\nTo find a specific brand or icon, **grep this file for the brand name in the description text** (e.g. `grep -i 'autodesk' asset-descriptions.md`). The Gemini Vision captions identify what's actually in each file — that's the agent's selector.\n\nThe `logo-<hash>.svg` filename prefix is a cheap structural hint (DOM said this SVG was inside a `<header>`, home-link `<a>`, or had an aria-label matching the page brand). It is NOT a content claim — many `logo-*` files are nav icons or decorative shapes. Trust the captions, not the filename prefix.\n\n"
-          : "# Asset Descriptions\n\n⚠️  GEMINI_API_KEY not set — descriptions below are catalog-derived (alt text, headings, section context, filename) instead of Vision-generated. To get richer Vision descriptions on the next capture, set GEMINI_API_KEY (or GOOGLE_API_KEY) and re-run.\n\nThe `logo-<hash>.svg` filename prefix is a structural hint (DOM said this SVG was inside a `<header>`, home-link `<a>`, or had an aria-label matching the page brand). To pick the actual brand logo without Vision, open the `logo-*` candidates in a previewer or rasterize them with `sharp` before referencing — composing a fake logo ships off-brand in the final video.\n\n";
+          : "# Asset Descriptions\n\n⚠️  No vision credentials — descriptions below are catalog-derived (alt text, headings, section context, filename) instead of Vision-generated. To get richer Vision descriptions on the next capture, set GEMINI_API_KEY (or GOOGLE_API_KEY), or HYPERFRAMES_VERTEX_PROJECT_ID plus HYPERFRAMES_VERTEX_SERVICE_ACCOUNT for Vertex service-account auth, and re-run.\n\nThe `logo-<hash>.svg` filename prefix is a structural hint (DOM said this SVG was inside a `<header>`, home-link `<a>`, or had an aria-label matching the page brand). To pick the actual brand logo without Vision, open the `logo-*` candidates in a previewer or rasterize them with `sharp` before referencing — composing a fake logo ships off-brand in the final video.\n\n";
         writeFileSync(
           join(outputDir, "extracted", "asset-descriptions.md"),
           header + lines.map((l) => "- " + l).join("\n") + "\n",
@@ -827,11 +905,13 @@ export async function captureWebsite(
       ok: true,
       projectDir: outputDir,
       url,
+      httpStatus,
       title: tokens.title,
       extracted,
       screenshots,
       tokens,
       assets,
+      dropped,
       animationCatalog,
       warnings,
       lastPhase,

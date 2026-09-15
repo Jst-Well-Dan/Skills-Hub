@@ -58,7 +58,48 @@ const capturedOnReorderShadow: { fn: ((targets: string[]) => void) | undefined }
   fn: undefined,
 };
 const domEditSelectionRef: { current: DomEditSelection | null } = { current: null };
+const domEditGroupSelectionsRef: { current: DomEditSelection[] } = { current: [] };
+const groupSelectionSpy = vi.fn();
 const gsapCommitMutation = Object.assign(vi.fn(), { batch: vi.fn() });
+
+function createSessionParams(
+  overrides: Partial<UseDomEditSessionParams> = {},
+): UseDomEditSessionParams {
+  return {
+    projectId: "proj-1",
+    activeCompPath: "index.html",
+    compIdToSrc: new Map(),
+    captionEditMode: false,
+    compositionLoading: false,
+    previewIframeRef: { current: null },
+    timelineElements: [],
+    getTimelineSelectionSet: () => new Set(),
+    setSelectedTimelineElementId: vi.fn(),
+    setTimelineSelectionSet: vi.fn(),
+    setRightCollapsed: vi.fn(),
+    setRightPanelTab: vi.fn(),
+    showToast: vi.fn(),
+    refreshPreviewDocumentVersion: vi.fn(),
+    queueDomEditSave: async <T,>(save: () => Promise<T>) => save(),
+    readProjectFile: async () => "",
+    writeProjectFile: async () => {},
+    updateEditingFileContent: vi.fn(),
+    editHistory: { recordEdit: async () => {} },
+    fileTree: [],
+    importedFontAssetsRef: { current: [] },
+    projectDir: null,
+    projectIdRef: { current: "proj-1" },
+    previewIframe: null,
+    refreshKey: 0,
+    previewDocumentVersion: 0,
+    rightPanelTab: "design",
+    applyStudioManualEditsToPreviewRef: { current: async () => {} },
+    syncPreviewHotkeys: vi.fn(),
+    reloadPreview: vi.fn(),
+    setRefreshKey: vi.fn(),
+    ...overrides,
+  };
+}
 
 vi.mock("../utils/sdkResolverShadow", () => ({
   runResolverShadow: vi.fn(),
@@ -91,7 +132,7 @@ vi.mock("./useDomSelection", () => ({
     domEditHoverSelection: null,
     activeGroupElement: null,
     domEditSelectionRef,
-    domEditGroupSelectionsRef: { current: [] },
+    domEditGroupSelectionsRef,
     setActiveGroupElement: vi.fn(),
     applyDomSelection: vi.fn(),
     clearDomSelection: vi.fn(),
@@ -150,7 +191,7 @@ vi.mock("./useGsapScriptCommits", () => ({
 }));
 vi.mock("./useGroupCommits", () => ({
   useGroupCommits: () => ({
-    groupSelection: vi.fn(),
+    groupSelection: (...args: unknown[]) => groupSelectionSpy(...args),
     ungroupSelection: vi.fn(),
   }),
 }));
@@ -220,43 +261,16 @@ describe("onReorderShadow source filter", () => {
     const sdkSession = {} as unknown as Composition;
 
     function Probe() {
-      const params: UseDomEditSessionParams = {
-        projectId: "proj-1",
-        activeCompPath: "index.html",
-        isMasterView: false,
-        compIdToSrc: new Map(),
-        captionEditMode: false,
-        compositionLoading: false,
-        previewIframeRef: { current: null },
-        timelineElements: [],
-        setSelectedTimelineElementId: vi.fn(),
-        setRightCollapsed: vi.fn(),
-        setRightPanelTab: vi.fn(),
-        showToast: vi.fn(),
-        refreshPreviewDocumentVersion: vi.fn(),
+      const params = createSessionParams({
         queueDomEditSave: vi.fn(async <T,>(save: () => Promise<T>) => save()) as <T>(
           save: () => Promise<T>,
         ) => Promise<T>,
         readProjectFile,
         writeProjectFile: vi.fn(async () => {}),
-        updateEditingFileContent: vi.fn(),
-        domEditSaveTimestampRef: { current: 0 },
         editHistory: { recordEdit: vi.fn(async () => {}) },
-        fileTree: [],
-        importedFontAssetsRef: { current: [] },
-        projectDir: null,
-        projectIdRef: { current: "proj-1" },
-        previewIframe: null,
-        refreshKey: 0,
-        previewDocumentVersion: 0,
-        rightPanelTab: "design",
-        applyStudioManualEditsToPreviewRef: { current: async () => {} },
-        syncPreviewHistoryHotkey: vi.fn(),
-        reloadPreview: vi.fn(),
-        setRefreshKey: vi.fn(),
         sdkSession,
         forceReloadSdkSession: vi.fn(),
-      };
+      });
       useDomEditSession(params);
       return null;
     }
@@ -318,39 +332,7 @@ describe("bulk segment ease commits", () => {
       | undefined;
 
     function Probe() {
-      const params: UseDomEditSessionParams = {
-        projectId: "proj-1",
-        activeCompPath: "index.html",
-        isMasterView: false,
-        compIdToSrc: new Map(),
-        captionEditMode: false,
-        compositionLoading: false,
-        previewIframeRef: { current: null },
-        timelineElements: [],
-        setSelectedTimelineElementId: vi.fn(),
-        setRightCollapsed: vi.fn(),
-        setRightPanelTab: vi.fn(),
-        showToast: vi.fn(),
-        refreshPreviewDocumentVersion: vi.fn(),
-        queueDomEditSave: async <T,>(save: () => Promise<T>) => save(),
-        readProjectFile: async () => "",
-        writeProjectFile: async () => {},
-        updateEditingFileContent: vi.fn(),
-        domEditSaveTimestampRef: { current: 0 },
-        editHistory: { recordEdit: async () => {} },
-        fileTree: [],
-        importedFontAssetsRef: { current: [] },
-        projectDir: null,
-        projectIdRef: { current: "proj-1" },
-        previewIframe: null,
-        refreshKey: 0,
-        previewDocumentVersion: 0,
-        rightPanelTab: "design",
-        applyStudioManualEditsToPreviewRef: { current: async () => {} },
-        syncPreviewHistoryHotkey: vi.fn(),
-        reloadPreview: vi.fn(),
-        setRefreshKey: vi.fn(),
-      };
+      const params = createSessionParams();
       updateSegmentEase = useDomEditSession(params).handleUpdateSegmentEase;
       return null;
     }
@@ -424,5 +406,58 @@ describe("bulk segment ease commits", () => {
       domEditSelectionRef.current = null;
       act(() => root.unmount());
     }
+  });
+});
+
+// ── Grouping refuses audio ───────────────────────────────────────────────────
+//
+// A layout group is a positioned wrapper: it takes the members' bounding box,
+// rebases each child's left/top against it and adopts the topmost z-index. An
+// <audio> clip has no box — offsetWidth/Height are 0 — so this produced a 0x0
+// div with inline left/top on elements that are never laid out. Enforced here
+// rather than only by hiding the button, because the G shortcut routes through
+// the same handler and no hidden button can gate a keystroke.
+
+describe("handleGroupSelection with audio in the selection", () => {
+  const sel = (tag: string): DomEditSelection =>
+    ({
+      id: tag,
+      element: document.createElement(tag),
+      sourceFile: "index.html",
+    }) as unknown as DomEditSelection;
+
+  async function group(members: DomEditSelection[]) {
+    const { useDomEditSession } = await import("./useDomEditSession");
+    groupSelectionSpy.mockClear();
+    domEditGroupSelectionsRef.current = members;
+    const showToast = vi.fn();
+    const captured: { fn?: () => void } = {};
+    function Probe() {
+      captured.fn = useDomEditSession(createSessionParams({ showToast })).handleGroupSelection;
+      return null;
+    }
+    const root = createRoot(document.createElement("div"));
+    act(() => root.render(<Probe />));
+    act(() => captured.fn?.());
+    act(() => root.unmount());
+    domEditGroupSelectionsRef.current = [];
+    return { showToast };
+  }
+
+  it("refuses a selection of audio clips, and says where grouping audio lives", async () => {
+    const { showToast } = await group([sel("audio"), sel("audio")]);
+    expect(groupSelectionSpy).not.toHaveBeenCalled();
+    expect(String(showToast.mock.calls[0]?.[0])).toContain("bus");
+  });
+
+  it("refuses a mixed selection, since the wrapper would take the audio in too", async () => {
+    const { showToast } = await group([sel("div"), sel("audio")]);
+    expect(groupSelectionSpy).not.toHaveBeenCalled();
+    expect(String(showToast.mock.calls[0]?.[0])).toContain("layout");
+  });
+
+  it("still groups a selection of layout elements", async () => {
+    await group([sel("div"), sel("span")]);
+    expect(groupSelectionSpy).toHaveBeenCalledTimes(1);
   });
 });

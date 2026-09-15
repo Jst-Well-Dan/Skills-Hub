@@ -1,6 +1,6 @@
 {
   "name": "@hyperframes/studio",
-  "version": "0.7.94",
+  "version": "0.8.40",
   "description": "",
   "repository": {
     "type": "git",
@@ -45,10 +45,11 @@
     "types": "./dist/index.d.ts"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "bun --bun ./node_modules/.bin/vite --host 127.0.0.1",
     "build": "vite build && tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:webmcp-edit-loop": "node tests/e2e/webmcp-edit-loop.mjs",
     "test:timeline-virtualization": "TIMELINE_ROW_VIRTUALIZATION=on TIMELINE_ELEMENT_COUNT=50000 node tests/e2e/timeline-virtualization.mjs",
     "test:watch": "vitest",
     "report:sdk-cutover": "bun src/utils/sdkCutoverPolicy.report.ts",
@@ -71,6 +72,7 @@
     "@hyperframes/player": "workspace:*",
     "@hyperframes/sdk": "workspace:*",
     "@hyperframes/studio-server": "workspace:*",
+    "@mcp-b/global": "^5.0.1",
     "@phosphor-icons/react": "^2.1.10",
     "@tanstack/react-virtual": "^3.14.6",
     "bpm-detective": "^2.0.5",
@@ -85,6 +87,7 @@
     "@types/react-dom": "19",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.0",
+    "chokidar": "^4.0.3",
     "fake-indexeddb": "^6.2.5",
     "postcss": "^8.4.0",
     "puppeteer-core": "^25.2.1",
@@ -92,7 +95,7 @@
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vite": "^6.4.2",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.11",
     "zustand": "^5.0.0"
   },
   "peerDependencies": {

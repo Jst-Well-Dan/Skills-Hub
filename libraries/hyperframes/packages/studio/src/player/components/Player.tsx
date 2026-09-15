@@ -1,11 +1,26 @@
+import { buildProjectApiPath } from "../../utils/projectRouting";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { isLottieAnimationLoaded } from "@hyperframes/core/runtime/lottie-readiness";
 import { useMountEffect } from "../../hooks/useMountEffect";
 import { applyPreviewVariablesToUrl } from "../../hooks/previewVariablesStore";
 import { HyperframesLoader } from "../../components/ui";
-// NOTE: importing "@hyperframes/player" registers a class extending HTMLElement
-// at module load, which throws under SSR. Defer the import to the mount effect
-// so it only runs in the browser.
+// Importing "@hyperframes/player" registers a class extending HTMLElement at
+// module load, which throws under SSR, hence the dynamic import behind a
+// `typeof window` guard. Kicking it here rather than in the mount effect puts
+// the chunk request in flight before the shell's first layout. Clearing the memo
+// on rejection stops one failure poisoning every later mount; the browser's
+// module map still caches a failed fetch, so recovery is a page reload.
+let playerModule: Promise<unknown> | null = null;
+
+export function loadPlayerModule(): Promise<unknown> {
+  playerModule ??= import("@hyperframes/player").catch((err: unknown) => {
+    playerModule = null;
+    throw err;
+  });
+  return playerModule;
+}
+
+if (typeof window !== "undefined") void loadPlayerModule().catch(() => {});
 
 interface PlayerProps {
   projectId?: string;
@@ -135,6 +150,7 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
     const [assetsLoading, setAssetsLoading] = useState(false);
     const [assetOverlayVisible, setAssetOverlayVisible] = useState(false);
     const [assetOverlayFading, setAssetOverlayFading] = useState(false);
+    const [assetWaitLong, setAssetWaitLong] = useState(false);
     const [shaderTransitionLoading, setShaderTransitionLoading] = useState(false);
     const [compositionLoading, setCompositionLoading] = useState(true);
     const [compositionOverlayDeferred, setCompositionOverlayDeferred] = useState(true);
@@ -157,19 +173,19 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
       const container = containerRef.current;
       if (!container) return;
 
+      const previewSource =
+        directUrl || (projectId ? buildProjectApiPath(projectId, "/preview") : null);
+      if (!previewSource) return;
+
       let canceled = false;
       let cleanup: (() => void) | undefined;
 
-      // Dynamic import registers the custom element in the browser only.
-      import("@hyperframes/player").then(() => {
+      void loadPlayerModule().then(() => {
         if (canceled) return;
 
         // Create the web component imperatively to avoid JSX custom-element typing.
         const player = document.createElement("hyperframes-player") as HyperframesPlayerElement;
-        const srcUrl = new URL(
-          directUrl || `/api/projects/${projectId}/preview`,
-          window.location.origin,
-        );
+        const srcUrl = new URL(previewSource, window.location.origin);
         applyPreviewVariablesToUrl(srcUrl);
         const src = srcUrl.pathname + srcUrl.search;
         const retryPreview = () => {
@@ -236,6 +252,11 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
               attempts += 1;
               lastUnloaded = hasUnloadedAssets(iframe, lastUnloaded);
               if (!lastUnloaded || attempts > 100) {
+                if (lastUnloaded && attempts > 100) {
+                  console.debug(
+                    "[studio] asset readiness poll hit the 10s cap — continuing with unloaded assets",
+                  );
+                }
                 if (assetPollRef.current) clearInterval(assetPollRef.current);
                 assetPollRef.current = null;
                 setAssetsLoading(false);
@@ -295,7 +316,13 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
           player.removeEventListener("error", handleError);
           if (assetPollRef.current) clearInterval(assetPollRef.current);
           assetPollRef.current = null;
-          container.removeChild(player);
+          // `remove()` rather than `container.removeChild(player)`: by the time
+          // this cleanup runs the element may already be detached — React can
+          // re-render the container, a crossfade refresh can swap it, or a
+          // translation/extension can reparent it. `removeChild` then throws
+          // NotFoundError, which the error boundary turns into a full-screen
+          // "Something went wrong". `remove()` is a no-op when already detached.
+          player.remove();
           if (retryPreviewRef.current === retryPreview) retryPreviewRef.current = null;
           // Clear the forwarded ref only if it still points to THIS iframe.
           // During crossfade refreshes the retiring Player unmounts after the
@@ -320,6 +347,17 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
         cleanup?.();
       };
     });
+
+    // Surface a "Continue anyway" escape hatch once the asset wait drags on.
+    // eslint-disable-next-line no-restricted-syntax
+    useEffect(() => {
+      if (!assetsLoading) {
+        setAssetWaitLong(false);
+        return;
+      }
+      const timer = setTimeout(() => setAssetWaitLong(true), 3000);
+      return () => clearTimeout(timer);
+    }, [assetsLoading]);
 
     useEffect(() => {
       if (assetFadeRef.current) {
@@ -348,12 +386,20 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
       };
     }, [assetsLoading]);
 
+    const handleContinueAnyway = () => {
+      if (assetPollRef.current) {
+        clearInterval(assetPollRef.current);
+        assetPollRef.current = null;
+      }
+      setAssetsLoading(false);
+    };
+
     const showCompositionOverlay =
       !suppressLoadingOverlay &&
       !compositionOverlayDeferred &&
       shouldShowCompositionLoadingOverlay(compositionLoading);
     const showAssetOverlay =
-      assetOverlayVisible && !shaderTransitionLoading && !showCompositionOverlay;
+      assetOverlayVisible && !shaderTransitionLoading && !showCompositionOverlay && !previewError;
 
     useEffect(() => {
       onCompositionLoadingChange?.(showCompositionOverlay || showAssetOverlay);
@@ -390,17 +436,27 @@ export const Player = forwardRef<HTMLIFrameElement, PlayerProps>(
             style={{
               opacity: assetOverlayFading ? 0 : 1,
               pointerEvents: assetOverlayFading ? "none" : "auto",
-              transition: "opacity 240ms ease-out",
+              transition: "opacity 180ms ease-in",
             }}
             onDragStart={(event) => event.preventDefault()}
             onMouseDown={(event) => event.preventDefault()}
-            onPointerDown={(event) => event.preventDefault()}
           >
-            <HyperframesLoader
-              title="Preparing preview assets"
-              detail="Waiting for media and motion assets before playback starts."
-              size={56}
-            />
+            <div className="flex flex-col items-center gap-3">
+              <HyperframesLoader
+                title="Preparing preview assets"
+                detail="Waiting for media and motion assets before playback starts."
+                size={56}
+              />
+              {assetWaitLong && (
+                <button
+                  type="button"
+                  onClick={handleContinueAnyway}
+                  className="px-3 py-1.5 text-[11px] rounded-md border border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:bg-neutral-800 transition-colors"
+                >
+                  Continue anyway
+                </button>
+              )}
+            </div>
           </div>
         )}
         {previewError && (

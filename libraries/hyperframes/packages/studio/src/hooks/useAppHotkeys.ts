@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef } from "react";
+import { automationOwnsKey } from "./useAutomationSelectionKeyboard";
 import { usePlayerStore } from "../player";
 import type { TimelineElement } from "../player";
 import type { DomEditSelection } from "../components/editor/domEditing";
 import type { LeftSidebarHandle } from "../components/sidebar/LeftSidebar";
 import { STUDIO_MOTION_PATH } from "../components/editor/studioMotion";
+import { isTypingTarget } from "../utils/typingTarget";
 import { isEditableTarget } from "../utils/timelineDiscovery";
+import { useCaptionStore } from "../captions/store";
+import {
+  applyCaptionModelToIframe,
+  isCaptionPreviewVisible,
+} from "../captions/components/CaptionOverlayUtils";
 import { shouldIgnoreHistoryShortcut } from "../utils/studioHelpers";
 import { canSplitElement } from "../utils/timelineElementSplit";
 import { trackStudioEvent } from "../utils/studioTelemetry";
@@ -99,16 +106,18 @@ interface EditHistoryHandle {
 }
 
 interface UseAppHotkeysParams {
-  handleTimelineElementDelete: (element: TimelineElement) => Promise<void>;
+  handleTimelineElementsDelete: (elements: TimelineElement[]) => Promise<void>;
   handleTimelineElementSplit: (element: TimelineElement, splitTime: number) => Promise<void>;
-  handleDomEditElementDelete: (selection: DomEditSelection) => Promise<void>;
+  handleDomEditElementDelete: (
+    selection: DomEditSelection,
+    options?: { expandGroup?: boolean },
+  ) => Promise<void>;
   domEditSelectionRef: React.MutableRefObject<DomEditSelection | null>;
   clearDomSelectionRef: React.MutableRefObject<() => void>;
   editHistory: EditHistoryHandle;
   readOptionalProjectFile: (path: string) => Promise<string>;
   readProjectFile: (path: string) => Promise<string>;
   writeProjectFile: (path: string, content: string) => Promise<void>;
-  domEditSaveTimestampRef: React.MutableRefObject<number>;
   showToast: (message: string, tone?: "error" | "info") => void;
   syncHistoryPreviewAfterApply: (restore: {
     paths?: string[];
@@ -140,9 +149,12 @@ interface UseAppHotkeysParams {
 // ── Extracted keydown dispatch (pure function, no hooks) ──
 
 interface HotkeyCallbacks {
-  handleTimelineElementDelete: (element: TimelineElement) => Promise<void>;
+  handleTimelineElementsDelete: (elements: TimelineElement[]) => Promise<void>;
   handleTimelineElementSplit: (element: TimelineElement, splitTime: number) => Promise<void>;
-  handleDomEditElementDelete: (selection: DomEditSelection) => Promise<void>;
+  handleDomEditElementDelete: (
+    selection: DomEditSelection,
+    options?: { expandGroup?: boolean },
+  ) => Promise<void>;
   handleUndo: () => Promise<void>;
   handleRedo: () => Promise<void>;
   handleCopy: () => boolean;
@@ -158,7 +170,14 @@ interface HotkeyCallbacks {
   showToast: (message: string, tone?: "error" | "info") => void;
 }
 
-function dispatchModifierKey(event: KeyboardEvent, key: string, cb: HotkeyCallbacks): boolean {
+/** Exported for tests, like dispatchPlainKey below: lets the Cmd+C/Cmd+V
+ *  arbitration between an automation range and the clip clipboard be asserted
+ *  without standing up the whole hook. */
+export function dispatchModifierKey(
+  event: KeyboardEvent,
+  key: string,
+  cb: HotkeyCallbacks,
+): boolean {
   if (
     !shouldIgnoreHistoryShortcut(event.target) &&
     handleUndoRedoKey(
@@ -188,7 +207,7 @@ function dispatchModifierKey(event: KeyboardEvent, key: string, cb: HotkeyCallba
     return true;
   }
 
-  if (key === "g" && !event.altKey && !isEditableTarget(event.target)) {
+  if (key === "g" && !event.altKey && !isTypingTarget(event.target)) {
     event.preventDefault();
     if (event.shiftKey) cb.onUngroupSelection?.();
     else cb.onGroupSelection?.();
@@ -196,6 +215,14 @@ function dispatchModifierKey(event: KeyboardEvent, key: string, cb: HotkeyCallba
   }
 
   if (!event.shiftKey && !event.altKey && !isEditableTarget(event.target)) {
+    // An active automation range owns Cmd+C/Cmd+V, the same way it owns Delete
+    // below. This listener is on window/capture and runs before
+    // useAutomationSelectionKeyboard's document/capture handler, so without
+    // this the clip clipboard also claimed the key: Cmd+V duplicated the clip
+    // while the automation paste wrote the same file, and Cmd+C armed both
+    // clipboards and toasted "Copied clip". Return without preventDefault so
+    // the downstream handler still sees the key.
+    if (automationOwnsKey(event)) return true;
     if (key === "c") {
       if (cb.handleCopy()) {
         event.preventDefault();
@@ -222,7 +249,10 @@ function dispatchModifierKey(event: KeyboardEvent, key: string, cb: HotkeyCallba
 }
 
 // fallow-ignore-next-line complexity
-function dispatchPlainKey(event: KeyboardEvent, key: string, cb: HotkeyCallbacks): void {
+/** Exported for tests: the unmodified-key half of the dispatcher, so the
+ *  Delete arbitration between keyframes, an automation range and the clip can
+ *  be asserted without standing up the whole hook. */
+export function dispatchPlainKey(event: KeyboardEvent, key: string, cb: HotkeyCallbacks): void {
   if (key === "f" && !event.shiftKey && !event.altKey) {
     event.preventDefault();
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -288,6 +318,13 @@ function dispatchPlainKey(event: KeyboardEvent, key: string, cb: HotkeyCallbacks
       event.preventDefault();
       return;
     }
+    // An active automation range owns Delete: useAutomationSelectionKeyboard
+    // empties the range in place, pinning the anchors. Fall through WITHOUT
+    // preventDefault so that document-level handler still sees the key — this
+    // listener is on window/capture, so it runs first and everything below
+    // would otherwise win. Without this the press reaches the clip delete
+    // below and destroys the whole clip the lane belongs to.
+    if (usePlayerStore.getState().automationSelection) return;
     if (event.key === "Backspace") {
       const { selectedElementId, keyframeCache } = usePlayerStore.getState();
       if (selectedElementId && keyframeCache.has(selectedElementId) && cb.onResetKeyframes()) {
@@ -295,24 +332,29 @@ function dispatchPlainKey(event: KeyboardEvent, key: string, cb: HotkeyCallbacks
         return;
       }
     }
-    // Delete acts on the primary selection OR the marquee multi-selection —
-    // the delete handler expands a clip that is part of the multi-selection
-    // into an atomic delete of the whole selection (single undo).
-    const { selectedElementId, selectedElementIds, elements } = usePlayerStore.getState();
-    const selectionKeys = new Set(selectedElementIds);
-    if (selectedElementId) selectionKeys.add(selectedElementId);
-    if (selectionKeys.size > 0) {
-      const el = elements.find((e) => selectionKeys.has(e.key ?? e.id));
-      if (el) {
-        event.preventDefault();
-        void cb.handleTimelineElementDelete(el);
-        return;
-      }
-    }
+    // The canvas selection is what the user actually drew a marquee around, so
+    // it owns Delete whenever it holds something. The timeline mirror of that
+    // selection is derived and lossy — a member with no timeline row of its own
+    // is dropped from it — so deleting through the timeline removed the handful
+    // of clips it knew about and left every other selected element behind,
+    // still drawn as selected. The timeline path stays as the fallback for rows
+    // with no canvas node to select (audio, a comp that is not the active one).
     const domSel = cb.domEditSelectionRef.current;
     if (domSel) {
       event.preventDefault();
-      void cb.handleDomEditElementDelete(domSel);
+      // The whole marquee group, not just the primary the ref holds.
+      void cb.handleDomEditElementDelete(domSel, { expandGroup: true });
+      return;
+    }
+    // Takes the WHOLE selection: `find` returned the first match, so selecting
+    // every clip and pressing Delete removed exactly one of them.
+    const { selectedElementId, selectedElementIds, elements } = usePlayerStore.getState();
+    const selectionKeys = new Set(selectedElementIds);
+    if (selectedElementId) selectionKeys.add(selectedElementId);
+    const selected = elements.filter((e) => selectionKeys.has(e.key ?? e.id));
+    if (selected.length > 0) {
+      event.preventDefault();
+      void cb.handleTimelineElementsDelete(selected);
     }
     return;
   }
@@ -326,7 +368,7 @@ function dispatchPlainKey(event: KeyboardEvent, key: string, cb: HotkeyCallbacks
 // ── Hook ──
 
 export function useAppHotkeys({
-  handleTimelineElementDelete,
+  handleTimelineElementsDelete,
   handleTimelineElementSplit,
   handleDomEditElementDelete,
   domEditSelectionRef,
@@ -334,7 +376,6 @@ export function useAppHotkeys({
   readOptionalProjectFile,
   readProjectFile,
   writeProjectFile,
-  domEditSaveTimestampRef,
   showToast,
   syncHistoryPreviewAfterApply,
   waitForPendingDomEditSaves,
@@ -351,7 +392,6 @@ export function useAppHotkeys({
   activeCompPath,
   forceReloadSdkSession,
 }: UseAppHotkeysParams) {
-  const previewHotkeyWindowRef = useRef<Window | null>(null);
   const previewHistoryCleanupRef = useRef<(() => void) | null>(null);
 
   // ── Undo / Redo ──
@@ -363,10 +403,9 @@ export function useAppHotkeys({
   );
   const writeHistoryFile = useCallback(
     async (path: string, content: string): Promise<void> => {
-      domEditSaveTimestampRef.current = Date.now();
       await writeProjectFile(path, content);
     },
-    [domEditSaveTimestampRef, writeProjectFile],
+    [writeProjectFile],
   );
   const serializeHistoryFiles = useCallback(
     <T>(paths: readonly string[], task: () => Promise<T>) =>
@@ -376,6 +415,23 @@ export function useAppHotkeys({
 
   const applyHistory = useCallback(
     async (direction: "undo" | "redo") => {
+      // Caption edits live in their own in-memory stack. While caption edit
+      // mode is active, ⌘Z must revert the caption edit — not an unrelated
+      // earlier file edit (which would ALSO leave the caption change intact).
+      const captionState = useCaptionStore.getState();
+      // Only when the caption preview is actually visible: isEditMode stays
+      // true while the preview is hidden (storyboard view), and eating ⌘Z
+      // there would pop invisible caption edits instead of file history.
+      if (captionState.isEditMode && isCaptionPreviewVisible()) {
+        const restored = direction === "undo" ? captionState.undo() : captionState.redo();
+        if (restored) {
+          applyCaptionModelToIframe(restored);
+          showToast(`${direction === "undo" ? "Undid" : "Redid"} caption edit`, "info");
+          return;
+        }
+        // Empty caption stack: fall through to beat/file history as usual.
+      }
+
       // Beat edits interleave with file history by timestamp; handle them first.
       if (tryApplyBeatHistory(direction, editHistory.state, showToast)) return;
 
@@ -396,9 +452,6 @@ export function useAppHotkeys({
         onAfterUndoRedo?.();
         // If the active composition was among the written files, force-reload
         // the SDK session so its in-memory doc matches the reverted content.
-        // writeHistoryFile sets domEditSaveTimestampRef which activates the
-        // 2 s suppress window — without this call the file-change event would
-        // be swallowed and the SDK session would stay on stale pre-undo content.
         if (activeCompPath && result.paths?.includes(activeCompPath)) {
           forceReloadSdkSession?.();
         }
@@ -427,7 +480,7 @@ export function useAppHotkeys({
 
   const cbRef = useRef<HotkeyCallbacks>(null!);
   cbRef.current = {
-    handleTimelineElementDelete,
+    handleTimelineElementsDelete,
     handleTimelineElementSplit,
     handleDomEditElementDelete,
     handleUndo,
@@ -454,7 +507,7 @@ export function useAppHotkeys({
       dispatchModifierKey(event, key, cb);
       return;
     }
-    if (!isEditableTarget(event.target)) dispatchPlainKey(event, key, cb);
+    if (!isTypingTarget(event.target)) dispatchPlainKey(event, key, cb);
   }, []);
 
   // eslint-disable-next-line no-restricted-syntax
@@ -465,33 +518,6 @@ export function useAppHotkeys({
 
   // ── Preview iframe forwarding ──
 
-  const syncPreviewTimelineHotkey = useCallback(
-    (iframe: HTMLIFrameElement | null) => {
-      const nextWindow = iframeContentWindow(iframe);
-      if (previewHotkeyWindowRef.current === nextWindow) return;
-      safeRemoveListener(
-        previewHotkeyWindowRef.current,
-        "keydown",
-        handleAppKeyDown as EventListener,
-      );
-      previewHotkeyWindowRef.current = nextWindow;
-      safeAddListener(nextWindow, "keydown", handleAppKeyDown as EventListener, true);
-    },
-    [handleAppKeyDown],
-  );
-
-  useEffect(
-    () => () => {
-      safeRemoveListener(
-        previewHotkeyWindowRef.current,
-        "keydown",
-        handleAppKeyDown as EventListener,
-      );
-      previewHotkeyWindowRef.current = null;
-    },
-    [handleAppKeyDown],
-  );
-
   const handleHistoryHotkey = useCallback((event: KeyboardEvent) => {
     if (!(event.metaKey || event.ctrlKey) || shouldIgnoreHistoryShortcut(event.target)) return;
     handleUndoRedoKey(
@@ -501,7 +527,18 @@ export function useAppHotkeys({
     );
   }, []);
 
-  const syncPreviewHistoryHotkey = useCallback(
+  /**
+   * Give the preview iframe the app's hotkeys, because a keypress lands in
+   * whichever document has focus and clicking the canvas puts focus in there.
+   *
+   * Must run on every iframe LOAD, not once when the element mounts: a reload
+   * keeps the same element (so no ref callback) and the same WindowProxy (so an
+   * identity check sees no change) while replacing the inner window that holds
+   * the listeners. Attaching once left Delete dead in the canvas after the first
+   * reload — press it with a selection and nothing happened, no toast, nothing
+   * to explain it — while undo/redo kept working because they re-attached here.
+   */
+  const syncPreviewHotkeys = useCallback(
     (iframe: HTMLIFrameElement | null) => {
       previewHistoryCleanupRef.current?.();
       previewHistoryCleanupRef.current = null;
@@ -514,14 +551,19 @@ export function useAppHotkeys({
       }
       if (!win && !doc) return;
       const handler = handleHistoryHotkey as EventListener;
+      const appHandler = handleAppKeyDown as EventListener;
       safeAddListener(win, "keydown", handler, true);
+      // Window only: the history pair also listens on the document, and a
+      // capture listener on both would run the app handler twice per press.
+      safeAddListener(win, "keydown", appHandler, true);
       doc?.addEventListener("keydown", handleHistoryHotkey, true);
       previewHistoryCleanupRef.current = () => {
         safeRemoveListener(win, "keydown", handler);
+        safeRemoveListener(win, "keydown", appHandler);
         doc?.removeEventListener("keydown", handleHistoryHotkey, true);
       };
     },
-    [handleHistoryHotkey],
+    [handleAppKeyDown, handleHistoryHotkey],
   );
 
   useEffect(
@@ -535,7 +577,6 @@ export function useAppHotkeys({
   return {
     handleUndo,
     handleRedo,
-    syncPreviewTimelineHotkey,
-    syncPreviewHistoryHotkey,
+    syncPreviewHotkeys,
   };
 }

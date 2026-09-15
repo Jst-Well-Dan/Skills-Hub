@@ -11,16 +11,27 @@ import type { Browser, Page } from "puppeteer-core";
 import { mkdirSync, writeFileSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 import { isPrivateUrl, safeFetch } from "./assetDownloader.js";
+import { CAPTURE_USER_AGENT } from "./userAgent.js";
+import { MAX_LOTTIE_BYTES, readLottieArchive, validLottieJson } from "./lottieValidation.js";
+import { guardLottiePreviewRequests, LOTTIE_RUNTIME_URL } from "./lottiePreviewRequests.js";
+import {
+  readBoundedResponse,
+  createCaptureDownloadBudget,
+  type DownloadByteBudget,
+} from "./readBoundedResponse.js";
 
 /** Discovered Lottie item from network interception or DOM scan. */
 export interface DiscoveredLottie {
   url: string;
   data?: unknown;
+  /** Internal discovery accounting: avoid charging the same buffered data twice. */
+  dataBudget?: DownloadByteBudget;
   dimensions?: { w: number; h: number };
   frameRate?: number;
 }
 
 interface RemainingBudget {
+  byteBudget?: DownloadByteBudget;
   remainingMs?: () => number;
 }
 
@@ -40,6 +51,7 @@ export async function saveLottieAnimations(
   lottieDir: string,
   budget: RemainingBudget = {},
 ): Promise<number> {
+  const byteBudget = budget.byteBudget ?? createCaptureDownloadBudget();
   let savedCount = 0;
   const savedHashes = new Set<string>(); // Deduplicate by content
 
@@ -52,45 +64,26 @@ export async function saveLottieAnimations(
       if (lottieItem.data) {
         // Already have the JSON data from network interception
         jsonData = JSON.stringify(lottieItem.data);
+        const size = Buffer.byteLength(jsonData);
+        if (size > MAX_LOTTIE_BYTES) continue;
+        if (lottieItem.dataBudget !== byteBudget) {
+          if (size > byteBudget.remainingBytes) continue;
+          byteBudget.remainingBytes -= size;
+        }
       } else if (lottieItem.url) {
         const requestTimeoutMs = Math.min(10_000, liveRemainingMs(budget, 10_000));
         if (requestTimeoutMs <= 0) break;
         // SSRF guard — safeFetch re-checks the denylist on every redirect hop
         const res = await safeFetch(lottieItem.url, {
           signal: AbortSignal.timeout(requestTimeoutMs),
-          headers: { "User-Agent": "HyperFrames/1.0" },
+          headers: { "User-Agent": CAPTURE_USER_AGENT },
         });
         if (!res || !res.ok) continue;
-        const buf = Buffer.from(await res.arrayBuffer());
-
-        if (lottieItem.url.endsWith(".lottie")) {
-          // dotLottie is a ZIP — extract the animation JSON
-          try {
-            const AdmZip = (await import("adm-zip")).default;
-            const zip = new AdmZip(buf);
-            const entries = zip.getEntries();
-            // Look for animation JSON in both v1 (animations/) and v2 (a/) paths
-            const animEntry = entries.find(
-              (e) =>
-                (e.entryName.startsWith("a/") || e.entryName.startsWith("animations/")) &&
-                e.entryName.endsWith(".json"),
-            );
-            if (animEntry) {
-              jsonData = animEntry.getData().toString("utf-8");
-            }
-          } catch {
-            // adm-zip not available or extraction failed — save raw .lottie
-            const hash = buf.toString("base64").slice(0, 100);
-            if (savedHashes.has(hash)) continue;
-            savedHashes.add(hash);
-            writeFileSync(join(lottieDir, `animation-${savedCount}.lottie`), buf);
-            savedCount++;
-            continue;
-          }
-        } else {
-          // Plain JSON file
-          jsonData = buf.toString("utf-8");
-        }
+        const buf = await readBoundedResponse(res, MAX_LOTTIE_BYTES, byteBudget);
+        if (!buf) continue;
+        jsonData = new URL(lottieItem.url).pathname.endsWith(".lottie")
+          ? (readLottieArchive(buf) ?? undefined)
+          : buf.toString("utf8");
       }
 
       if (jsonData) {
@@ -99,13 +92,7 @@ export async function saveLottieAnimations(
         if (savedHashes.has(hash)) continue;
         savedHashes.add(hash);
 
-        // Validate it's actually Lottie
-        try {
-          const parsed = JSON.parse(jsonData);
-          if (!parsed.layers || !parsed.w) continue;
-        } catch {
-          continue;
-        }
+        if (!validLottieJson(jsonData)) continue;
 
         writeFileSync(join(lottieDir, `animation-${savedCount}.json`), jsonData, "utf-8");
         savedCount++;
@@ -164,6 +151,7 @@ export async function renderLottiePreviews(
         if (liveRemainingMs(budget, 1) <= 0) break;
         previewPage = await chromeBrowser.newPage();
         if (liveRemainingMs(budget, 1) <= 0) break;
+        await guardLottiePreviewRequests(previewPage);
         await previewPage.setViewport({ width: 400, height: 400 });
         const animData = JSON.parse(readFileSync(join(lottieDir, file), "utf-8"));
         const midFrame = Math.floor(((raw.op || 0) - (raw.ip || 0)) * 0.3);
@@ -171,7 +159,7 @@ export async function renderLottiePreviews(
         await previewPage.setContent(
           `<!DOCTYPE html>
 <html><head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<script src="${LOTTIE_RUNTIME_URL}"></script>
 <style>*{margin:0;padding:0;background:transparent}#c{width:400px;height:400px}</style>
 </head><body><div id="c"></div></body></html>`,
           { waitUntil: "load", timeout: 10000 },
@@ -278,7 +266,7 @@ async function downloadVideoBody(
     // Location hop, so a public URL cannot 30x to an internal/metadata host.
     const res = await safeFetch(srcUrl, {
       signal: AbortSignal.timeout(timeoutMs), // bounded by both per-request and aggregate capture budgets
-      headers: { "User-Agent": "HyperFrames/1.0" },
+      headers: { "User-Agent": CAPTURE_USER_AGENT },
     });
     if (!res || !res.ok || !res.body) return null;
     const ct = (res.headers.get("content-type") || "").toLowerCase();

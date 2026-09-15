@@ -30,8 +30,8 @@ python scripts/generate_site.py
 
 Skills-Hub provides a lightweight local management backend and web interface:
 
-- **Start Admin**: Run `start-admin.bat` or `python scripts/admin_server.py --port 5173`.
-- **Admin UI**: Open `http://127.0.0.1:5174/index.html?admin=1`.
+- **Start Admin**: Run `python scripts/admin_server.py` (no args needed: auto-selects a free port and auto-opens the browser; `--port` / `--no-open` are optional overrides).
+- **Admin UI**: Auto-opened at `http://127.0.0.1:<port>/index.html?admin=1`. Single port serves both the static site and `/api/*` (frontend uses relative API paths).
 - **Capabilities**:
   - Visual category management (create, rename, reorder, delete categories).
   - Multi-select projects or skills and batch move them across categories.

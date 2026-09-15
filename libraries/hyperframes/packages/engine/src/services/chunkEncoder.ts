@@ -6,22 +6,32 @@
  * Supports CPU (libx264) and GPU encoding.
  */
 
-import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "fs";
 import { join, dirname, extname } from "path";
 import { DEFAULT_CONFIG, type EngineConfig } from "../config.js";
 import {
   type GpuEncoder,
   getCachedGpuEncoder,
   getGpuEncoderName,
+  buildVideoToolboxRateControlArgs,
   mapPresetForGpuEncoder,
 } from "../utils/gpuEncoder.js";
 import { type HdrTransfer, getHdrEncoderColorParams } from "../utils/hdr.js";
 import { withEvenDimensionPad } from "../utils/evenDimensions.js";
-import { formatFfmpegError, runFfmpeg } from "../utils/runFfmpeg.js";
+import { formatFfmpegError, isExternalFfmpegInterruption, runFfmpeg } from "../utils/runFfmpeg.js";
 import { extractAudioMetadata } from "../utils/ffprobe.js";
-import { type Fps, fpsToFfmpegArg } from "@hyperframes/core";
+import { type Fps, fpsToFfmpegArg, fpsToNumber } from "@hyperframes/core";
 import type { EncoderOptions, EncodeResult, MuxResult } from "./chunkEncoder.types.js";
 import { appendVp9CpuUsedArg } from "./vp9Options.js";
+import { appendRenderProvenanceArgs } from "../utils/renderProvenance.js";
 
 export type { EncoderOptions, EncodeResult, MuxResult } from "./chunkEncoder.types.js";
 
@@ -77,7 +87,13 @@ export interface MuxVideoWithAudioOptions extends Partial<
    * depend on the file extension alone.
    */
   audioCodec?: "aac";
-  /** Preserve a priming edit list known to have been created by AAC re-encoding. */
+  /**
+   * @deprecated No longer used. `-avoid_negative_ts` is never passed for
+   * mp4/mov muxing (ffmpeg's `auto` default already resolves to `disabled`
+   * for those containers), so the AAC priming edit list is preserved
+   * unconditionally and this flag has no effect. See issue #3487. Kept for
+   * source compatibility; it will be removed in a future major.
+   */
   preserveAudioPrimingEditList?: boolean;
   /** Hard cap copied audio to the already-encoded video's exact duration. */
 }
@@ -187,12 +203,15 @@ export function buildEncoderArgs(
           else args.push("-cq", String(quality));
           break;
         case "videotoolbox":
-          if (bitrate) args.push("-b:v", bitrate);
-          else {
-            const vtQuality = Math.max(0, Math.min(100, 100 - quality * 2));
-            args.push("-q:v", String(vtQuality));
-          }
-          args.push("-allow_sw", "1");
+          args.push(
+            ...buildVideoToolboxRateControlArgs({
+              bitrate,
+              width: options.width,
+              height: options.height,
+              fps: fpsToNumber(fps),
+              quality,
+            }),
+          );
           break;
         case "vaapi":
           args.unshift("-vaapi_device", "/dev/dri/renderD128");
@@ -361,6 +380,7 @@ export function buildEncoderArgs(
   } else if (codec === "prores") {
     args.push("-c:v", "prores_ks", "-profile:v", preset, "-vendor", "apl0");
     args.push("-pix_fmt", pixelFormat);
+    appendRenderProvenanceArgs(args, outputPath);
     return [...args, "-y", outputPath];
   }
 
@@ -445,6 +465,8 @@ export function buildEncoderArgs(
 
   args.push("-avoid_negative_ts", "make_zero");
 
+  appendRenderProvenanceArgs(args, outputPath);
+
   args.push("-y", outputPath);
   return args;
 }
@@ -508,6 +530,7 @@ export async function encodeFramesFromDir(
         result.terminationReason === "deadline",
         encodeTimeout,
       ),
+      failureReason: isExternalFfmpegInterruption(result) ? "external_interruption" : undefined,
     };
   }
   const fileSize = existsSync(outputPath) ? statSync(outputPath).size : 0;
@@ -545,8 +568,10 @@ export async function encodeFramesChunkedConcat(
   }
   const chunkSize = Math.max(30, Math.floor(chunkSizeFrames));
   const chunkCount = Math.ceil(files.length / chunkSize);
-  const chunkDir = join(dirname(outputPath), "chunk-encode");
-  if (!existsSync(chunkDir)) mkdirSync(chunkDir, { recursive: true });
+  mkdirSync(dirname(outputPath), { recursive: true });
+  // Keep intermediates under the caller-owned output directory for its existing
+  // cleanup/debug policy, but never reuse another invocation's chunk files.
+  const chunkDir = mkdtempSync(join(dirname(outputPath), "chunk-encode-"));
   const chunkPaths: string[] = [];
 
   for (let i = 0; i < chunkCount; i++) {
@@ -602,6 +627,9 @@ export async function encodeFramesChunkedConcat(
         framesEncoded: 0,
         fileSize: 0,
         error: chunkResult.error,
+        failureReason: isExternalFfmpegInterruption(processResult)
+          ? "external_interruption"
+          : undefined,
       };
     }
     chunkPaths.push(chunkPath);
@@ -611,18 +639,14 @@ export async function encodeFramesChunkedConcat(
   const concatInput = chunkPaths.map((path) => `file '${path.replace(/'/g, "'\\''")}'`).join("\n");
   writeFileSync(concatListPath, concatInput, "utf-8");
 
-  const concatArgs = [
-    "-f",
-    "concat",
-    "-safe",
-    "0",
-    "-i",
-    concatListPath,
-    "-c",
-    "copy",
-    "-y",
-    outputPath,
-  ];
+  const concatArgs = ["-f", "concat", "-safe", "0", "-i", concatListPath, "-c", "copy"];
+  // The concat demuxer does not carry per-chunk container metadata into the
+  // output, so the chunks' provenance is dropped here even though every chunk
+  // carries it. Re-assert on the concatenated file: for a no-audio mov/webm
+  // this is the last container write, since mux is skipped and applyFaststart
+  // only copies those two formats.
+  appendRenderProvenanceArgs(concatArgs, outputPath);
+  concatArgs.push("-y", outputPath);
   const encodeTimeout = config?.ffmpegEncodeTimeout ?? DEFAULT_CONFIG.ffmpegEncodeTimeout;
   const concatProcessResult = await runFfmpeg(concatArgs, { signal, timeout: encodeTimeout });
   const concatResult = {
@@ -644,6 +668,9 @@ export async function encodeFramesChunkedConcat(
       framesEncoded: 0,
       fileSize: 0,
       error: concatResult.error,
+      failureReason: isExternalFfmpegInterruption(concatProcessResult)
+        ? "external_interruption"
+        : undefined,
     };
   }
 
@@ -693,14 +720,22 @@ export async function muxVideoWithAudio(
       args.push("-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart");
     }
   }
-  const copiesContainerizedAac =
-    !isWebm && shouldCopyAudio && config?.preserveAudioPrimingEditList === true;
-  // PTS bases can diverge during mux and reintroduce negative DTS. See
-  // buildEncoderArgs for the full reasoning on why that breaks playback.
-  // A freshly encoded M4A is the exception: its edit list already hides the
-  // AAC priming packet. `make_zero` discards that edit and shifts copied video
-  // forward by one AAC frame (~21ms), creating a visible first-frame offset.
-  if (!copiesContainerizedAac) args.push("-avoid_negative_ts", "make_zero");
+  // No `-avoid_negative_ts` here, in any mode. ffmpeg's default is `auto`,
+  // which the mp4/mov muxers (AVFMT_TS_NEGATIVE) already resolve to
+  // `disabled` — the correct behavior for the containers this function
+  // writes. Passing `make_zero` explicitly overrides that default and, on the
+  // dominant audio-copy path, discards the AAC priming edit list the sidecar
+  // encode created: the video start_time shifts forward one AAC frame
+  // (~21ms) and the muxer writes an empty video edit at t=0, which
+  // edit-list-honoring players (QuickTime/Safari) show as a black first
+  // frame. See issue #3487. The video-only encoder args (buildEncoderArgs)
+  // still pass the flag deliberately — those chunks are consumed as raw
+  // elementary output, not as a delivered mp4/mov.
+  //
+  // Re-assert provenance here: this stage re-muxes into the delivered
+  // container, and the mp4 muxer drops the encode stage's tags without the
+  // use_metadata_tags flag that appendRenderProvenanceArgs adds.
+  appendRenderProvenanceArgs(args, outputPath);
   if (fps !== undefined) {
     // Set the exact output framerate so the muxer doesn't PTS-average a
     // fractional rational like `360000/12001` instead of `30/1` into the
@@ -725,6 +760,7 @@ export async function muxVideoWithAudio(
     outputPath,
     durationMs: result.durationMs,
     error: !result.success ? formatFfmpegError(result.exitCode, result.stderr) : undefined,
+    failureReason: result.failureReason,
   };
 }
 
@@ -742,6 +778,7 @@ export async function applyFaststart(
     return { success: true, outputPath, durationMs: 0 };
   }
   const args = ["-i", inputPath, "-c", "copy", "-movflags", "+faststart"];
+  appendRenderProvenanceArgs(args, outputPath);
   if (fps !== undefined) {
     // Set the exact output framerate so the final remux doesn't PTS-average
     // a fractional rational like `360000/12001` instead of `30/1` into the
@@ -766,5 +803,6 @@ export async function applyFaststart(
     outputPath,
     durationMs: result.durationMs,
     error: !result.success ? formatFfmpegError(result.exitCode, result.stderr) : undefined,
+    failureReason: result.failureReason,
   };
 }

@@ -78,6 +78,8 @@ const EXPECTED_NON_RETRYABLE_ERRORS = new Set([
   "PLAN_V2_INTEGRITY_UNRECOVERABLE",
   "VIDEO_SOURCE_UNRENDERABLE",
   "INVALID_VIDEO_METADATA",
+  "NOT_MEDIA_PAYLOAD",
+  "NotMediaPayloadError",
   "PlanV2IntegrityError",
   "PLAN_ARTIFACT_DIGEST_MISMATCH",
   "FORMAT_NOT_SUPPORTED_IN_DISTRIBUTED",
@@ -147,6 +149,18 @@ describe("HyperframesRenderStack — snapshot", () => {
     expect(definition.StartAt).toBe("SelectPlanProtocol");
     const actualStates = Object.keys(definition.States);
     expect(actualStates.sort()).toEqual([...EXPECTED_STATE_NAMES].sort());
+  });
+
+  it("defaults omitted plan protocol to v2 and preserves the explicit v1 branch", () => {
+    for (const definition of [SYNTHED.definition, readSamDefinition()]) {
+      const selection = requireRecord(
+        definition.States.SelectPlanProtocol,
+        "SelectPlanProtocol state",
+      );
+      expect(selection.Default).toBe("PlanV2");
+      expect(JSON.stringify(selection)).toContain('"StringEquals":"v1"');
+      expect(JSON.stringify(definition.States.Plan)).toContain('"PlanProtocol":"v1"');
+    }
   });
 
   it("preserves every typed non-retryable error name across the three Lambda tasks", () => {

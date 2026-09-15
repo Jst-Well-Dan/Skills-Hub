@@ -11,10 +11,12 @@ group_for() {
     rn-renhua)              echo "01-writing" ;;
     rn-motion-director)     echo "02-video-production" ;;
     rn-motion-replica)      echo "02-video-production" ;;
+    rn-human-motion-extractor) echo "02-video-production" ;;
     rn-dark-saas-video)     echo "02-video-production" ;;
     rn-bw-text-opener)      echo "02-video-production" ;;
     rn-replica-qc)          echo "03-quality-control" ;;
     rn-cover-skill)         echo "04-design" ;;
+    rn-niulai-style-image)  echo "05-image-generation" ;;
     *)                      echo "99-other" ;;
   esac
 }
@@ -66,6 +68,7 @@ Packed $COUNT skills. Drag individual ZIPs into Trae Solo or extract manually.
 - 02-video-production: 视频制作
 - 03-quality-control: 视频质检
 - 04-design: 视觉设计
+- 05-image-generation: 图片风格生成
 EOF
 
 (cd "$DIST" && zip -qr "../rnskill-${VERSION}.zip" .)

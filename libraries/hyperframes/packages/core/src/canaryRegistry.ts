@@ -80,15 +80,6 @@ export const CANARIES: readonly CanaryDefinition[] = [
     owner: "vance",
     sunsetAfter: "2026-09-15",
   },
-  // ── Real rollouts ────────────────────────────────────────────────────────
-  {
-    name: "de-parallel-router",
-    percentage: 0,
-    description:
-      "Route auto multi-worker renders to verified parallel drawElement streaming (HF_DE_PARALLEL_ROUTER). Ramp only alongside the per-install circuit breaker.",
-    owner: "vance",
-    sunsetAfter: "2026-10-01",
-  },
 ] as const;
 
 export function findCanary(name: string): CanaryDefinition | undefined {

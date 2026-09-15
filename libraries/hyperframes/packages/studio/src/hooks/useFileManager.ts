@@ -10,11 +10,7 @@ import {
   StudioFileConflictError,
   StudioSaveNetworkError,
 } from "../utils/studioSaveDiagnostics";
-import {
-  createStudioWriteToken,
-  markStudioWriteToken,
-  studioExpectedFileVersion,
-} from "../utils/studioFileVersion";
+import { studioExpectedFileVersion, studioWriteHeaders } from "../utils/studioFileVersion";
 import { useFileTree } from "./useFileTree";
 import { useEditorSave } from "./useEditorSave";
 
@@ -31,7 +27,6 @@ interface UseFileManagerOptions {
   projectId: string | null;
   showToast: (message: string, tone?: "error" | "info") => void;
   recordEdit: (input: RecordEditInput) => Promise<void>;
-  domEditSaveTimestampRef: React.MutableRefObject<number>;
   setRefreshKey: React.Dispatch<React.SetStateAction<number>>;
 }
 
@@ -41,7 +36,6 @@ export function useFileManager({
   projectId,
   showToast,
   recordEdit,
-  domEditSaveTimestampRef,
   setRefreshKey,
 }: UseFileManagerOptions) {
   // ── Shared refs ──
@@ -124,8 +118,6 @@ export function useFileManager({
       await retryStudioSave(async () => {
         // Each request gets its own receipt identity. If a committed request loses its response,
         // the retry can produce a second filesystem receipt that must be suppressed independently.
-        const writeToken = createStudioWriteToken();
-        markStudioWriteToken(writeToken);
         let response: Response;
         try {
           response = await fetch(
@@ -134,7 +126,7 @@ export function useFileManager({
               method: "PUT",
               headers: {
                 "Content-Type": "text/plain",
-                "X-Hyperframes-Write-Token": writeToken,
+                ...studioWriteHeaders(),
                 ...(expectedVersion ? { "If-Match": expectedVersion } : { "If-None-Match": "*" }),
               },
               body: content,
@@ -204,7 +196,6 @@ export function useFileManager({
     readProjectFile,
     writeProjectFile,
     recordEdit,
-    domEditSaveTimestampRef,
     setRefreshKey,
     showToast,
   });

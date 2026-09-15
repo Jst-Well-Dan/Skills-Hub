@@ -286,11 +286,27 @@ export interface CapturePerfSummary {
   staticDedupEnabled: boolean;
   /** Dedup passed every gate + verification and was active. */
   staticDedupArmed: boolean;
-  /** Predicted reusable frame count when armed; 0 otherwise. */
+  /** Original predicted reusable frame count before profitability/budget filtering. */
   staticDedupPredicted: number;
+  /** Frames retained after complete-run verification. */
+  staticDedupVerified?: number;
+  /** Bounded verifier result taxonomy. */
+  staticDedupVerificationOutcome?:
+    | "verified"
+    | "unprofitable"
+    | "time_budget"
+    | "count_budget"
+    | "mismatch"
+    | "infrastructure";
+  staticDedupVerificationPlannedRuns?: number;
+  staticDedupVerificationCompletedRuns?: number;
+  staticDedupVerificationScreenshots?: number;
+  staticDedupVerificationSeeks?: number;
+  staticDedupVerificationComparisons?: number;
+  staticDedupVerificationElapsedMs?: number;
   /**
    * Low-cardinality reason dedup did not arm: `capture_mode` | `video_injection`
-   * | `page_composite` | `ineligible` | `verification_failed` | `verification_budget`.
+   * | `page_composite` | `ineligible` | `unprofitable` | `verification_failed` | `verification_budget`.
    * Undefined when armed or when dedup was disabled. (Render-level aggregation may
    * `|`-join distinct reasons when parallel workers diverge.)
    */
@@ -345,6 +361,13 @@ export interface CapturePerfSummary {
   deBoundaryFrames: number;
   /** Per-frame "No cached paint record" screenshot fallbacks during capture. */
   deNcprFallbacks: number;
+  /**
+   * Per-frame drawElement captures that blew the `HF_DE_FRAME_TIMEOUT_MS`
+   * deadline (renderer stopped scheduling after drawElementImage returned —
+   * PRINFRA-488). Each timeout aborts that attempt so the producer can retry the
+   * whole render on a fresh screenshot session.
+   */
+  deFrameTimeouts: number;
 }
 
 // ── Global Augmentation ────────────────────────────────────────────────────────

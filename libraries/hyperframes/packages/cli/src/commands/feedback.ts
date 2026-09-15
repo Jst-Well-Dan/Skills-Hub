@@ -5,12 +5,12 @@ import { defineCommand } from "citty";
 import * as clack from "@clack/prompts";
 import open from "open";
 import type { Example } from "./_examples.js";
-import { trackRenderFeedback } from "../telemetry/events.js";
+import { trackCatalogSearchMiss, trackRenderFeedback } from "../telemetry/events.js";
 import { shouldTrack, flush } from "../telemetry/client.js";
 import { getDoctorSummary } from "../telemetry/feedback.js";
 import { readConfig, type RecentRenderRecord } from "../telemetry/config.js";
 import { publishProjectArchive } from "../utils/publishProject.js";
-import { submitFeedback } from "../utils/submitFeedback.js";
+import { submitCatalogSearchMiss, submitFeedback } from "../utils/submitFeedback.js";
 import { buildIssueUrl, HYPERFRAMES_REPO_URL } from "../utils/feedbackIssue.js";
 import { VERSION } from "../version.js";
 import { c } from "../ui/colors.js";
@@ -20,6 +20,10 @@ import { lintFeedbackComment, type FeedbackLintInput } from "../utils/feedbackLi
 export const examples: Example[] = [
   ["Submit render feedback", 'hyperframes feedback --rating 8 --comment "fast but font missing"'],
   ["Quick rating only", "hyperframes feedback --rating 10"],
+  [
+    "Report a catalog gap after a fruitless search",
+    'hyperframes feedback --search-miss "typewriter that deletes" --wanted "text that types then backspaces"',
+  ],
   [
     "Also file a GitHub issue with a published repro",
     'hyperframes feedback --rating 3 --comment "GSAP timeline froze" --file-issue',
@@ -155,12 +159,25 @@ export default defineCommand({
   args: {
     rating: {
       type: "string",
+      // Required for a rating report, but --search-miss is a different report
+      // with no rating to give, so the check moved into the run body.
       description: "Likelihood to recommend (0=not likely, 10=extremely likely)",
-      required: true,
     },
     comment: {
       type: "string",
       description: "Optional details about your experience",
+    },
+    "search-miss": {
+      type: "string",
+      description: "Report a catalog search that found nothing useful; pass the query you ran",
+    },
+    wanted: {
+      type: "string",
+      description: "What you needed the catalog to have (used with --search-miss)",
+    },
+    tier: {
+      type: "string",
+      description: 'Which search tier answered: "on-device" or "words"',
     },
     "file-issue": {
       type: "boolean",
@@ -179,7 +196,29 @@ export default defineCommand({
     },
   },
   async run({ args }) {
-    const rating = parseFeedbackRating(args.rating);
+    // A search miss is a different report from a rating: it names a gap in the
+    // catalog rather than scoring an experience, so it carries no rating and
+    // must not land in the same number.
+    const searchMiss = normalizeComment(args["search-miss"]);
+    if (searchMiss) {
+      if (!shouldTrack()) {
+        console.log(c.dim("Telemetry is disabled. Nothing sent."));
+        return;
+      }
+      const wanted = normalizeComment(args.wanted);
+      const tier = normalizeComment(args.tier);
+      trackCatalogSearchMiss({ query: searchMiss, wanted, tier });
+      await flush();
+      // Ack before the forward, which is best-effort and bounded, so the
+      // reporter is never left waiting on it.
+      console.log(c.dim("Logged the gap. Thanks — that is how the catalog grows."));
+      await submitCatalogSearchMiss({ query: searchMiss, wanted, tier, cliVersion: VERSION });
+      return;
+    }
+
+    // `--rating` is no longer required at the arg level, so an absent one
+    // reaches here as undefined rather than being rejected by the parser.
+    const rating = args.rating === undefined ? null : parseFeedbackRating(args.rating);
     if (rating === null) {
       console.error(c.error("Rating must be an integer between 0 and 10"));
       failCommand();

@@ -15,10 +15,21 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 | Upload many submitted talks from Airtable/local files to YouTube Studio | [youtube-studio-batch-upload](./youtube-studio-batch-upload) | [youtube-studio-computer-use](./youtube-studio-computer-use) for post-upload Studio cleanup |
 | Edit existing YouTube Studio videos, thumbnails, playlists, visibility, or schedules through Chrome | [youtube-studio-computer-use](./youtube-studio-computer-use) | [youtube-api](./youtube-api) if API credentials exist and the task is API-friendly |
 | Use the YouTube Data API for metadata, thumbnails, uploads, or channel listing | [youtube-api](./youtube-api) | [youtube-studio-computer-use](./youtube-studio-computer-use) for Studio-only states |
+| Build a full YouTube operations bot with raw API access, Slack approvals, playlists, comments, live operations, and change-impact analytics | [youtube-channel-operator](./youtube-channel-operator) | [slackbot-builder](./slackbot-builder), [data-chatbots](./data-chatbots), then [youtube-api](./youtube-api) or [youtube-studio-computer-use](./youtube-studio-computer-use) |
+| Redesign an app or explore product behavior through generated visual directions and matched implementation screenshots | [design-apps-with-imagegen](./design-apps-with-imagegen) | [visual-playtest](./visual-playtest) after the selected direction is implemented |
+| Visually inspect a local or deployed site/app and find concrete layout or responsive defects | [visual-playtest](./visual-playtest) | Load its app/media references only when those workflows are in scope; use [design-apps-with-imagegen](./design-apps-with-imagegen) for broader redesign |
+| Create or align a durable project CEO, product steward, or autonomous owner | [ceo-creator](./ceo-creator) | Project-specific execution skills selected by the approved CEO charter |
+| Create a durable independent dissent agent with its own evidence model, ledger, interruption threshold, and cadence | [cassandra-creator](./cassandra-creator) | The created Cassandra thread's bounded tests or decisions |
+| Critically audit or trim an overgrown skill or over-broad trigger | [skill-cutter](./skill-cutter) | Apply local cuts only when explicitly requested |
 | Build conference schedule, speaker, or developer data surfaces | [schedule-design](./schedule-design), [conference-developer-endpoints](./conference-developer-endpoints), or [europe-developer-api](./europe-developer-api) | `accelevents-*` or [sync-accelevents](./sync-accelevents) when syncing source systems |
-| Harden a software repo | [codebase-maintainability-guardrails](./codebase-maintainability-guardrails) for defaults, then [antislop-codebase](./antislop-codebase) for larger cleanup | `productionize-*`, `security-*`, `observability-*`, `release-*`, `test-*` |
+| Harden a software repo | [antislop-codebase](./antislop-codebase) for deliberate structural cleanup | `productionize-*`, `security-*`, `observability-*`, `release-*`, `test-*` |
+| Design, debug, migrate, cache, or deploy a production system on Cloudflare | [cloudflare-production-builder](./cloudflare-production-builder) | Product-specific skills after the Cloudflare durability, storage, security, and release boundaries are settled |
+| Host repositories or deploy exact-SHA releases through SmolForge | [forge](./forge) | [cloudflare-production-builder](./cloudflare-production-builder) when the underlying Cloudflare runtime or bindings also need design work |
 | Build a structured-data chatbot or Slack bot | [data-chatbots](./data-chatbots) or [slackbot-builder](./slackbot-builder) | [app-ux-paradigms](./app-ux-paradigms) for interaction details |
 | Protect usernames and public handles from route collisions, squatting, or impersonation | [reserved-handle-policy](./reserved-handle-policy) | [security-hardening](./security-hardening) when broader auth or permission review is needed |
+| Create or substantially revise a repository README around a verified first result | [ai-readme](./ai-readme) | [ai-devblog](./ai-devblog) for a dated engineering story |
+| Write, revise, verify, or publish an individual technical devblog | [ai-devblog](./ai-devblog) | [blog-system-design](./blog-system-design) only when shared presentation infrastructure must change |
+| Create or redesign a technical blog index, post shell, navigation, search, typography, or reusable components | [blog-system-design](./blog-system-design) | [ai-devblog](./ai-devblog) for individual article content |
 
 ### Routing Notes
 
@@ -33,7 +44,11 @@ Use the most specific skill that matches the job. When a workflow spans multiple
 
 #### Kakuna Codebase Hardening Suite
 
-Use these skills as a hardening progression: prevent new slop, harden the existing codebase as-is, add product services, then tighten safety, operability, and quality gates.
+Use these opt-in skills only when the named hardening problem is the primary
+task. They are diagnostic tools, not a maturity ladder: select the smallest
+relevant skill, reuse existing controls, prefer deletion, and stop when the
+explicit problem is resolved. Ordinary implementation work should not trigger
+the suite merely because it will ship or could be made more robust.
 
 <table>
   <tr>
@@ -43,25 +58,25 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
     <td valign="middle">
       <p><strong>Foundation</strong></p>
       <ul>
-        <li><a href="./codebase-maintainability-guardrails">codebase-maintainability-guardrails</a> — <strong>Default engineering standards.</strong> Always-on rules for small, typed, feature-owned, contract-driven, behavior-preserving, visually verified app work.</li>
-        <li><a href="./antislop-codebase">antislop-codebase</a> — <strong>Structural cleanup/migration.</strong> Staged refactors for messy or prototype repos as they already are, with concurrent workers, better tests, smaller files, clearer module boundaries, and a final migration audit microsite.</li>
+        <li><a href="./antislop-codebase">antislop-codebase</a> — <strong>Structural cleanup/migration.</strong> Reduces demonstrated repository maintenance cost without imposing folder, file-size, compatibility, testing, or audit-artifact targets.</li>
       </ul>
       <p><strong>Productization</strong></p>
       <ul>
-        <li><a href="./productionize-app-with-services">productionize-app-with-services</a> — <strong>Operational/product hardening.</strong> Adds product services after the codebase is coherent enough to operate: audit trails, role-aware permissions, API keys, REST/OpenAPI/agent docs, PostHog instrumentation, feature flags, admin UX, deploy smokes, and a final audit microsite.</li>
+        <li><a href="./productionize-app-with-services">productionize-app-with-services</a> — <strong>Bounded productization.</strong> Adds only explicitly needed product services for named users and operators; it does not install a default SaaS maturity stack.</li>
       </ul>
       <p><strong>Safety</strong></p>
       <ul>
-        <li><a href="./security-hardening">security-hardening</a> — <strong>Practical appsec pass.</strong> Reviews auth/session risk, secrets, dependency exposure, SSRF/uploads, CORS/CSRF, rate limits, input validation, unsafe logging, permission bypasses, and security headers.</li>
+        <li><a href="./security-hardening">security-hardening</a> — <strong>Threat-scoped appsec.</strong> Fixes concrete reachable risks in an explicitly reviewed threat surface and reuses existing framework/provider defenses.</li>
       </ul>
       <p><strong>Operability</strong></p>
       <ul>
-        <li><a href="./observability-hardening">observability-hardening</a> — <strong>Production visibility.</strong> Adds privacy-safe structured logs, error classes, request IDs, traces, metrics, dashboards, alert thresholds, user-visible operation status, and debug paths.</li>
-        <li><a href="./release-readiness-hardening">release-readiness-hardening</a> — <strong>Safe ship gates.</strong> Defines env validation, deploy checklist, smoke tests, rollback path, feature flags, migration checks, production verification, and post-deploy monitoring.</li>
+        <li><a href="./observability-hardening">observability-hardening</a> — <strong>Question-driven visibility.</strong> Uses the cheapest existing or new privacy-safe signal to answer named production questions without requiring every telemetry type.</li>
+        <li><a href="./release-readiness-hardening">release-readiness-hardening</a> — <strong>Minimal ship proof.</strong> Audits the smallest sufficient release controls, prefers authoritative provider facts, and removes redundant ceremony.</li>
+        <li><a href="./vercel-production-cost-review">vercel-production-cost-review</a> — <strong>Material cost diagnosis.</strong> Answers a defined Vercel billing question by investigating the few dominant drivers before authorizing any remediation.</li>
       </ul>
       <p><strong>Quality</strong></p>
       <ul>
-        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Trustworthy tests.</strong> Audits whether tests carry their weight, then hardens flaky tests, contract tests, golden-path e2e, regression fixtures, runtime, dedupe, and coverage quality.</li>
+        <li><a href="./test-strategy-hardening">test-strategy-hardening</a> — <strong>Confidence-per-minute.</strong> Solves explicit test-system problems through faithful boundaries, deterministic fixes, and deletion or consolidation—not test-layer growth.</li>
       </ul>
     </td>
   </tr>
@@ -69,23 +84,64 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 
 #### Other coding/workstation skills
 
+- [align-me](./align-me) — pauses before a long autonomous run to surface material ambiguities as numbered, lettered choices with concrete tradeoffs, recommendations, and an `approve all` path.
 - [new-mac-setup](./new-mac-setup) — opinionated Apple Silicon Mac bootstrap for fullstack and AI work. Installs Homebrew, shell tooling, editors, AI tools, terminal setup, and macOS defaults in a repeatable run order.
+- [cloudflare-production-builder](./cloudflare-production-builder) — chooses among Workers, Pages, Workflows, Queues, Durable Objects, D1, R2, KV, Cache API, alarms, and Cron; then applies durable handoffs, safe caching, migration discipline, multi-tenant boundaries, observability, and live production verification.
+- [forge](./forge) — operates SmolForge as a Git repository and collaboration host or as an exact-SHA Deploy/Sites release control plane, while preserving explicit authentication, provider, preview, and production boundaries.
 - [claude-session-introspect](./claude-session-introspect) — inspects Claude Code session JSONL files at `~/.claude/projects/` for token totals, prompt counts, assistant turns, tool calls, compaction boundaries, and compaction summaries.
+- [deep-trajectory-analysis](./deep-trajectory-analysis) — reconstructs paired agent, game, or policy trajectories from exact shared pre-states, connects aggregate effects to first-divergence evidence, and validates machine-readable causal reports before promotion decisions.
+- [design-apps-with-imagegen](./design-apps-with-imagegen) — audits an existing interface, generates four divergent visual and behavioral directions including a wildcard, obtains one numbered approval contract, implements with code and generated assets, and compares matched mobile, tablet, and desktop captures until material deltas are resolved.
+- [visual-playtest](./visual-playtest) — runs a proportional browser review of representative visual states; app-interaction and media-workflow checklists are selectively loaded only when relevant.
+- [ceo-creator](./ceo-creator) — creates a durable project CEO with an evidence model, authority boundaries, operating cadence, initiative and delegation rules, privacy protections, and a decision-oriented reporting contract.
+- [cassandra-creator](./cassandra-creator) — creates a durable independent dissent agent with separate evidence access, a dated assumptions and predictions ledger, symmetric skepticism, a high interruption threshold, explicit self-correction, read-only authority, and an optional approved recurring cadence.
+- [skill-cutter](./skill-cutter) — critically classifies and trims overgrown skills to their behavioral core, narrows over-broad trigger metadata, and separates provider constraints from optional or project-specific policy.
 - [smart-entity-resolution](./smart-entity-resolution) — resolves named people or organizations in messy databases with aliases, duplicates, sparse records, common names, LLM retrieval repair, reranking, and visible runner-up candidates.
-- [autoreview](./autoreview) — runs structured closeout code review with a selected helper, verifies accepted findings, reruns focused tests, and stops only when no actionable findings remain.
+- [autoreview](./autoreview) — performs an explicitly requested final review using whatever review capability is available, without depending on a particular helper, model, or service.
 - [public-qa-chatbot](./public-qa-chatbot) — builds unauthenticated public Q&A chatbot widgets with rate limits, origin/input hardening, semantic caching, observability, streaming UX, and robust chat scroll behavior.
-- [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, fast acknowledgements, thread sessions, Block Kit interactions, App Home preferences, durable execution for slow agent work (never inline past the silent serverless timeout ceiling), guaranteed result-or-error delivery branched by surface, and structured observability.
+- [slackbot-builder](./slackbot-builder) — builds production Slack bots with signed Events API handlers, causal shared-thread sessions, per-thread serialization, stateful routing and owned-resource resolution, state-aware Block Kit approvals, durable execution for slow agent work, guaranteed result-or-error delivery, and structured observability.
 - [sync-url-navigation](./sync-url-navigation) — syncs URL query params with app navigation, tabs, and filter state so views are bookmarkable and shareable (`view`, `table`, `q`, deep links, `popstate`).
 - [app-ux-paradigms](./app-ux-paradigms) — standard web UX defaults: Esc/backdrop/× for modals, ⌘/Ctrl shortcuts, form save states, tables, menus, and help text for discoverable interactions.
 - [data-chatbots](./data-chatbots) — copilots over structured data that **propose** mutations (draft → Apply), not direct writes: prompting, validator allowlists, session memory with DRAFT/APPLIED/IGNORED, version-stale UX, and test matrices.
 - [reserved-handle-policy](./reserved-handle-policy) — designs and implements two-tier public username protection with hard platform reservations, administrator-reviewed claims, separator-confusable matching, a source-attributed registry of common names and notable identities, and signup/rename/admin test guidance.
 
-### Media Download And Transformation
+### AI DevRel
+
+AI DevRel is the end-to-end publication bundle: capture technical work, acquire
+and transform source media, extract the useful story, publish dense written and
+video explanations, operate distribution channels, and measure what changed.
+Start with the orchestrator for a multi-stage job, then route each stage to the
+narrowest atomic skill.
+
+#### Technical blogging
+
+- [ai-readme](./ai-readme) — turns a repository into a progressive, executable explanation for an explicitly chosen reader, with a verified first result, one stable example, honest tradeoffs, and a context-isolated cold read.
+- [ai-devblog](./ai-devblog) — routes technical material into the right story mode and weight, aligns on the reader and belief change, preserves primary evidence, and edits the result for clarity and human interest before verified publication.
+- [blog-system-design](./blog-system-design) — designs dense technical blog systems: index and section pages, compact typography, full-text `/` search, resizable article index rails, responsive floating TOCs, reusable explanatory components, and information-dense media policy.
+
+#### Media acquisition and transformation
 
 - [media-transform](./media-transform) — orchestrates video pipelines across download, upload, transcription, chapters, thumbnails, and title testing by routing to the right atomic skill for each stage.
 - [download-video](./download-video) — downloads embedded videos from web pages by resolving the real player URL and calling `yt-dlp` with the right referer/origin headers.
 - [download-x-video](./download-x-video) — downloads X/Twitter post videos with `yt-dlp`, including HLS streams and reliable final-path detection.
 - [zoom-download](./zoom-download) — downloads Zoom cloud recordings, verifies filenames/file types, and supports ffmpeg-based content analysis.
+
+#### Transcription, extraction, and repurposing
+
+- [transcribe-anything](./transcribe-anything) — transcribes audio and video files using pluggable ASR backends including local Whisper, whisperX, faster-whisper, OpenAI, Groq, Deepgram, AssemblyAI, Gemini, and Hugging Face models.
+- [conference-transcribe](./conference-transcribe) — splits long conference livestreams or YouTube videos into per-talk transcripts using chapter timestamps, segment transcription, and LLM cleanup.
+- [multimodal-extraction](./multimodal-extraction) — turns local videos or video URLs into Markdown timelines with slide screenshots, key frames, and transcript spans aligned by timestamp.
+- [summarize-anything](./summarize-anything) — recursively summarizes long text with pluggable LLM backends and can emit executive summaries, YouTube descriptions, chapters, posts, titles, thumbnail prompts, blog outlines, and pull quotes.
+- [podcast-publishing-assistant](./podcast-publishing-assistant) — turns podcasts, interviews, panels, and long-form audio/video into transcripts, summaries, chapter markers, show notes, titles, descriptions, and promo copy.
+
+#### YouTube operations
+
+- [youtube-channel-operator](./youtube-channel-operator) — designs full-power multi-channel YouTube operators with typed Data/Analytics/Reporting/Live API access, transcript-derived viewer packages, paid-versus-organic analysis, guided Slack approvals, exact-channel OAuth isolation, immutable external-action audit, Studio-only handoffs, and post-change measurement.
+- [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
+- [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
+- [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
+- [youtube-studio-computer-use](./youtube-studio-computer-use) — automates live YouTube Studio cleanup through Chrome/Computer Use: thumbnails, schedules, playlist fixes, visibility, save-state recovery, and DOM-assisted edit pages.
+- [youtube-thumbnails](./youtube-thumbnails) — creates AI-generated YouTube thumbnails with prompt engineering, image generation, compression, and upload guidance.
+- [thumbnail-extraction](./thumbnail-extraction) — extracts interesting video frames, face crops, presentation slides, and transparent cutouts for thumbnail compositing.
 
 ### Web And Social Scraping
 
@@ -102,23 +158,6 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - [testing-schedule-preview](./testing-schedule-preview) — tests the AI Engineer Europe internal Bun schedule preview and public schedule page workflows.
 - [web-animation-perf](./web-animation-perf) — debugs jank, layout thrash, and drift in JS-driven CSS animation across AI Engineer conference sites.
 
-### Transcription, Extraction, And Summarization
-
-- [transcribe-anything](./transcribe-anything) — transcribes audio and video files using pluggable ASR backends including local Whisper, whisperX, faster-whisper, OpenAI, Groq, Deepgram, AssemblyAI, Gemini, and Hugging Face models.
-- [conference-transcribe](./conference-transcribe) — splits long conference livestreams or YouTube videos into per-talk transcripts using chapter timestamps, segment transcription, and LLM cleanup.
-- [multimodal-extraction](./multimodal-extraction) — turns local videos or video URLs into Markdown timelines with slide screenshots, key frames, and transcript spans aligned by timestamp.
-- [summarize-anything](./summarize-anything) — recursively summarizes long text with pluggable LLM backends and can emit executive summaries, YouTube descriptions, chapters, posts, titles, thumbnail prompts, blog outlines, and pull quotes.
-- [podcast-publishing-assistant](./podcast-publishing-assistant) — turns podcasts, interviews, panels, and long-form audio/video into transcripts, summaries, chapter markers, show notes, titles, descriptions, and promo copy.
-
-### YouTube Publishing And Thumbnails
-
-- [youtube-api](./youtube-api) — manages YouTube videos programmatically through the YouTube Data API v3, including uploads, thumbnails, metadata updates, and channel video listing.
-- [youtube-publish](./youtube-publish) — publishes videos on YouTube, edits titles/descriptions/timestamps, assigns playlists, and manages YouTube Studio metadata workflows.
-- [youtube-studio-batch-upload](./youtube-studio-batch-upload) — batches YouTube Studio uploads from Airtable or local video submissions, with source download recovery, metadata staging, unlisted visibility, playlist tagging, save verification, and blocked-row reporting.
-- [youtube-studio-computer-use](./youtube-studio-computer-use) — automates live YouTube Studio cleanup through Chrome/Computer Use: thumbnails, schedules, playlist fixes, visibility, save-state recovery, and DOM-assisted edit pages.
-- [youtube-thumbnails](./youtube-thumbnails) — creates AI-generated YouTube thumbnails with prompt engineering, image generation, compression, and upload guidance.
-- [thumbnail-extraction](./thumbnail-extraction) — extracts interesting video frames, face crops, presentation slides, and transparent cutouts for thumbnail compositing.
-
 ## Repo Shape
 
 - One skill per top-level folder.
@@ -127,6 +166,74 @@ Use these skills as a hardening progression: prevent new slop, harden the existi
 - Keep auxiliary docs minimal; the skill body should carry the agent-facing workflow.
 
 Click into each folder for the detailed workflow, prerequisites, and command examples.
+
+## Skill acceptance model
+
+A skill is an advisory lens, not an implicit acceptance gate. Author and review
+skills with this model:
+
+```text
+User outcome
+  + higher-level invariants
+  + risks created by this action
+  = blocking acceptance criteria
+
+Everything else is advice or follow-up.
+```
+
+Classify meaningful instructions by their actual force:
+
+| Class | Meaning |
+| --- | --- |
+| **Invariant** | Must never be violated, such as authorization, privacy, secret handling, destructive-target clarity, or user-data integrity. |
+| **Action-required** | Intrinsic to the named task type; without it the requested result is not correct or usable. |
+| **Risk-triggered gate** | Blocking only when the skill names a concrete risk introduced by the proposed action. |
+| **Recommendation** | A useful default that may be skipped without blocking completion. |
+| **Opportunity** | An adjacent improvement or follow-up outside the current critical path. |
+
+Write the class directly when prose could otherwise make a recommendation sound
+mandatory. A comprehensive checklist is not a demand to satisfy every item:
+tell agents to select only relevant items and state the concrete risk before
+promoting one to a gate.
+
+For bounded tasks, a skill should normally add no more than one or two blocking
+criteria. Exceed that budget only for a direct correctness, privacy, security,
+data-integrity, or irreversible-action risk. Match evidence to impact: a local
+documentation edit may need formatting and link checks; a CLI contract fix
+needs focused process or contract tests; one Worker repair needs component
+checks, health, one bounded reproduction, and rollback evidence; a schema or
+data mutation warrants stronger integrity and repair proof; a destructive or
+externally consequential action requires exact targets and explicit authority.
+
+Do not silently expand scope. Adjacent improvements, checklist findings, and
+residual issues are observations or follow-ups unless necessary to make the
+requested result correct, safe, or usable. Define a stop condition for workflows
+that can otherwise accumulate proof or retries, and allow completion when that
+condition is met.
+
+Do not make a broken control plane approve or execute its own repair when a
+documented lower-level operator path exists. Preserve that path's authorization,
+target-resolution, rollback, and evidence requirements. Coordinate only for
+concrete overlap: the same files with likely merge conflicts, production
+resource, migration sequence, or externally mutable object. Read-only work and
+unrelated components do not need a global mutex or continual peer updates.
+
+Users may simplify recommendations and authorize documented break-glass paths.
+They cannot waive higher-level constraints around secrets, destructive
+ambiguity, unauthorized external action, privacy, or irreversible user-data
+loss.
+
+## Validating skills
+
+The repository pins its validator dependency in `pyproject.toml` and `uv.lock`.
+With [uv](https://docs.astral.sh/uv/) installed, validate a changed skill with:
+
+```bash
+uv run python .system/skill-creator/scripts/quick_validate.py <skill-directory>
+```
+
+Use `uv sync --locked` to prepare the development environment without changing
+the lockfile.
 
 ## Installing in Cursor
 

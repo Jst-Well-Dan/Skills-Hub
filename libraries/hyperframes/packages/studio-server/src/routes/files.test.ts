@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Hono } from "hono";
+import { parseHTML } from "linkedom";
 import {
   existsSync,
   mkdirSync,
@@ -14,7 +15,7 @@ import { join } from "node:path";
 import { commitElementPatchBatches, registerFileRoutes } from "./files";
 import type { StudioApiAdapter } from "../types";
 import {
-  consumeFileWriteReceipt,
+  identifyFileWrite,
   fileContentVersion,
   resetFileWriteReceipts,
 } from "../helpers/fileVersion";
@@ -65,10 +66,18 @@ function createAdapter(projectDir: string): StudioApiAdapter {
   };
 }
 
-function postElementPatchBatch(app: Hono, file: string, patches: unknown[]): Promise<Response> {
+function postElementPatchBatch(
+  app: Hono,
+  file: string,
+  patches: unknown[],
+  writeToken?: string,
+): Promise<Response> {
   return app.request(`http://localhost/projects/demo/file-mutations/patch-elements-batch/${file}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(writeToken ? { "X-Hyperframes-Write-Token": writeToken } : {}),
+    },
     body: JSON.stringify({ patches }),
   });
 }
@@ -76,10 +85,14 @@ function postElementPatchBatch(app: Hono, file: string, patches: unknown[]): Pro
 function postElementPatchBatches(
   app: Hono,
   batches: Array<{ sourceFile: string; patches: unknown[] }>,
+  writeToken?: string,
 ): Promise<Response> {
   return app.request("http://localhost/projects/demo/file-mutations/patch-element-batches", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(writeToken ? { "X-Hyperframes-Write-Token": writeToken } : {}),
+    },
     body: JSON.stringify({ batches }),
   });
 }
@@ -95,6 +108,9 @@ function postCutBatch(
       splitTime: number;
       elementStart: number;
       elementDuration: number;
+      playbackStart?: number;
+      playbackRate?: number;
+      isComposition?: boolean;
     }>;
   }>,
 ): Promise<Response> {
@@ -119,7 +135,10 @@ describe("registerFileRoutes", () => {
     const insert = (expectedVersion: string) =>
       app.request("http://localhost/projects/demo/file-mutations/insert-composition/index.html", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Hyperframes-Write-Token": "studio-insert-1",
+        },
         body: JSON.stringify({ sourcePath: "child.html", start: 4, track: 0, expectedVersion }),
       });
 
@@ -131,6 +150,11 @@ describe("registerFileRoutes", () => {
     expect(result.after).toContain('data-duration="7"');
     expect(result.after).toContain(`id="${result.hostId}"`);
     expect(result.version).toBe(fileContentVersion(result.after));
+    expect(identifyFileWrite(join(projectDir, "index.html"), result.version)).toEqual({
+      path: "index.html",
+      version: result.version,
+      writeToken: "studio-insert-1",
+    });
 
     const committed = result.after;
     const stale = await insert(fileContentVersion(before));
@@ -260,6 +284,91 @@ describe("registerFileRoutes", () => {
     expect(response.headers.get("etag")).toBe(payload.version);
   });
 
+  it.each(["POST", "PUT"])("preserves arbitrary bytes when creating through %s", async (method) => {
+    const projectDir = createProjectDir();
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0xff, 0xc0, 0x80]);
+    const url = "http://localhost/projects/demo/files/assets/image.png";
+    const response = await app.request(url, {
+      method,
+      headers: { "Content-Type": "application/octet-stream", "If-None-Match": "*" },
+      body: bytes,
+    });
+    expect(response.status).toBe(method === "POST" ? 201 : 200);
+    expect(readFileSync(join(projectDir, "assets/image.png"))).toEqual(bytes);
+    const read = await app.request(url);
+    const payload = await read.json();
+    expect(payload.content).toBe(bytes.toString("utf-8"));
+    expect(payload.version).toBe(fileContentVersion(bytes));
+    expect(read.headers.get("etag")).toBe(payload.version);
+    const duplicate = await app.request(url, {
+      method,
+      headers: { "If-None-Match": "*" },
+      body: "overwrite",
+    });
+    expect(duplicate.status).toBe(409);
+    expect(readFileSync(join(projectDir, "assets/image.png"))).toEqual(bytes);
+  });
+
+  it("does not overwrite a file created while a POST body is being read", async () => {
+    const projectDir = createProjectDir();
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+    const path = join(projectDir, "raced.bin");
+    const existing = Buffer.from([0xff, 0, 0x80]);
+    const request = new Request("http://localhost/projects/demo/files/raced.bin", {
+      method: "POST",
+      body: "upload",
+    });
+    const readBody = request.arrayBuffer.bind(request);
+    vi.spyOn(request, "arrayBuffer").mockImplementation(async () => {
+      writeFileSync(path, existing, { flag: "wx" });
+      return readBody();
+    });
+    const response = await app.request(request);
+    expect(response.status).toBe(409);
+    expect(readFileSync(path)).toEqual(existing);
+  });
+
+  it("versions binary bytes exactly while preserving conflicts, backups, and write receipts", async () => {
+    const projectDir = createProjectDir();
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+    const path = join(projectDir, "image.png");
+    const before = Buffer.from([0xff, 0, 0x80, 0x81]);
+    const after = Buffer.from([0xfe, 0, 0x80]);
+    writeFileSync(path, before);
+    const url = "http://localhost/projects/demo/files/image.png";
+    const read = await app.request(url);
+    const version = read.headers.get("etag")!;
+    // Invalid UTF-8 bytes may decode to the same string, but must not share a version.
+    const staleBytes = Buffer.from([0xfe, 0, 0x80, 0x81]);
+    expect(staleBytes.toString("utf-8")).toBe(before.toString("utf-8"));
+    for (const headers of [{}, { "If-Match": fileContentVersion(staleBytes) }]) {
+      const rejected = await app.request(url, { method: "PUT", headers, body: after });
+      expect([428, 409]).toContain(rejected.status);
+      expect((await rejected.json()).currentVersion).toBe(version);
+      expect(readFileSync(path)).toEqual(before);
+    }
+    const response = await app.request(url, {
+      method: "PUT",
+      headers: { "If-Match": version, "X-Hyperframes-Write-Token": "binary-write" },
+      body: after,
+    });
+    const payload = await response.json();
+    expect(response.status).toBe(200);
+    expect(readFileSync(path)).toEqual(after);
+    expect(readFileSync(join(projectDir, payload.backupPath))).toEqual(before);
+    expect(payload.version).toBe(fileContentVersion(after));
+    expect(response.headers.get("etag")).toBe(payload.version);
+    expect(identifyFileWrite(path, payload.version)).toEqual({
+      path: "image.png",
+      version: payload.version,
+      writeToken: "binary-write",
+    });
+  });
+
   it("requires If-Match for updates and preserves the current bytes", async () => {
     const projectDir = createProjectDir();
     const app = new Hono();
@@ -366,7 +475,7 @@ describe("registerFileRoutes", () => {
     expect(payload.version).toBe(fileContentVersion("after"));
     expect(payload.writeToken).toBe("studio-write-1");
     expect(response.headers.get("etag")).toBe(payload.version);
-    expect(consumeFileWriteReceipt(join(projectDir, "index.html"))).toEqual({
+    expect(identifyFileWrite(join(projectDir, "index.html"), payload.version!)).toEqual({
       path: "index.html",
       version: payload.version,
       writeToken: "studio-write-1",
@@ -413,16 +522,90 @@ describe("registerFileRoutes", () => {
     const payload = (await response.json()) as {
       changed?: boolean;
       path?: string;
+      version?: string;
       backupPath?: string;
     };
 
     expect(payload.changed).toBe(true);
     expect(payload.path).toBe("index.html");
+    expect(payload.version).toBe(
+      fileContentVersion(readFileSync(join(projectDir, "index.html"), "utf-8")),
+    );
     expect(payload.backupPath).toMatch(/^\.hyperframes\/backup\//);
     expect(readFileSync(join(projectDir, payload.backupPath!), "utf-8")).toBe(
       '<div id="title">Before</div>',
     );
     expect(readFileSync(join(projectDir, "index.html"), "utf-8")).toContain("After");
+  });
+
+  it("returns the current durable version for a matched no-op element patch", async () => {
+    const projectDir = createProjectDir();
+    const original = '<div id="title">Before</div>';
+    writeFileSync(join(projectDir, "index.html"), original);
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+
+    const response = await app.request(
+      "http://localhost/projects/demo/file-mutations/patch-element/index.html",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target: { id: "title" },
+          operations: [{ type: "text-content", property: "textContent", value: "Before" }],
+        }),
+      },
+    );
+    const payload = (await response.json()) as {
+      changed?: boolean;
+      matched?: boolean;
+      path?: string;
+      version?: string;
+      backupPath?: string;
+    };
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      changed: false,
+      matched: true,
+      path: "index.html",
+      version: fileContentVersion(original),
+    });
+    expect(payload.backupPath).toBeUndefined();
+    expect(existsSync(join(projectDir, ".hyperframes", "backup"))).toBe(false);
+  });
+
+  // Without the receipt the client cannot recognise its own edit in the watcher
+  // broadcast, so it treats it as someone else's write and does a full preview
+  // reload — a visible blank on the stage right after the user typed.
+  it("leaves a write receipt so the patch's own file-change echo is identifiable", async () => {
+    const projectDir = createProjectDir();
+    writeFileSync(projectDir + "/index.html", '<div id="title">Before</div>');
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+
+    const response = await app.request(
+      "http://localhost/projects/demo/file-mutations/patch-element/index.html",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Hyperframes-Write-Token": "studio-patch-1",
+        },
+        body: JSON.stringify({
+          target: { id: "title" },
+          operations: [{ type: "text-content", property: "textContent", value: "After" }],
+        }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    const version = fileContentVersion(readFileSync(join(projectDir, "index.html"), "utf-8"));
+    expect(identifyFileWrite(join(projectDir, "index.html"), version)).toEqual({
+      path: "index.html",
+      version,
+      writeToken: "studio-patch-1",
+    });
   });
 
   it("applies an ordered element patch batch with one file write", async () => {
@@ -433,16 +616,21 @@ describe("registerFileRoutes", () => {
     const app = new Hono();
     registerFileRoutes(app, createAdapter(projectDir));
 
-    const response = await postElementPatchBatch(app, "index.html", [
-      {
-        target: { id: "back" },
-        operations: [{ type: "inline-style", property: "z-index", value: "2" }],
-      },
-      {
-        target: { id: "front" },
-        operations: [{ type: "inline-style", property: "z-index", value: "1" }],
-      },
-    ]);
+    const response = await postElementPatchBatch(
+      app,
+      "index.html",
+      [
+        {
+          target: { id: "back" },
+          operations: [{ type: "inline-style", property: "z-index", value: "2" }],
+        },
+        {
+          target: { id: "front" },
+          operations: [{ type: "inline-style", property: "z-index", value: "1" }],
+        },
+      ],
+      "studio-layer-order-1",
+    );
     expect(response.status).toBe(200);
     const payload = (await response.json()) as {
       changed?: boolean;
@@ -458,6 +646,12 @@ describe("registerFileRoutes", () => {
     expect(payload.content).toContain('id="back" style="z-index: 2"');
     expect(payload.content).toContain('id="front" style="z-index: 1"');
     expect(readFileSync(join(projectDir, payload.backupPath!), "utf-8")).toBe(original);
+    const version = fileContentVersion(payload.content!);
+    expect(identifyFileWrite(join(projectDir, "index.html"), version)).toEqual({
+      path: "index.html",
+      version,
+      writeToken: "studio-layer-order-1",
+    });
     expect(readdirSync(join(projectDir, ".hyperframes", "backup"))).toHaveLength(1);
   });
 
@@ -517,6 +711,52 @@ describe("registerFileRoutes", () => {
     expect(payload.backupPath).toBeUndefined();
     expect(readFileSync(join(projectDir, "index.html"), "utf-8")).toBe(original);
     expect(existsSync(join(projectDir, ".hyperframes", "backup"))).toBe(false);
+  });
+
+  it("leaves one exact write receipt for every file in a durable element patch batch", async () => {
+    const projectDir = createProjectDir();
+    writeFileSync(join(projectDir, "index.html"), '<div id="index">Before</div>');
+    writeFileSync(join(projectDir, "scene.html"), '<div id="scene">Before</div>');
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+
+    const response = await postElementPatchBatches(
+      app,
+      [
+        {
+          sourceFile: "index.html",
+          patches: [
+            {
+              target: { id: "index" },
+              operations: [{ type: "text-content", property: "textContent", value: "After" }],
+            },
+          ],
+        },
+        {
+          sourceFile: "scene.html",
+          patches: [
+            {
+              target: { id: "scene" },
+              operations: [{ type: "text-content", property: "textContent", value: "After" }],
+            },
+          ],
+        },
+      ],
+      "studio-group-drag-1",
+    );
+    const payload = (await response.json()) as {
+      files: Array<{ sourceFile: string; after: string }>;
+    };
+
+    expect(response.status).toBe(200);
+    for (const file of payload.files) {
+      const version = fileContentVersion(file.after);
+      expect(identifyFileWrite(join(projectDir, file.sourceFile), version)).toEqual({
+        path: file.sourceFile,
+        version,
+        writeToken: "studio-group-drag-1",
+      });
+    }
   });
 
   it("refuses every file when one batch contains an unmatched target", async () => {
@@ -732,11 +972,60 @@ describe("registerFileRoutes", () => {
     expect(payload.files[0].after).toContain('id="a-split"');
     expect(payload.files[0].after).toContain('id="b-split"');
     expect(readFileSync(join(projectDir, "index.html"), "utf-8")).toBe(payload.files[0].after);
-    expect(consumeFileWriteReceipt(join(projectDir, "index.html"))).toEqual({
+    expect(identifyFileWrite(join(projectDir, "index.html"), payload.files[0].version)).toEqual({
       path: "index.html",
       version: payload.files[0].version,
       writeToken: "cut-test",
     });
+  });
+
+  it("persists media in-points for audio and video in an atomic split-all cut", async () => {
+    const projectDir = createProjectDir();
+    const before =
+      '<audio id="audio" src="voice.mp3" data-start="0" data-duration="6"></audio>' +
+      '<video id="video" src="clip.mp4" data-start="0" data-duration="6" data-playback-rate="2"></video>';
+    writeFileSync(join(projectDir, "index.html"), before);
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+
+    const response = await postCutBatch(app, [
+      {
+        path: "index.html",
+        expectedVersion: fileContentVersion(before),
+        targets: [
+          {
+            target: { id: "audio" },
+            originalId: "audio",
+            splitTime: 2,
+            elementStart: 0,
+            elementDuration: 6,
+            playbackStart: 0,
+            playbackRate: 1,
+          },
+          {
+            target: { id: "video" },
+            originalId: "video",
+            splitTime: 2,
+            elementStart: 0,
+            elementDuration: 6,
+            playbackStart: 0,
+            playbackRate: 2,
+          },
+        ],
+      },
+    ]);
+    const payload = (await response.json()) as {
+      files: Array<{ after: string; splitCount: number }>;
+    };
+    const { document } = parseHTML(payload.files[0].after);
+
+    expect(response.status).toBe(200);
+    expect(payload.files[0].splitCount).toBe(2);
+    expect(document.getElementById("audio")?.getAttribute("data-media-start")).toBe("0");
+    expect(document.getElementById("audio-split")?.getAttribute("data-media-start")).toBe("2");
+    expect(document.getElementById("video")?.getAttribute("data-media-start")).toBe("0");
+    expect(document.getElementById("video-split")?.getAttribute("data-media-start")).toBe("4");
+    expect(readFileSync(join(projectDir, "index.html"), "utf-8")).toBe(payload.files[0].after);
   });
 
   it("cuts multiple id-less selector targets against their original indices", async () => {
@@ -1125,6 +1414,30 @@ const tl = gsap.timeline({ paused: true });
     const res = await postGsapMutationBatch(app, "index.html", body);
 
     expect(res.status).toBe(400);
+  });
+
+  it("rejects raw JavaScript expressions at the GSAP mutation boundary", async () => {
+    const projectDir = createProjectDir();
+    writeHtml(projectDir, "comp.html", FROMTO_COMP);
+    const app = new Hono();
+    registerFileRoutes(app, createAdapter(projectDir));
+    const animation = await getFirstAnimation(app, "comp.html");
+
+    const response = await app.request("http://localhost/projects/demo/gsap-mutations/comp.html", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "update-meta",
+        animationId: animation.id,
+        updates: { ease: "__raw:(()=>alert(1))()" },
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "raw JavaScript expressions are not accepted",
+    });
+    expect(readFileSync(join(projectDir, "comp.html"), "utf8")).toBe(FROMTO_COMP);
   });
 
   it("update-from-property updates a fromTo start value in place", async () => {

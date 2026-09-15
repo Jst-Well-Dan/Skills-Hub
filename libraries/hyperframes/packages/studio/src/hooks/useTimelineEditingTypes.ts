@@ -1,6 +1,7 @@
 import type { MutableRefObject, RefObject } from "react";
 import type { Composition } from "@hyperframes/sdk";
 import type { TimelineElement } from "../player";
+import type { TimelineStackingReorderIntent } from "../player/components/timelineEditing";
 import type { EditHistoryKind } from "../utils/editHistory";
 import type { PublishSdkSession } from "../utils/sdkCutover";
 
@@ -34,7 +35,6 @@ export interface UseTimelineEditingOptions {
   writeProjectFile: (path: string, content: string, expectedContent?: string) => Promise<void>;
   observeProjectFileVersion?: (path: string, version: string | null) => void;
   recordEdit: (input: RecordEditInput) => Promise<void>;
-  domEditSaveTimestampRef: MutableRefObject<number>;
   reloadPreview: () => void;
   previewIframeRef: RefObject<HTMLIFrameElement | null>;
   pendingTimelineEditPathRef: MutableRefObject<Set<string>>;
@@ -55,3 +55,9 @@ export type TimelineFileDropHandler = (
   files: File[],
   placement?: { start: number; track: number },
 ) => Promise<void>;
+
+/** What a timeline move commits: the new start and track, plus the z-index
+ *  reorder a vertical drag resolves to (absent for a pure horizontal move). */
+export type TimelineMoveUpdates = Pick<TimelineElement, "start" | "track"> & {
+  stackingReorder?: TimelineStackingReorderIntent | null;
+};

@@ -20,7 +20,9 @@ from shared import (
     DIAGRAM_TEMPLATES,
     GENERIC_AGENT_INSTALL_COMMAND,
     PUBLIC_DOCUMENT_TEMPLATE_KINDS,
+    REPO_ROOT,
     ROOT,
+    SITE_ROOT,
     kami_version,
     public_document_template_count,
     public_document_template_kinds,
@@ -39,12 +41,21 @@ SITE_LOCALE_PAGES = (
 
 # Every surface that must carry the full public fact set. Derived from the
 # locale-page tuple so adding a locale automatically joins both checks.
+# index.md is the Markdown twin agents read instead of the homepage, so it
+# carries the same install and product facts.
+DEVELOPER_FACT_FILES = (
+    "developers.html",
+    "developers.md",
+)
 FULL_PUBLIC_FACT_FILES = (
     "README.md",
     "llms.txt",
+    "index.md",
     SITE_BASE_PAGE,
     *SITE_LOCALE_PAGES,
+    *DEVELOPER_FACT_FILES,
 )
+SITE_VERSION_BADGE_FILES = (SITE_BASE_PAGE, *SITE_LOCALE_PAGES)
 REDIRECT_SITE_FILE = "index-en.html"
 SITE_SURFACE_ABSENT = "__site_surface_absent__"
 
@@ -93,6 +104,15 @@ def _contains_diagram_count(text: str, expected: int) -> bool:
     return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
 
 
+def public_path(rel: str) -> Path:
+    """Where a public fact file lives: README at the repo root, pages under site/."""
+    if SITE_ROOT is None:
+        return ROOT / rel
+    if rel == "README.md":
+        return REPO_ROOT / rel
+    return SITE_ROOT / rel
+
+
 def _file_texts(files: Mapping[str, str] | None) -> tuple[dict[str, str], list[str]]:
     if files is not None:
         return dict(files), []
@@ -100,10 +120,10 @@ def _file_texts(files: Mapping[str, str] | None) -> tuple[dict[str, str], list[s
     texts: dict[str, str] = {}
     issues: list[str] = []
     site_files = (*FULL_PUBLIC_FACT_FILES, REDIRECT_SITE_FILE)
-    if not any((ROOT / rel).exists() for rel in site_files):
+    if not any(public_path(rel).exists() for rel in site_files):
         return {SITE_SURFACE_ABSENT: ""}, []
     for rel in site_files:
-        path = ROOT / rel
+        path = public_path(rel)
         if not path.exists():
             issues.append(f"{rel}: missing public fact file")
             continue
@@ -223,10 +243,10 @@ def site_fact_issues(files: Mapping[str, str] | None = None) -> list[str]:
         if rel != "llms.txt" and CLAUDE_DESKTOP_PACKAGE_URL not in text:
             issues.append(f"{rel}: missing Claude Desktop package URL {CLAUDE_DESKTOP_PACKAGE_URL}")
 
-        # The site pages carry a hand-written Kami version badge; tie it to the
-        # tracked VERSION file so a release bump cannot leave a page behind.
-        # README and llms.txt intentionally carry no version string.
-        if rel.endswith(".html") and f"v{kami_version()}" not in text:
+        # The homepage HTML pages carry a hand-written Kami version badge; tie
+        # those pages to VERSION without forcing the prose/developer files to
+        # repeat a badge they do not display.
+        if rel in SITE_VERSION_BADGE_FILES and f"v{kami_version()}" not in text:
             issues.append(f"{rel}: missing Kami version badge v{kami_version()}")
 
         if not _contains_template_count(text, template_count):
@@ -249,8 +269,43 @@ def site_fact_issues(files: Mapping[str, str] | None = None) -> list[str]:
     return issues
 
 
+# The site teaches CSS recipes in prose, outside any code fence, so
+# `--check-docs` (which reads Markdown fences) cannot see them. That is how the
+# homepage kept advertising a 0.5pt closed border with a radius long after the
+# linter started failing templates for it, in five locales at once. This guard
+# reads the rendered copy of every locale page and fails on the combinations the
+# design system forbids outright, so the public surface cannot drift past the
+# rules the repository enforces on itself.
+FORBIDDEN_SITE_RECIPES = (
+    (
+        re.compile(r"0\.5pt\s*(?:border|枠線|邊框|边框)[^.。]{0,40}(?:radius|圆角|圓角|角丸)", re.I),
+        "sub-1pt closed border paired with a radius (production.md pitfall #2)",
+    ),
+    (
+        re.compile(r"border:\s*0\.5pt\s+solid\s+var\(--brand\)", re.I),
+        "closed 0.5pt brand border; mark one edge with border-left instead",
+    ),
+)
+
+
+def site_recipe_issues(files: Mapping[str, str] | None = None) -> list[str]:
+    """Flag CSS recipes on the public pages that the design system forbids."""
+    texts, issues = _file_texts(files)
+    if SITE_SURFACE_ABSENT in texts:
+        return []
+    for rel in (SITE_BASE_PAGE, *SITE_LOCALE_PAGES):
+        raw = texts.get(rel)
+        if raw is None:
+            continue
+        visible = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", raw))
+        for pattern, why in FORBIDDEN_SITE_RECIPES:
+            if pattern.search(visible):
+                issues.append(f"{rel}: teaches {why}")
+    return issues
+
+
 def check_site_facts(verbose: bool = False) -> int:
-    if not any((ROOT / rel).exists() for rel in (*FULL_PUBLIC_FACT_FILES, REDIRECT_SITE_FILE)):
+    if not any(public_path(rel).exists() for rel in (*FULL_PUBLIC_FACT_FILES, REDIRECT_SITE_FILE)):
         print("OK: public site facts skipped (site files absent)")
         return 0
 
@@ -266,6 +321,17 @@ def check_site_facts(verbose: bool = False) -> int:
             print(f"  {issue}")
         if verbose:
             print("  source: shared public constants and template registries")
+        result = 1
+
+    recipe_issues = site_recipe_issues()
+    if not recipe_issues:
+        print(f"OK: no forbidden CSS recipes across {len(SITE_LOCALE_PAGES) + 1} public page(s)")
+    else:
+        print(f"\nERROR: [site-recipe-drift] {len(recipe_issues)}")
+        for issue in recipe_issues:
+            print(f"  {issue}")
+        if verbose:
+            print("  source: references/design.md and production.md pitfall #2")
         result = 1
 
     structure_issues = site_structure_issues()

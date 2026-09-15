@@ -226,9 +226,19 @@ for (const [network, prefix] of [
   NON_PUBLIC_IPV6_ADDRESSES.addSubnet(network, prefix, "ipv6");
 }
 
-function isBlockedHost(hostname: string): boolean {
-  const h = hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  if (h === "localhost") return true;
+/** Literal-host policy shared by rendering and capture; DNS resolution remains trusted. */
+export function isBlockedNetworkHost(hostname: string): boolean {
+  const h = hostname
+    .toLowerCase()
+    .replace(/\.$/, "")
+    .replace(/^\[|\]$/g, "");
+  if (
+    h === "localhost" ||
+    h.endsWith(".localhost") ||
+    h.endsWith(".local") ||
+    h.endsWith(".internal")
+  )
+    return true;
   const addressType = isIP(h);
   if (addressType === 0) return false;
   return addressType === 4
@@ -251,7 +261,7 @@ export function assertPublicHttpsUrl(url: string): void {
   if (parsed.protocol !== "https:") {
     throw new Error(`[URLDownloader] Only HTTPS URLs are permitted in compositions`);
   }
-  if (isBlockedHost(parsed.hostname)) {
+  if (isBlockedNetworkHost(parsed.hostname)) {
     throw new Error("[URLDownloader] URL targets a private/reserved address and is not permitted");
   }
 }
@@ -1113,7 +1123,22 @@ async function downloadWithRetry(
       return await runDownloadAttempt(url, localPath, timeoutMs, attempt + 1, options, signal);
     } catch (error) {
       const classified = classifyDownloadFailure(error);
-      if (!classified.locallyRetryable || attempt >= maxTransientRetries) throw classified;
+      if (!classified.locallyRetryable || attempt >= maxTransientRetries) {
+        const identity = safeDownloadUrlIdentity(url);
+        throw new UrlDownloadError(
+          classified.kind,
+          classified.retryable,
+          classified.message,
+          classified.status,
+          {
+            ...classified.telemetry,
+            urlFingerprint: identity.urlFingerprint,
+            initialHost: identity.host,
+            attempt: attempt + 1,
+          },
+          classified.locallyRetryable,
+        );
+      }
       if (classified.retryable) onTransientRetry?.(classified);
       const identity = safeDownloadUrlIdentity(url);
       emitDownloadTelemetry(options, {

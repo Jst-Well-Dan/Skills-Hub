@@ -29,8 +29,15 @@ import {
 } from "../../utils/renderArgs.js";
 import { normalizeSkillSlug } from "../../telemetry/skill.js";
 import { loadProjectConfig } from "../../utils/projectConfig.js";
+import { type CatalogUsage, summarizeCatalogUsage } from "../../utils/catalogUsage.js";
 
-const VALID_QUALITY = new Set(["draft", "standard", "high"]);
+const QUALITY_ALIASES = {
+  draft: { quality: "draft" as const },
+  standard: { quality: "standard" as const },
+  high: { quality: "high" as const },
+  looks: { quality: "standard" as const, crf: 16 },
+  delivery: { quality: "high" as const },
+} as const;
 const RENDER_FORMATS = ["mp4", "webm", "mov", "png-sequence", "gif"] as const;
 const VALID_FORMAT = new Set<string>(RENDER_FORMATS);
 const RENDER_FORMAT_LABEL = "mp4, webm, mov, png-sequence, or gif";
@@ -99,6 +106,8 @@ export interface RenderPlan {
   quality: RenderQuality;
   authoringSkill?: string;
   invalidAuthoringSkill?: string;
+  /** Catalog items installed in this project, and those the entry reaches. */
+  catalogUsage: CatalogUsage;
   format: RenderFormat;
   gifLoop?: number;
   gifFpsCapped: boolean;
@@ -186,12 +195,16 @@ export function createRenderPlan(args: RenderCommandArgs, now = new Date()): Ren
   }
   let fps = fpsParse.value;
 
-  const qualityRaw = args.quality ?? "standard";
-  if (!VALID_QUALITY.has(qualityRaw)) {
-    errorBox("Invalid quality", `Got "${qualityRaw}". Must be draft, standard, or high.`);
+  const qualityRaw = args.quality ?? "looks";
+  if (!(qualityRaw in QUALITY_ALIASES)) {
+    errorBox(
+      "Invalid quality",
+      `Got "${qualityRaw}". Must be draft, looks, delivery, standard, or high.`,
+    );
     failUsage();
   }
-  const quality = qualityRaw as RenderQuality;
+  const qualityAlias = QUALITY_ALIASES[qualityRaw as keyof typeof QUALITY_ALIASES];
+  const quality = qualityAlias.quality;
 
   // Attribution resolves the explicit --skill flag first, then falls back to
   // the owning skill persisted in hyperframes.json — so re-renders, batch
@@ -203,6 +216,10 @@ export function createRenderPlan(args: RenderCommandArgs, now = new Date()): Ren
     typeof args.skill === "string" && args.skill.trim() !== "" && !flagSkill
       ? args.skill
       : undefined;
+
+  // Resolved here, once, from the same entry the render will use: batch rows
+  // vary only their variables, so every row shares this composition tree.
+  const catalogUsage = summarizeCatalogUsage(project.dir, renderTarget);
 
   const formatRaw = args.format ?? "mp4";
   const format = parseRenderFormat(formatRaw);
@@ -381,7 +398,11 @@ export function createRenderPlan(args: RenderCommandArgs, now = new Date()): Ren
           `Got "${args.crf}". Must be a non-negative integer.`,
           0,
         )
-      : undefined;
+      : format === "mov" || args["video-bitrate"]
+        ? undefined
+        : "crf" in qualityAlias
+          ? qualityAlias.crf
+          : undefined;
   let vp9CpuUsed: number | undefined;
   if (args["vp9-cpu-used"] != null) {
     const parsed = Number(args["vp9-cpu-used"]);
@@ -401,6 +422,15 @@ export function createRenderPlan(args: RenderCommandArgs, now = new Date()): Ren
     );
     failUsage();
   }
+  if (format === "mov" && (crf !== undefined || videoBitrate !== undefined)) {
+    const flag = crf !== undefined ? "--crf" : "--video-bitrate";
+    errorBox(
+      "Unsupported ProRes rate control",
+      `${flag} does not apply to MOV. MOV uses a fixed alpha-preserving ProRes 4444 profile.`,
+      `Remove ${flag}, or choose MP4/WebM when you need CRF or target-bitrate control.`,
+    );
+    failUsage();
+  }
 
   const quiet = args.quiet ?? false;
   const batchJson = args.json ?? false;
@@ -412,6 +442,7 @@ export function createRenderPlan(args: RenderCommandArgs, now = new Date()): Ren
     quality,
     authoringSkill,
     invalidAuthoringSkill,
+    catalogUsage,
     format,
     gifLoop,
     gifFpsCapped,
@@ -461,7 +492,6 @@ export function renderOutputDirectory(plan: RenderPlan): string {
 
 /** Resolve browser GPU mode from Docker, CLI, env, then the auto default. */
 // Re-exported by render.ts to preserve its tested public seam.
-// fallow-ignore-next-line unused-export
 export function resolveBrowserGpuForCli(
   useDocker: boolean,
   browserGpuArg: boolean | undefined,

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cassandra Creator"
+  short_description: "Create an independent evidence-backed dissent agent"
+  default_prompt: "Use $cassandra-creator to establish a durable independent Cassandra thread and operating cadence for this project."

@@ -32,6 +32,9 @@ import {
   listPlanV2ArtifactsForTarget,
   materializePlanV2Target,
   plan,
+  isPlanAudioArtifactPath,
+  PLAN_AUDIO_RELATIVE_PATH,
+  resolvePlanAudioPath,
   planV2WithPublisher,
   type PlanResult,
   type PlanV2Artifact,
@@ -43,13 +46,16 @@ import {
 import { resolveChromeExecutablePath } from "./chromium.js";
 import type {
   AssembleEvent,
+  AssembleV2Event,
   AssembleResultBody,
   CloudRunAction,
   CloudRunEvent,
   CloudRunResult,
   PlanEvent,
+  PlanV2Event,
   PlanResultBody,
   RenderChunkEvent,
+  RenderChunkV2Event,
   RenderChunkResultBody,
 } from "./events.js";
 import { type DistributedFormat, formatExtension } from "./formatExtension.js";
@@ -152,21 +158,22 @@ function validatePlanProtocolShape(event: PlanEvent | RenderChunkEvent | Assembl
   }
   if (event.Action === "plan") return;
 
+  const effectiveProtocol = protocol ?? "v2";
   const hasV1Locator = typeof raw.PlanGcsUri === "string";
   const hasV2Manifest = typeof raw.PlanV2ManifestGcsUri === "string";
   const hasV2Prefix = typeof raw.PlanV2ArtifactGcsPrefix === "string";
   const valid =
-    protocol === "v2"
+    effectiveProtocol === "v2"
       ? !hasV1Locator && hasV2Manifest && hasV2Prefix
       : hasV1Locator && !hasV2Manifest && !hasV2Prefix;
   if (!valid) {
     const error = new Error(
-      `[handler] ${protocol === "v2" ? "v2" : "v1"} ${event.Action} event has mixed or missing plan locators`,
+      `[handler] ${effectiveProtocol} ${event.Action} event has mixed or missing plan locators`,
     );
     error.name = "PLAN_PROTOCOL_UNSUPPORTED";
     throw error;
   }
-  if (protocol === "v2" && event.Action === "assemble" && event.AudioGcsUri !== null) {
+  if (effectiveProtocol === "v2" && event.Action === "assemble" && event.AudioGcsUri !== null) {
     const error = new Error("[handler] v2 assemble audio must be materialized from the manifest");
     error.name = "PLAN_PROTOCOL_UNSUPPORTED";
     throw error;
@@ -251,14 +258,14 @@ function summarizeEvent(
       return {
         projectGcsUri: event.ProjectGcsUri,
         planOutputGcsPrefix: event.PlanOutputGcsPrefix,
-        planProtocol: event.PlanProtocol ?? "v1",
+        planProtocol: event.PlanProtocol ?? "v2",
         format: event.Config.format,
         fps: event.Config.fps,
       };
     case "renderChunk":
       return {
-        planProtocol: event.PlanProtocol ?? "v1",
-        ...(event.PlanProtocol === "v2"
+        planProtocol: event.PlanProtocol ?? "v2",
+        ...(event.PlanProtocol !== "v1"
           ? { planV2ManifestGcsUri: event.PlanV2ManifestGcsUri }
           : { planGcsUri: event.PlanGcsUri }),
         chunkIndex: event.ChunkIndex,
@@ -266,8 +273,8 @@ function summarizeEvent(
       };
     case "assemble":
       return {
-        planProtocol: event.PlanProtocol ?? "v1",
-        ...(event.PlanProtocol === "v2"
+        planProtocol: event.PlanProtocol ?? "v2",
+        ...(event.PlanProtocol !== "v1"
           ? { planV2ManifestGcsUri: event.PlanV2ManifestGcsUri }
           : { planGcsUri: event.PlanGcsUri }),
         chunkCount: event.ChunkGcsUris.length,
@@ -294,7 +301,7 @@ function primeChrome(deps?: HandlerDeps): void {
 
 // fallow-ignore-next-line complexity
 async function handlePlan(event: PlanEvent, deps?: HandlerDeps): Promise<PlanResultBody> {
-  if (event.PlanProtocol === "v2") {
+  if (event.PlanProtocol !== "v1") {
     return handlePlanV2(event, deps);
   }
   const started = Date.now();
@@ -322,7 +329,7 @@ async function handlePlan(event: PlanEvent, deps?: HandlerDeps): Promise<PlanRes
 
     // Upload the planDir as a single tarball. The workflow cannot pass a
     // directory-shaped artifact between steps; we serialize and rely on the
-    // consumer (renderChunk / assemble) to untar. `audio.aac` lives inside
+    // consumer (renderChunk / assemble) to untar. The audio artifact lives inside
     // planDir, so it already rides along in this tarball — every consumer
     // (including assemble) gets it from the untar. We deliberately do NOT
     // upload a separate audio object: it would duplicate the bytes on every
@@ -331,7 +338,7 @@ async function handlePlan(event: PlanEvent, deps?: HandlerDeps): Promise<PlanRes
     const planTar = join(work, "plan.tar.gz");
     await tarDirectory(planDir, planTar);
     const planTarUri = `${trimTrailingSlash(event.PlanOutputGcsPrefix)}/plan.tar.gz`;
-    const audioPath = join(planDir, "audio.aac");
+    const audioPath = join(planDir, PLAN_AUDIO_RELATIVE_PATH);
     const hasAudio = existsSync(audioPath) && statSync(audioPath).size > 0;
     await uploadFileToGcs(storage, planTar, planTarUri, "application/gzip");
 
@@ -362,7 +369,7 @@ async function handlePlan(event: PlanEvent, deps?: HandlerDeps): Promise<PlanRes
  */
 // fallow-ignore-next-line complexity
 async function handlePlanV2(
-  event: Extract<PlanEvent, { PlanProtocol: "v2" }>,
+  event: PlanV2Event,
   deps?: HandlerDeps,
 ): Promise<Extract<PlanResultBody, { PlanProtocol: "v2" }>> {
   const started = Date.now();
@@ -397,7 +404,7 @@ async function handlePlanV2(
       Width: manifest.width,
       Height: manifest.height,
       Format: manifest.format,
-      HasAudio: manifest.artifacts.some((artifact) => artifact.path === "audio.aac"),
+      HasAudio: manifest.artifacts.some((artifact) => isPlanAudioArtifactPath(artifact.path)),
       AudioGcsUri: null,
       FfmpegVersion: manifest.ffmpegVersion,
       ProducerVersion: manifest.producerVersion,
@@ -415,7 +422,7 @@ async function handleRenderChunk(
   event: RenderChunkEvent,
   deps?: HandlerDeps,
 ): Promise<RenderChunkResultBody> {
-  if (event.PlanProtocol === "v2") {
+  if (event.PlanProtocol !== "v1") {
     return handleRenderChunkV2(event, deps);
   }
   const started = Date.now();
@@ -472,7 +479,7 @@ async function handleRenderChunk(
 /** Materialize only this chunk's verified v2 dependencies before rendering. */
 // fallow-ignore-next-line complexity
 async function handleRenderChunkV2(
-  event: Extract<RenderChunkEvent, { PlanProtocol: "v2" }>,
+  event: RenderChunkV2Event,
   deps?: HandlerDeps,
 ): Promise<RenderChunkResultBody> {
   const started = Date.now();
@@ -545,7 +552,7 @@ async function handleAssemble(
   event: AssembleEvent,
   deps?: HandlerDeps,
 ): Promise<AssembleResultBody> {
-  if (event.PlanProtocol === "v2") {
+  if (event.PlanProtocol !== "v1") {
     return handleAssembleV2(event, deps);
   }
   const started = Date.now();
@@ -567,7 +574,7 @@ async function handleAssemble(
     // only for backward compatibility with an older Plan that uploaded it
     // standalone.
     let audioPath: string | null = null;
-    const planAudio = join(planDir, "audio.aac");
+    const planAudio = resolvePlanAudioPath(planDir) ?? join(planDir, PLAN_AUDIO_RELATIVE_PATH);
     if (existsSync(planAudio) && statSync(planAudio).size > 0) {
       audioPath = planAudio;
     } else if (event.AudioGcsUri) {
@@ -610,7 +617,7 @@ async function handleAssemble(
  */
 // fallow-ignore-next-line complexity
 async function handleAssembleV2(
-  event: Extract<AssembleEvent, { PlanProtocol: "v2" }>,
+  event: AssembleV2Event,
   deps?: HandlerDeps,
 ): Promise<AssembleResultBody> {
   const started = Date.now();
@@ -619,7 +626,7 @@ async function handleAssembleV2(
   const work = mkdtempSync(join(deps?.tmpRoot ?? tmpdir(), "hf-cr-assemble-v2-"));
   try {
     const planDir = await downloadAndMaterializePlanV2(storage, event, { role: "assembler" }, work);
-    const audioPath = existsSync(join(planDir, "audio.aac")) ? join(planDir, "audio.aac") : null;
+    const audioPath = resolvePlanAudioPath(planDir);
     const chunkPaths = await downloadChunkObjects(storage, event.ChunkGcsUris, work, event.Format);
     const finalOutput =
       event.Format === "png-sequence"
@@ -778,12 +785,12 @@ function getEventGcsUris(event: PlanEvent | RenderChunkEvent | AssembleEvent): s
     case "plan":
       return [event.ProjectGcsUri, event.PlanOutputGcsPrefix];
     case "renderChunk":
-      return event.PlanProtocol === "v2"
+      return event.PlanProtocol !== "v1"
         ? [event.PlanV2ManifestGcsUri, event.PlanV2ArtifactGcsPrefix, event.ChunkOutputGcsPrefix]
         : [event.PlanGcsUri, event.ChunkOutputGcsPrefix];
     case "assemble":
       return [
-        ...(event.PlanProtocol === "v2"
+        ...(event.PlanProtocol !== "v1"
           ? [event.PlanV2ManifestGcsUri, event.PlanV2ArtifactGcsPrefix]
           : [event.PlanGcsUri]),
         ...event.ChunkGcsUris,
@@ -906,11 +913,13 @@ const NON_RETRYABLE_ERROR_NAMES = new Set([
   "PLAN_V2_INTEGRITY_UNRECOVERABLE",
   "VIDEO_SOURCE_UNRENDERABLE",
   "INVALID_VIDEO_METADATA",
+  "NOT_MEDIA_PAYLOAD",
   // Producer error class names (`.name`) + their string code aliases — the
   // class sets `.name` to the class name but wraps a `code`; cover both so a
   // raw-code throw is caught too. Mirrors the AWS state machine's
   // non-retryable list.
   "FormatNotSupportedInDistributedError",
+  "NotMediaPayloadError",
   "PlanTooLargeError",
   "PlanProtocolUnsupportedError",
   "PlanV2IntegrityError",

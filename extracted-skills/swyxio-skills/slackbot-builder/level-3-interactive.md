@@ -8,15 +8,17 @@ the right target, streams progress, and only chimes into threads when addressed.
 - [ ] **`POST /interactions`** route (signed like everything else).
 - [ ] **Human-in-the-loop approvals** — drafts as Block Kit, applied only on click.
 - [ ] **Buttons resolve in place** (`chat.update`) so they can't be actioned twice — with an **instant ephemeral ack** before any async work so the button can't be double-fired in the gap.
-- [ ] **Batch actions show incremental progress** — rewrite the message after each item, not once at the end.
+- [ ] **Batch actions are state-aware** — model the provider's real atomic transition as one draft; Approve all re-reads and processes only independently-ready remaining drafts, with visible progress and a terminal summary.
 - [ ] **Dry-run validation** before presenting drafts.
 - [ ] **Rich, actionable drafts** — render computed evidence/artifacts, bulk + edit-before-apply, deep links.
 - [ ] **Slash commands** for one-shot invocations.
 - [ ] **Inline flags** (`!help`, `!model`, `!audit`) — shared parser, strip before planning, help lists model slugs.
 - [ ] **Routing / clarification ladder** for ambiguous targets.
+- [ ] **Stateful domain routing** — weak nouns inherit the active workflow; strong explicit intent can switch it.
+- [ ] **Owned-resource resolution** before asking humans for IDs; exact matches draft even if siblings remain unresolved.
 - [ ] **Live status streaming** of agent steps into the composer (native version → L4).
 - [ ] **Monitored-thread decision** — reply to non-mentions only when addressed (heuristic-first).
-- [ ] **Rich outputs + in-message settings** — file/media uploads, control buttons under output (Regenerate/Variation/Settings), a `views.open` settings modal persisted per thread. (Generating images? → [image-generation.md](image-generation.md).)
+- [ ] **Rich outputs + in-message settings** — native analytical visuals, file/media uploads, control buttons under output (Regenerate/Variation/Settings), and a `views.open` settings modal persisted per thread. (Analytical charts/tables → [analytical-visualizations.md](analytical-visualizations.md); generating images → [image-generation.md](image-generation.md).)
 
 ## Mutations require a human
 
@@ -43,7 +45,7 @@ outcome where the buttons were.
 ```ts
 const blocks = original.blocks.map(b =>
   b.block_id === `apply_${id}`
-    ? { type: "context", elements: [{ type: "mrkdwn", text: `:white_check_mark: Appled by <@${user}> · v${version}` }] }
+    ? { type: "context", elements: [{ type: "mrkdwn", text: `:white_check_mark: Applied by <@${user}> · v${version}` }] }
     : b);
 await slack("chat.update", { channel, ts, text, blocks }, env);
 ```
@@ -66,16 +68,26 @@ return ack200();
 (For truly fast in-place toggles you can skip the ephemeral and just `chat.update`;
 the ephemeral ack earns its keep the moment the action schedules async work.)
 
-## Batch actions: incremental progress, not one final rewrite
+## Batch actions: atomic drafts and visible progress
 
-"Approve all 6 drafts" processes items sequentially (~3s each). If you only rewrite
-the message *once at the end*, the user stares at unchanged buttons for 20+ seconds
-and assumes it hung (→ re-click, "is it broken?"). Rewrite the message **after each
-item**, best-effort, so progress is visible:
+Do not make a human approve artificial intermediate steps when one provider write
+can safely perform the intended transition. Draft the smallest typed action that
+captures the real operation, including its preconditions, before/after state, and
+readback test. A batch should contain independently hydrated, ready-to-run drafts;
+it is not a substitute for an ordered plan with implicit auto-advance.
+
+"Approve all 6 drafts" must first re-read canonical state and select only rows
+still in `draft`; an earlier individual Approve/Reject changes what “all” means.
+Never replay already resolved actions. Process the remaining items sequentially
+(~3s each). Post a clear started state and show best-effort incremental progress
+when practical; always reconcile the card with a terminal per-item summary. A
+single final rewrite with no initial status leaves unchanged buttons for 20+ seconds
+and invites re-clicks.
 
 ```ts
 const resolved = new Map<string, string>();
-for (const item of items) {
+const remaining = (await loadActionSet(setId)).filter(item => item.state === "draft");
+for (const item of remaining) {
   await applyOne(item);                                   // the real, awaited work
   resolved.set(item.id, statusLineFor(item));
   void slack("chat.update", {                             // best-effort, don't block the next item
@@ -91,6 +103,11 @@ await slack("chat.update", { channel, ts: messageTs, text: summary, blocks: fina
   the remaining items.
 - One bad item records its error on that row and the loop **keeps going**; post a
   summary line (`Applied 5 of 7 — 2 need attention`).
+- A durable worker may own a longer batch. It still atomically claims each draft,
+  records each terminal outcome, and re-reads the action set before applying; do
+  not use background execution to imply an unreviewed dependency auto-advance.
+- Rebuild from current backend state after every item so applied/rejected cards
+  lose their buttons and cannot be clicked again.
 - The version/concurrency mechanics of bulk apply (chain `expectedVersion`, one
   final snapshot refresh) live in [data-chatbots](../data-chatbots/SKILL.md)
   § Bulk review / mass-approve.
@@ -146,6 +163,48 @@ Persist pending clarification in the store with a short TTL; on selection,
 ```ts
 await kv.put(`pending:${channel}:${threadKey}`, JSON.stringify({ message, userId, context }), { expirationTtl: 3600 });
 ```
+
+### Stateful routing and resource resolution
+
+Keep a compact active domain in the shared thread session. Domain-explicit or
+strong operational language may switch it; ambiguous nouns such as “talk,”
+“track,” “session,” “those,” or a person's name inherit it. Do not let one weak
+keyword send an ongoing media workflow into the scheduler.
+
+For owned videos, playlists, repositories, customers, or other frequently named
+resources, maintain a compact complete catalog (name/title, exact ID, URL,
+timestamp, normalized alias tokens). Refresh incrementally, reconcile fully on a
+slower cadence, resolve locally first, and use authenticated provider search
+only on a catalog miss. General web search is separate and opt-in.
+
+Before asking the user for IDs, exhaust owned-resource resolution. Draft actions
+for every unambiguous match and list unresolved names separately; one miss must
+not discard the valid portion of a batch. Always render `Human name (opaque_id)`.
+
+Discovery is not write authority. Before persisting an action, independently
+re-read the target from the provider, verify tenant/account ownership, capture
+current state + ETag/version, and freeze a typed request. Transient Slack search
+may help identify a resource but should neither authorize the write nor
+blanket-block an independently hydrated action.
+
+Full pattern and regressions:
+[stateful-agent-workflows.md](stateful-agent-workflows.md).
+
+## Publish a private result safely
+
+Ephemeral `block_actions` payloads are not a durable result store and may omit
+`payload.message`. When offering **Make public**, persist a short-lived rendered
+snapshot and put only its opaque ID in the button. On click:
+
+1. acknowledge immediately;
+2. authorize workspace, actor, channel, and exact thread;
+3. atomically claim the snapshot;
+4. publish with `chat.postMessage` into that thread;
+5. validate HTTP and Slack `{ok:false}`;
+6. mark published and scrub/expire the retained payload.
+
+Log actionable route/message/result identifiers on failure. Never silently
+swallow a failed `chat.postMessage`.
 
 ### Classifier input hygiene — route on the request, not the context
 
@@ -209,6 +268,12 @@ still record observability (L5) and support per-request flags (e.g. `--history`)
 
 ## Rich outputs: file/media uploads + in-message controls + a settings modal
 
+For quantitative answers, start with Slack-native charts and interactive data
+tables; move to deterministic PNG/SVG renders or hosted HTML only when the
+visual form needs more than Slack provides. Follow the bounded schema, visual
+selection, accessibility, table-budget, and live-QA guidance in
+[analytical-visualizations.md](analytical-visualizations.md).
+
 When the bot produces an **artifact** (a generated image, a rendered chart, a PDF)
 rather than text, give it the same affordances Slack gives the Cursor/agent apps:
 the file plus buttons to iterate, plus a modal to change settings — no flag-typing
@@ -249,9 +314,13 @@ don't stand up R2/S3 just to remember the last render. Distinguish the bot's own
 outputs (`bot_id` set) from human-supplied references so "Regenerate" replays the
 original sources instead of recursively editing its own last frame.
 
-**Attaching a file is itself an intent signal.** A picture on a mention/DM is an
-unambiguous "work with this" — route to the media path without requiring a flag
-(but still classify on the raw text, not the prepended context — see above).
+**Do not equate an attachment with image-mode intent.** Files and images may be
+evidence for an ordinary question. Require an explicit image action/flag to start
+image mode, then keep it sticky only inside that thread with a documented
+one-message escape hatch for normal bot work. Preserve and forward bare
+attachments to the ordinary multimodal planner instead of silently deleting them.
+The complete routing/reference policy lives in
+[image-generation.md](image-generation.md).
 
 > **Generating (not just uploading) images?** That's an optional capability with
 > its own gotchas — long renders must run in durable execution (a `waitUntil`
@@ -372,7 +441,12 @@ Cross-surface detail: [data-chatbots](../data-chatbots/SKILL.md) § Slack inline
 - ❌ Applying changes straight from a query (no approval).
 - ❌ Leaving buttons live after a click → double-applies.
 - ❌ Relying on the post-work `chat.update` alone to disable a button — the 2–5s gap before it lands invites a double-click; fire an instant ephemeral ack first.
-- ❌ Bulk-applying N items with a single final message rewrite → 20s of frozen-looking UI; rewrite per item.
+- ❌ Bulk-applying N items with no immediate started state and only a late final
+  rewrite. Add incremental per-item updates when practical and always publish a
+  terminal summary.
+- ❌ Approve all replaying actions already applied/rejected individually.
+- ❌ Depending on `payload.message` to republish an ephemeral answer.
+- ❌ Treating Slack search as write authority—or blocking a provider-verified action merely because Slack helped discover it.
 - ❌ Presenting drafts you never validated → 409 on approve.
 - ❌ Guessing the target when several are plausible.
 - ❌ Replying to every thread message → the bot becomes a nuisance.

@@ -36,13 +36,15 @@ export function StudioLeftSidebar({
   onAddCompositionToTimeline,
 }: StudioLeftSidebarProps) {
   const {
-    leftCollapsed,
+    effectiveLeftCollapsed,
     leftWidth,
     adjustPanelWidth,
     toggleLeftSidebar,
     handlePanelResizeStart,
     handlePanelResizeMove,
     handlePanelResizeEnd,
+    setRightPanelTab,
+    setRightCollapsed,
   } = usePanelLayoutContext();
   const { projectId, renderQueue, waitForPendingDomEditSaves } = useStudioShellContext();
   const {
@@ -64,14 +66,25 @@ export function StudioLeftSidebar({
 
   const handleRenderComposition = useCallback(
     async (comp: string) => {
+      // startRender refuses without an encoder, so nothing unfinishable gets
+      // queued either way. What it cannot do from here is show the reason:
+      // its refusal lands as a row in the Renders panel, which may be
+      // collapsed or on another tab, so the click would look like nothing
+      // happened. Same move the header makes: put the prompt in front of the
+      // user, then stop.
+      if (renderQueue.ffmpegMissing) {
+        setRightPanelTab("renders");
+        setRightCollapsed(false);
+        return;
+      }
       await waitForPendingDomEditSaves();
       const { format, quality, fps } = getPersistedRenderSettings();
       await renderQueue.startRender({ composition: comp, format, quality, fps });
     },
-    [renderQueue, waitForPendingDomEditSaves],
+    [renderQueue, waitForPendingDomEditSaves, setRightPanelTab, setRightCollapsed],
   );
 
-  if (leftCollapsed) {
+  if (effectiveLeftCollapsed) {
     return (
       <div className="mr-0.5 flex w-10 flex-shrink-0 flex-col items-center rounded-lg border border-neutral-800/50 bg-neutral-950 pt-1">
         <button

@@ -42,12 +42,14 @@ If "no", don't draw. Diagrams add signal to hierarchy, direction, and magnitude.
 
 ## 2. Complexity budget
 
-**Target density: 4/10**. Enough to be technically complete, not so dense the reader needs a guide.
+**Target density: 4/10** for editorial documents (reports, one-pagers, decks). Enough to be technically complete, not so dense the reader needs a guide.
 
 - Nodes > 9 -> this is two diagrams, not one
 - Two nodes that always travel together -> they're one node
 - A line whose meaning is obvious from layout -> remove the line
 - 5 nodes in ink-blue -> you haven't decided what's focal
+
+**Teaching tier: 6-7/10.** A figure inside a technical teaching article (the reader expects to learn how something works) carries more: layers, data-flow direction, and at least one labeled trade-off or decision point. A 3-box overview shipped as an "architecture diagram" in that context reads as marketing, and readers say so. If hand-assembled SVG cannot hold that detail at the target display width, switch to the host-image illustration path (SKILL.md «Illustrations») instead of enlarging the SVG.
 
 **Focal rule**: 1-2 focal elements per diagram (`#1B365D` stroke + `#EEF2F7` fill). Everything else goes neutral. Focal signal comes from contrast, not count.
 
@@ -297,6 +299,45 @@ Node titles carry function first, protocol noun second. A bare protocol noun out
 
 In-diagram copy holds objects, boundaries, and actions only; argument stays in prose. CJK copy inside nodes uses short labels with commas, slashes, and semicolons, never the CJK full stop (。). If a line needs a full stop, it is a sentence, and sentences live in the document, not the diagram.
 
+### Executable architecture geometry
+
+Keep HTML as the only source: mark the existing visible node rectangle with
+`data-node="api"`, the line or polyline shaft with `data-edge="enqueue"`,
+`data-from="api"`, and `data-to="queue"`. Mark a relationship label's existing
+background rectangle with `data-label-for="enqueue"`. IDs stay stable when text
+or positions change. Do not mark arrowheads, legends, or boundary frames as nodes.
+The architecture figure and the board's main path demonstrate this contract.
+
+`python3 scripts/build.py --check` checks the shipped templates;
+`python3 scripts/build.py --check-style filled.html` checks a filled document.
+These checks report duplicate IDs, missing endpoints, overlapping node rectangles
+or label masks, lines through nodes or other labels, and endpoints that do not
+attach outward within 8 SVG units of the named node edge. The board's intentional
+4px standoff remains valid. Rectangle-edge grazing and crossing a real boundary
+frame are allowed; neither means passing through a node.
+
+This is a bounded static check, not a browser layout engine. Marked geometry uses
+numeric SVG user coordinates on `rect`, `line`, and `polyline`, without inline
+style or ancestor transforms/styles. Do not override its geometry through CSS,
+animation, or reuse elements. Curved paths and unmarked diagrams remain outside
+this contract. Text must fit its label mask at the final display size; inspect
+actual Chinese and Latin font rendering in the visual pass. A passing mask check
+does not establish text fit, arrowhead visibility, or factual architecture accuracy.
+
+Preserve meaningful relationship labels: protocol, action, direction, and
+synchronous/asynchronous behavior. When a label does not fit, move its mask and
+text together, widen the corridor, or reroute the edge. Do not shrink text or
+remove meaning to pass a check. Multiple branches need separate attachment points;
+keep their order stable and leave room at corners.
+
+Record verified source paths and the source revision in the existing `prompt.md`
+blocks, including evidence for relationships, not just component names. Source
+existence alone does not prove a call or dependency. During updates distinguish
+changed relationships from moved boxes; preserve stable IDs for unchanged objects.
+
+The semantic-geometry approach draws on [Archify](https://github.com/tt-a1i/archify).
+Kami retains static SVG and its existing typography; no Archify runtime is bundled.
+
 ### Terminology sync
 
 The diagram and its host document are one vocabulary. When prose renames an object, the same change updates: SVG `<text>` labels, `<title>` and `<desc>`, `prompt.md`, the re-exported PNG, and any cross-references. A diagram that still shows the old name is a bug, not a style issue.
@@ -360,7 +401,7 @@ Edit the `<text>` and `<rect>` values directly. Rules:
 - **SVG top padding**: the `y` in `<text y="…">` is the baseline. `y` must be ≥ font-size × 1.2, otherwise the tops of capital letters extend above the viewBox and get clipped (classic symptom: "TOOLS" renders as "TOULS"). Either pad the viewBox at the top or move `y` into the safe zone.
 - **Loop arc control points**: for a four-cardinal-node ring, each arc is a Q-curve whose control point sits at the **outer intersection of the two adjacent tangent axes**, not at a node corner. Example for PLAN (top) → ACT (right): start = PLAN's right-edge midpoint, end = ACT's top-edge midpoint, control = `(ACT.x + ACT.w/2, PLAN.y + PLAN.h/2)`. This gives a pure horizontal tangent at departure and pure vertical at arrival, reading as a clean quarter-circle. Control at the node corner produces a squashed arc.
 - **Closed loops need a dashed framing ring**: four directed arcs alone force the reader to mentally connect them into a loop. A dashed circle centered on the visual center (radius slightly larger than center-to-inner-edge distance) makes the loop immediately readable. Draw the ring below the nodes; solid node fills mask where the ring crosses each node; the ring shows only between nodes.
-- **Chevron arrows, not filled triangles**: use `<path d="M2 1 L8 5 L2 9" fill="none" stroke=... stroke-width="1.5" stroke-linecap="round"/>`. A filled triangle reads as technical UI; an open two-stroke chevron reads as editorial schematic. kami defaults to chevron. **WeasyPrint does not support `<marker orient="auto">`**: all markers render at 0° (pointing right). The fix is to skip `<marker>` and draw each arrowhead as a manual chevron `<path>` with hardcoded direction (see production.md #15).
+- **Chevron arrows, not filled triangles**: use `<path d="M2 1 L8 5 L2 9" fill="none" stroke=... stroke-width="1.5" stroke-linecap="round"/>`. A filled triangle reads as technical UI; an open two-stroke chevron reads as editorial schematic. kami defaults to chevron. **WeasyPrint does not support `<marker orient="auto">`**: all markers render at 0° (pointing right). The fix is to skip `<marker>` and draw each arrowhead as a manual chevron `<path>` with hardcoded direction (see production.md #14).
 
 ### Color token map
 
@@ -642,6 +683,36 @@ Every diagram template carries a poster-size `@page` sized to its own frame and 
 
 ---
 
-## 11. Credit
+## 11. Illustration briefs (host image model)
+
+For raster illustrations delegated to the host's image generation (SKILL.md «Illustrations» defines when to switch). The brief is the deliverable Kami controls; write it tightly and the image model has nowhere to drift.
+
+**Brief skeleton**, in order:
+
+1. Claim: one sentence stating what the reader should conclude. Name the assertion, not the topic: “review protects the release boundary”, not “software workflow”.
+2. Placement: destination, aspect ratio, and smallest display size. README inline, social card, slide, and report figure have different type floors.
+3. Reference: the accepted sibling image or named visual system this must sit beside. State what survives from that reference: composition, density, line language, or crop.
+4. Exclusions: what must not appear. Version strings, release copy, invented UI, unrelated atmosphere, extra hues, and private identifiers stay out unless the task explicitly needs them.
+5. Canvas: warm parchment `#f5f4ed`, never pure white; generous whitespace; composed like a figure in a well-typeset report.
+6. Accent: ink blue `#1B365D` on the 1-2 focal elements only; everything else warm gray with a yellow-brown undertone; no second hue anywhere.
+7. Strokes and icons: thin single-line geometric strokes; flat icons matching section 6 (rounded line style, no fills beyond the two sanctioned ones); no gradients, drop shadows, or 3D.
+8. Labels: serif, few, short. Prefer single words; image models misspell long phrases, and a misspelled label voids the image. If a label must be a phrase, plan to typeset it in HTML over the image instead.
+9. Content spec: the same complexity budget as section 2 (state the tier: 4/10 editorial or 6-7/10 teaching), what is focal, and the reading direction.
+
+**QC before placing a generated image** (regenerate on any failure, do not retouch expectations):
+
+- Palette holds: parchment ground, single blue accent, no stray hue, no cool grays.
+- No gradient, shadow, or 3D crept in.
+- Text in the image is spelled correctly and minimal; anything wrong or verbose gets re-briefed with fewer words.
+- Composition reads as a report figure (balanced margins, clear focal point), not as a poster or clip art.
+- The claim is legible at the stated smallest display size; a detail visible only in the full-resolution source does not count.
+- Every exclusion holds, especially version text, invented product surfaces, unrelated decoration, and private identifiers.
+- Style matches the other generated images in the same deliverable (shared style anchor, see SKILL.md batch rule).
+
+After a partly successful generation, name what survives before changing the brief. After two look-based rejections, stop blind regeneration and use the SKILL.md comparison protocol: preserve the accepted part, show labeled alternatives in the same frame, and realign on the claim, reference, and exclusions.
+
+---
+
+## 12. Credit
 
 This capability is inspired by Cathryn Lavery's [diagram-design](https://github.com/cathrynlavery/diagram-design) (a Claude Code skill with 13 editorial diagram types). kami borrowed the **approach** (inline SVG, semantic tokens, complexity budget, anti-slop table). Not the full catalog.

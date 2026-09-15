@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vercel Production Cost Review"
+  short_description: "Explain a material Vercel cost question"
+  default_prompt: "Use $vercel-production-cost-review to scope the material Vercel cost question, rely on billing evidence, investigate the few dominant drivers, and avoid remediation machinery without proof."

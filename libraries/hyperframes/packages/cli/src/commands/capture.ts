@@ -204,9 +204,13 @@ export default defineCommand({
               ok: result.ok,
               projectDir: result.projectDir,
               url: result.url,
+              // Reported beside `ok`, because they answer different questions: a capture of an
+              // error page is `ok: true` with a status the caller has to see to know it.
+              httpStatus: result.httpStatus,
               title: result.title,
               screenshots: result.screenshots.length,
               assets: result.assets.length,
+              dropped: result.dropped,
               detectedSections: result.tokens.sections.length,
               fonts: result.tokens.fonts.map((f) => f.family),
               fontsDetailed: result.tokens.fonts,
@@ -225,6 +229,18 @@ export default defineCommand({
         console.log();
         console.log(`  ${c.dim("Screenshots:")} ${result.screenshots.length}`);
         console.log(`  ${c.dim("Assets:")} ${result.assets.length}`);
+        const droppedTotal = Object.values(result.dropped).reduce((sum, n) => sum + n, 0);
+        if (droppedTotal > 0) {
+          const breakdown = Object.entries(result.dropped)
+            .filter(function (entry) {
+              return entry[1] > 0;
+            })
+            .map(function (entry) {
+              return entry[1] + " " + entry[0];
+            })
+            .join(", ");
+          console.log(`  ${c.dim("Dropped:")} ${droppedTotal} (${breakdown})`);
+        }
         console.log(`  ${c.dim("Sections:")} ${result.tokens.sections.length}`);
         console.log(
           `  ${c.dim("Fonts:")} ${result.tokens.fonts
@@ -250,14 +266,11 @@ export default defineCommand({
       }
     } catch (err) {
       const errMsg = normalizeErrorMessage(err);
-      // Write BLOCKED.md so the user/agent knows the capture failed
       try {
         const { mkdirSync, writeFileSync } = await import("node:fs");
+        const { formatCaptureFailureReason } = await import("../capture/captureTimeout.js");
         mkdirSync(outputDir, { recursive: true });
-        const isTimeout = /timeout|timed out/i.test(errMsg);
-        const reason = isTimeout
-          ? "Page navigation timed out — the site may be blocking headless browsers or requires authentication."
-          : `Capture failed: ${errMsg}`;
+        const reason = formatCaptureFailureReason(errMsg);
         writeFileSync(
           `${outputDir}/BLOCKED.md`,
           `# Capture Failed\n\n${reason}\n\nURL: ${url}\n\n## What to try\n\n- Re-run with a longer timeout: \`--timeout 60000\`\n- The site may block headless browsers (anti-bot protection)\n- Try capturing a different page on the same domain\n`,

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   calculateOptimalWorkers,
   computeWorkerSizing,
@@ -6,15 +6,45 @@ import {
   expectedFramesForTask,
   flagSilentWorkerExits,
   formatWorkerFailure,
+  isFfmpegInfrastructureFailure,
   selectVerifySampleIndicesForTask,
   selectWorkerDiagnostics,
   shouldDisableBrowserPoolForParallelWorker,
   shouldVerifyWorkerGpu,
   synthesizeSilentWorkerExitError,
+  withParallelWorkerDeadline,
   resolveParallelDeVerifySamples,
   type WorkerResult,
 } from "./parallelCoordinator.js";
 import type { EngineConfig } from "../config.js";
+
+describe("parallel worker phase deadline", () => {
+  it("fails a wedged operation with phase and browser diagnostics before the aggregate watchdog", async () => {
+    vi.useFakeTimers();
+    try {
+      const raced = withParallelWorkerDeadline(
+        new Promise<void>(() => {}),
+        {
+          workerId: 2,
+          phase: "frame_capture",
+          frameIndex: 0,
+          browserExecutable: "C:/Chrome/chrome.exe",
+          browserVersion: "Chrome/152.0.7977.30",
+          canvasDrawElement: true,
+          gpuBackend: "d3d11/nvidia",
+        },
+        30_000,
+      );
+      const assertion = expect(raced).rejects.toThrow(
+        /worker=2.*phase=frame_capture.*frame=0.*Chrome\/152.*CanvasDrawElement=true.*gpu=d3d11\/nvidia/,
+      );
+      await vi.advanceTimersByTimeAsync(30_000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
 
 describe("distributeFrames", () => {
   it("distributes frames evenly across workers", () => {
@@ -423,5 +453,62 @@ describe("resolveParallelDeVerifySamples", () => {
 
   it("passes a caller-set value through untouched", () => {
     expect(resolveParallelDeVerifySamples(2, 3)).toBe(2);
+  });
+});
+
+describe("isFfmpegInfrastructureFailure", () => {
+  it("matches an execFile ENOENT (missing ffmpeg binary)", () => {
+    const err = Object.assign(new Error("spawn ffmpeg ENOENT"), { code: "ENOENT" });
+    expect(isFfmpegInfrastructureFailure(err)).toBe(true);
+  });
+
+  it('matches ffmpeg\'s "No such filter" stderr (libpostproc-less build)', () => {
+    const err = Object.assign(new Error("Command failed"), {
+      stderr:
+        "Error initializing filter 'psnr' with args ''\n" +
+        "  No such filter: 'psnr'\n" +
+        "Error opening filters!",
+    });
+    expect(isFfmpegInfrastructureFailure(err)).toBe(true);
+  });
+
+  it("matches the older `Unknown filter 'psnr'` wording (ffmpeg <=5)", () => {
+    const err = Object.assign(new Error("Command failed"), {
+      stderr: "Unknown filter 'psnr'",
+    });
+    expect(isFfmpegInfrastructureFailure(err)).toBe(true);
+  });
+
+  it("does not match per-sample noise (readFile race, transient EPERM)", () => {
+    const eperm = Object.assign(new Error("EACCES: permission denied, open '/tmp/…'"), {
+      code: "EACCES",
+    });
+    expect(isFfmpegInfrastructureFailure(eperm)).toBe(false);
+
+    const parseErr = new Error("psnr parse failed: average=<truncated>");
+    expect(isFfmpegInfrastructureFailure(parseErr)).toBe(false);
+
+    const enoentFile = Object.assign(
+      new Error("ENOENT: no such file or directory, open '/tmp/frame_000042.jpg'"),
+      {
+        code: "ENOENT",
+      },
+    );
+    // ⚠ known aliasing edge: an execFile ENOENT and an fs ENOENT reading the
+    // sample frame share the same code. The discriminator errs toward the
+    // infrastructure classification — a spurious per-sample fs ENOENT
+    // (impossible for a frame that was just written by the worker before this
+    // verify call) would abort the render, which is acceptable given how
+    // rarely that shape appears vs. how important the infra-fail signal is.
+    // Documented here so a future maintainer sees why the assertion below
+    // reads "true": this is the deliberate false-positive on collision.
+    expect(isFfmpegInfrastructureFailure(enoentFile)).toBe(true);
+  });
+
+  it("returns false for null / non-object errors", () => {
+    expect(isFfmpegInfrastructureFailure(null)).toBe(false);
+    expect(isFfmpegInfrastructureFailure(undefined)).toBe(false);
+    expect(isFfmpegInfrastructureFailure("psnr broken")).toBe(false);
+    expect(isFfmpegInfrastructureFailure(42)).toBe(false);
   });
 });

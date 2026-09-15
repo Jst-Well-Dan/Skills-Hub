@@ -3,7 +3,7 @@ import { failCommand } from "../utils/commandResult.js";
 import { defineCommand } from "citty";
 import { existsSync, mkdtempSync, readFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve, join, relative, isAbsolute, basename } from "node:path";
+import { resolve, join, relative, isAbsolute, basename, posix } from "node:path";
 import {
   DEFAULT_ZOOM_SCALE,
   captureRegionCrop,
@@ -15,6 +15,12 @@ import {
   type ZoomTarget,
 } from "../capture/captureCompositionFrame.js";
 import { resolveProject } from "../utils/project.js";
+import {
+  definitiveEntryMismatchComposition,
+  hasDefinitiveEntryMismatch,
+  lintProject,
+} from "../utils/lintProject.js";
+import { formatLintFindings } from "../utils/lintFormat.js";
 import { normalizeErrorMessage } from "../utils/errorMessage.js";
 import { serveStaticProjectHtml } from "../utils/staticProjectServer.js";
 import { c } from "../ui/colors.js";
@@ -103,6 +109,18 @@ export function resolveSnapshotVideoClipStart(input: {
   return input.runtimeResolvedStart ?? input.authoredStart;
 }
 
+/** Match runtime/render timing: authored data-playback-rate wins over the
+ * browser default, then the effective rate is clamped to the supported range. */
+export function resolveSnapshotVideoPlaybackRate(input: {
+  authoredRate: string | undefined;
+  defaultRate: number;
+}): number {
+  const authoredRate = Number.parseFloat(input.authoredRate ?? "");
+  const rawRate =
+    Number.isFinite(authoredRate) && authoredRate > 0 ? authoredRate : input.defaultRate;
+  return Number.isFinite(rawRate) && rawRate > 0 ? Math.max(0.1, Math.min(5, rawRate)) : 1;
+}
+
 export function requireSnapshotFfmpeg(ffmpegPath: string | undefined): string {
   if (ffmpegPath) return ffmpegPath;
   throw new Error(
@@ -119,6 +137,7 @@ async function extractVideoFrameToBuffer(
   videoPath: string,
   timeSeconds: number,
   useVp9AlphaDecoder = false,
+  accurateSeek = false,
 ): Promise<Buffer | null> {
   const tmp = mkdtempSync(join(tmpdir(), "hf-snapshot-frame-"));
   const outPath = join(tmp, "frame.png");
@@ -126,15 +145,15 @@ async function extractVideoFrameToBuffer(
     const ffmpegPath = requireSnapshotFfmpeg(findFFmpeg());
     // `-ss` before `-i` performs a fast keyframe seek; adequate for snapshot accuracy
     // (±1 frame) and orders of magnitude faster than the decode-and-scan alternative.
+    // `accurateSeek` puts `-ss` after `-i` (decode from the start) for frame-exact
+    // reference pairs, where ±1 frame would read as a real mismatch.
     const args = ["-hide_banner", "-loglevel", "error"];
     if (useVp9AlphaDecoder) {
       args.push("-c:v", "libvpx-vp9");
     }
+    const seek = ["-ss", String(Math.max(0, timeSeconds))];
     args.push(
-      "-ss",
-      String(Math.max(0, timeSeconds)),
-      "-i",
-      videoPath,
+      ...(accurateSeek ? ["-i", videoPath, ...seek] : [...seek, "-i", videoPath]),
       "-frames:v",
       "1",
       "-q:v",
@@ -162,6 +181,10 @@ export const examples: Example[] = [
   [
     "Zoom into an exact pixel region at 2x density",
     "snapshot --zoom 100,50,400,300 --zoom-scale 2",
+  ],
+  [
+    "Pair each frame with the reference footage at the same time",
+    "snapshot --at 1.5,4.3,8.1 --against ref.mp4",
   ],
 ];
 
@@ -246,6 +269,8 @@ async function captureSnapshots(
     zoomScale?: number;
     autoProxy?: boolean;
     browserGpuMode?: BrowserGpuMode;
+    /** Reference video: save its frame at each captured time plus a render|reference pair. */
+    against?: string;
   },
 ): Promise<string[]> {
   const { bundleWithLocalizedFonts } = await import("../utils/bundleWithLocalizedFonts.js");
@@ -419,30 +444,23 @@ async function captureSnapshots(
               const v = el as HTMLVideoElement;
               const authoredStart = parseFloat(v.dataset.start ?? "0") || 0;
               const runtimeResolvedStart = runtimeWindow.__hfResolveMediaStartSeconds?.(v);
-              const rawRate = v.defaultPlaybackRate;
-              const playbackRate =
-                Number.isFinite(rawRate) && rawRate > 0 ? Math.max(0.1, Math.min(5, rawRate)) : 1;
               const mediaStart =
                 parseFloat(v.dataset.playbackStart ?? v.dataset.mediaStart ?? "0") || 0;
               const rawDuration = parseFloat(v.dataset.duration ?? "");
               const srcDur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : 0;
-              const duration =
-                Number.isFinite(rawDuration) && rawDuration > 0
-                  ? rawDuration
-                  : srcDur > 0
-                    ? Math.max(0, (srcDur - mediaStart) / playbackRate)
-                    : Number.POSITIVE_INFINITY;
               return {
                 id: v.id,
                 src: v.currentSrc || v.src,
                 authoredStart,
+                authoredRate: v.dataset.playbackRate,
+                defaultRate: v.defaultPlaybackRate,
                 runtimeResolvedStart:
                   runtimeResolvedStart !== undefined && Number.isFinite(runtimeResolvedStart)
                     ? runtimeResolvedStart
                     : null,
-                duration,
+                authoredDuration:
+                  Number.isFinite(rawDuration) && rawDuration > 0 ? rawDuration : null,
                 srcDuration: srcDur,
-                playbackRate,
                 mediaStart,
                 loop: v.loop,
               };
@@ -450,7 +468,13 @@ async function captureSnapshots(
           });
           const active = candidates.flatMap((candidate) => {
             const start = resolveSnapshotVideoClipStart(candidate);
-            let relTime = (time - start) * candidate.playbackRate + candidate.mediaStart;
+            const playbackRate = resolveSnapshotVideoPlaybackRate(candidate);
+            const duration =
+              candidate.authoredDuration ??
+              (candidate.srcDuration > 0
+                ? Math.max(0, (candidate.srcDuration - candidate.mediaStart) / playbackRate)
+                : Number.POSITIVE_INFINITY);
+            let relTime = (time - start) * playbackRate + candidate.mediaStart;
             if (
               candidate.loop &&
               candidate.srcDuration > candidate.mediaStart &&
@@ -464,11 +488,13 @@ async function captureSnapshots(
             const frameTime = resolveSnapshotVideoFrameTime({
               globalTime: time,
               clipStart: start,
-              clipDuration: candidate.duration,
+              clipDuration: duration,
               relativeTime: relTime,
               sourceDuration: candidate.srcDuration,
             });
-            return frameTime === null ? [] : [{ ...candidate, start, relTime: frameTime }];
+            return frameTime === null
+              ? []
+              : [{ ...candidate, start, playbackRate, duration, relTime: frameTime }];
           });
 
           const updates: Array<{ videoId: string; dataUri: string }> = [];
@@ -540,7 +566,8 @@ async function captureSnapshots(
         }
 
         const timeLabel = formatSnapshotTimestamp(time);
-        const filename = `frame-${String(i).padStart(2, "0")}-at-${timeLabel}.png`;
+        const index = String(i).padStart(2, "0");
+        const filename = `frame-${index}-at-${timeLabel}.png`;
         const framePath = join(snapshotDir, filename);
 
         if (opts.zoom) {
@@ -566,6 +593,31 @@ async function captureSnapshots(
         } else {
           await page.screenshot({ path: framePath, type: "png", omitBackground: true });
         }
+        if (opts.against) {
+          // Frame-exact reference frame beside the render, so a rebuild can be
+          // checked against its footage without hand-rolled ffmpeg + montage.
+          const refPng = await extractVideoFrameToBuffer(opts.against, time, false, true);
+          if (!refPng) {
+            console.error(
+              `   ${c.warn("⚠")} --against has no frame at ${timeLabel} — reference pair skipped`,
+            );
+          } else {
+            const refPath = join(snapshotDir, `ref-${index}-at-${timeLabel}.png`);
+            writeFileSync(refPath, refPng);
+            const pairPath = join(snapshotDir, `pair-${index}-at-${timeLabel}.jpg`);
+            const { createContactSheet } = await import("../capture/contactSheet.js");
+            await createContactSheet([framePath, refPath], pairPath, {
+              cols: 2,
+              maxImages: 2,
+              cellWidth: 960,
+              labelMode: "custom",
+              labels: ["render", "reference"],
+            });
+          }
+        }
+        // Only the capture itself is a "snapshot": the reference frame and the
+        // pair sheet are derived artifacts, like contact-sheet.jpg, so they stay
+        // out of savedPaths (count, listing, and --describe all read it).
         const rel = relative(projectDir, framePath);
         savedPaths.push(rel.startsWith("..") || isAbsolute(rel) ? framePath : rel);
       }
@@ -630,6 +682,11 @@ export default defineCommand({
       description: "Device-scale-factor density for --zoom crops (default: 3)",
       default: "3",
     },
+    against: {
+      type: "string",
+      description:
+        "Reference video (e.g. footage being rebuilt): also save its frame at each captured time and a render|reference pair sheet",
+    },
     describe: {
       type: "string",
       description:
@@ -650,6 +707,33 @@ export default defineCommand({
   },
   async run({ args }) {
     const project = resolveProject(args.dir);
+    const lintResult = await lintProject(project.dir);
+    if (hasDefinitiveEntryMismatch(lintResult)) {
+      const candidate = definitiveEntryMismatchComposition(lintResult);
+      console.log("");
+      for (const line of formatLintFindings(lintResult, { errorsFirst: true })) {
+        console.log(line);
+      }
+      console.log("");
+      console.log(c.error("  Aborting snapshot because the default index.html entry is blank."));
+      if (candidate && posix.basename(candidate) === "index.html") {
+        const candidateDir = posix.dirname(candidate);
+        const target = `<project>/${candidateDir}`;
+        console.log(
+          c.dim(
+            `  Move or mount the authored file, or snapshot its directory directly: hyperframes snapshot ${target}. Only use the directory form when its assets are self-contained under that directory; otherwise mount it from the project root.`,
+          ),
+        );
+      } else if (candidate) {
+        console.log(
+          c.dim(
+            `  Move or mount ${candidate} as a project index.html before snapshotting; snapshot accepts project directories, not individual HTML files.`,
+          ),
+        );
+      }
+      console.log("");
+      failCommand();
+    }
     const frames = parseInt(args.frames as string, 10) || 5;
     const timeout = parseInt(args.timeout as string, 10) || 5000;
     const atTimestamps = args.at
@@ -672,6 +756,11 @@ export default defineCommand({
     const camera = args.angle ? parseAngle(String(args.angle)) : undefined;
     const zoomTarget = args.zoom ? parseZoomTarget(String(args.zoom)) : undefined;
     const zoomScale = parseZoomScale(args["zoom-scale"]);
+    const against = args.against ? resolve(String(args.against)) : undefined;
+    if (against && !existsSync(against)) {
+      console.log(`${c.error("✗")} --against video not found: ${against}`);
+      failCommand();
+    }
 
     const label = atTimestamps
       ? `${atTimestamps.length} frames at [${atTimestamps.map(formatSnapshotTimestamp).join(", ")}]`
@@ -697,6 +786,7 @@ export default defineCommand({
         zoomScale,
         autoProxy: args.proxy as boolean | undefined,
         browserGpuMode: resolveLocalBrowserGpuMode(args["browser-gpu"] as boolean | undefined),
+        against,
       });
 
       if (paths.length === 0) {
@@ -711,6 +801,11 @@ export default defineCommand({
       );
       for (const p of paths) {
         console.log(`   ${p}`);
+      }
+      if (against) {
+        console.log(
+          `   ${c.dim("ref-*.png + pair-*.jpg")} beside each frame (reference frame, render | reference sheet)`,
+        );
       }
 
       // Generate contact sheet for quick AI review

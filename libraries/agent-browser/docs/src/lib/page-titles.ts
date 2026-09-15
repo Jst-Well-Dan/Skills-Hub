@@ -4,6 +4,7 @@ export const PAGE_TITLES: Record<string, string> = {
   "quick-start": "Quick Start",
   skills: "Skills",
   commands: "Commands",
+  webmcp: "WebMCP",
   configuration: "Configuration",
   plugins: "Plugins",
   selectors: "Selectors",
@@ -34,6 +35,7 @@ export const PAGE_TITLES: Record<string, string> = {
   "providers/browserbase": "Browserbase",
   "providers/browserless": "Browserless",
   "providers/kernel": "Kernel",
+  "providers/remote-agent-browser": "Remote Agent Browser",
   changelog: "Changelog",
 };
 

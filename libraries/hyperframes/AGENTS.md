@@ -7,8 +7,9 @@ Open-source video rendering framework: write HTML, render video.
 This repo ships AI agent skills via [vercel-labs/skills](https://github.com/vercel-labs/skills). Install them before writing compositions — they encode framework-specific patterns that generic docs don't cover. **Default to the core set** — the `/hyperframes` router installs each creation workflow on demand; install everything only when the user explicitly asks for the full set.
 
 ```bash
-npx hyperframes skills update                        # default: installs/refreshes the core set — workflows install on demand
-npx skills add heygen-com/hyperframes --full-depth   # interactive picker (terminal only — non-interactive without --skill installs everything)
+npx hyperframes skills update           # default: installs/refreshes the core set — workflows install on demand
+npx hyperframes skills                  # all 20 published skills at once
+npx skills add heygen-com/hyperframes   # interactive picker (terminal only; repo-internal skills are excluded by default)
 ```
 
 **Creation workflows** route through one entry skill — read `/hyperframes` first: it orients you to the whole surface, confirms the brief up front (the intent layer), and maps "make me a…" intent — usually a video, but also a navigable deck (`/slideshow`) or a composition port (`/remotion-to-hyperframes`) — to a concrete workflow. Consult it before invoking a specific workflow:
@@ -66,7 +67,7 @@ packages/
   player/               → Embeddable <hyperframes-player> web component
   producer/             → Full rendering pipeline (capture + encode + audio mix)
   shader-transitions/   → WebGL shader transitions for compositions
-  studio/               → Browser-based composition editor UI
+  studio/               → Browser-based composition editor UI (read packages/studio/AGENTS.md first)
 registry/
   blocks/               → Installable sub-composition scenes (50+)
   components/           → Installable effects and snippets
@@ -80,7 +81,7 @@ skills/                 → AI agent skill definitions
 - **Package manager**: bun (not pnpm, not npm for workspace operations)
 - **Commit format**: Conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`)
 - **TypeScript**: Avoid `any` and `as T` assertions. Prefer type guards and narrowing.
-- **Compositions**: HTML files with `data-*` attributes. Clips need `class="clip"`. GSAP timelines must be paused and registered on `window.__timelines`.
+- **Compositions**: HTML files with `data-*` attributes. Clips need `class="clip"`. Register one paused GSAP root timeline per composition on `window.__timelines`. Scene timelines manually added to that root must not be paused, or they will not advance when the root is seeked.
 - **Frame Adapters**: Animation runtimes plug in via the seek-by-frame adapter pattern. GSAP is the primary adapter.
 - **Deterministic rendering**: No `Date.now()`, no unseeded `Math.random()`, no render-time network fetches.
 

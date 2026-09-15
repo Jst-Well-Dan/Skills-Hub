@@ -155,6 +155,19 @@ describe("assertPublicHttpsUrl — SSRF guard", () => {
     expect(() => assertPublicHttpsUrl("http://localhost:3000/secret")).toThrow();
   });
 
+  it("rejects localhost aliases and local/internal suffixes", () => {
+    for (const host of [
+      "localhost.",
+      "foo.localhost",
+      "FOO.LOCALHOST.",
+      "svc.local.",
+      "db.internal.",
+    ]) {
+      expect(() => assertPublicHttpsUrl(`https://${host}/asset`), host).toThrow("private/reserved");
+    }
+    expect(() => assertPublicHttpsUrl("https://example.com./asset")).not.toThrow();
+  });
+
   it("rejects RFC1918 — 10.x", () => {
     expect(() => assertPublicHttpsUrl("https://10.0.0.1/secret")).toThrow("private/reserved");
     expect(() => assertPublicHttpsUrl("https://10.255.255.255/secret")).toThrow("private/reserved");
@@ -447,6 +460,7 @@ describe("downloadToTemp atomic publication and bounded retry", () => {
     ).rejects.toMatchObject({
       kind: "length_mismatch",
       retryable: true,
+      telemetry: expect.objectContaining({ attempt: 2 }),
     } satisfies Partial<UrlDownloadError>);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(readdirSync(dir).filter((name) => name.startsWith("download_"))).toEqual([]);
@@ -802,6 +816,7 @@ describe("downloadToTemp atomic publication and bounded retry", () => {
     ).rejects.toMatchObject({
       kind: "invalid_payload",
       retryable: false,
+      telemetry: expect.objectContaining({ attempt: 1 }),
     } satisfies Partial<UrlDownloadError>);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(temporaryDownloadEntries(dir)).toEqual([]);

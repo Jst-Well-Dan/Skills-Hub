@@ -216,25 +216,22 @@ Skills-Hub 是一个面向 AI Agent 开发者和用户的 **Agent Skill 沉浸�
 
 - **仓库快照与提炼**：实际收藏的 GitHub 项目完整保留在 `libraries/` 下；提炼出的纯净、开箱即用的可复制/可部署技能保存在 `extracted-skills/` 下。
 - **现代化可视化体验**：零构建单页应用（`site/index.html`），支持即时分类筛选、标签过滤、全文搜索以及抽屉式（Drawer）查看 Skill 原文与 YAML Frontmatter。
-- **本地策展与一键部署**：内置轻量级 Admin 工作台（`start-admin.bat`），支持可视化调整分类、批量多选，并将指定 Skill 直接部署到本机任意项目的 Agent 目录（如 `.claude/skills/`、`.agents/skills/`、`.codex/skills/`）。
+- **本地策展与一键部署**：内置轻量级 Admin 工作台（单端口本地服务），支持可视化调整分类、批量多选，并将指定 Skill 直接部署到本机任意项目的 Agent 目录（如 `.claude/skills/`、`.agents/skills/`、`.codex/skills/`）。
 - **实测与最佳实践**：在 `reviews/` 下收录技能组合实践、深度评测与排坑指南。
 
 ## 快速启动与管理
 
 ### 1. 启动可视化管理与部署工作台 (Admin Mode)
-双击运行根目录脚本，即可同时启动后台服务 (5173) 与前端站点 (5174)，并自动打开管理界面：
+一条命令启动本地工作台（静态站 + API 同端口，端口自动选择并自动打开浏览器）：
 ```bash
-# Windows 双击或在终端运行：
-start-admin.bat
-
-# 停止后台服务：
-stop-admin.bat
+python scripts/admin_server.py
 ```
-或直接通过命令行启动：
+启动后浏览器会自动打开管理界面（`.../index.html?admin=1`）。如需固定端口或不自动打开浏览器：
 ```bash
-python scripts/admin_server.py --port 5173
+python scripts/admin_server.py --port 8080
+python scripts/admin_server.py --no-open
 ```
-浏览器访问 `http://127.0.0.1:5174/index.html?admin=1` 即可进行分类管理与一键部署。
+在管理界面中可进行分类管理与一键部署。
 
 ### 2. 静态页面浏览与部署
 运行 `python scripts/generate_site.py` 会读取 `registry/projects.yaml` 生成静态单页 `site/index.html`。页面可直接双击离线打开，也通过 GitHub Actions 自动发布到 GitHub Pages。

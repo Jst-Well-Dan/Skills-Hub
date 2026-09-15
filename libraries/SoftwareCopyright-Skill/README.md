@@ -1,6 +1,6 @@
 # Software Copyright Materials Skill
 
-这是一个用于生成中文软件著作权申请资料的 Skill / 插件仓库，可用于 Codex，也可作为 Claude Code 插件加载。
+这是一个用于生成中文软件著作权申请资料的通用 Skill 仓库，适用于支持本地 Skill 目录机制的 coding agent 软件。
 
 项目地址：https://github.com/Fokkyp/SoftwareCopyright-Skill
 
@@ -10,7 +10,7 @@
 software-copyright-materials/
 ```
 
-安装时不要把仓库根目录当作普通单个 skill 复制。Codex 使用 `software-copyright-materials/` 这个实际 skill 目录；Claude Code 使用仓库根目录中的 `.claude-plugin/plugin.json` 和 `skills/` 插件结构。
+安装时不要把仓库根目录当作普通单个 skill 复制。只需将 `software-copyright-materials/` 这个实际 skill 目录放置到你的 coding agent 软件要求的 skill 目录下，即可加载使用。
 
 ## 功能概览
 
@@ -76,63 +76,35 @@ git clone https://github.com/Fokkyp/SoftwareCopyright-Skill.git
 cd SoftwareCopyright-Skill
 ```
 
-不会用 Git 的用户可以在 GitHub 页面点击 `Code` -> `Download ZIP`，解压后进入仓库目录。目录中应能看到：
+不会用 Git 的用户可以在 GitHub 页面点击 `Code` -> `Download ZIP`，解压后进入仓库目录。目录中应能看到实际 skill 目录：
 
 ```text
 software-copyright-materials/
-.claude-plugin/plugin.json
-skills/software-copyright-materials
 ```
 
-按使用工具选择一种方式：
-
-**Codex**：复制实际 skill 目录。
+按照你的 coding agent 软件文档，找到它要求的 skill 目录，然后复制实际 skill 目录即可：
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R software-copyright-materials ~/.codex/skills/
+AGENT_SKILLS_DIR="<你的 coding agent 软件要求的 skill 目录>"
+mkdir -p "$AGENT_SKILLS_DIR"
+cp -R software-copyright-materials "$AGENT_SKILLS_DIR/"
 ```
 
-**Claude Code**：把本仓库作为插件目录加载。
+如果你的 coding agent 支持项目级 skill，也可以把 `software-copyright-materials/` 放到该项目要求的本地 skill 目录中：
 
 ```bash
-claude --plugin-dir /path/to/SoftwareCopyright-Skill
+PROJECT_SKILLS_DIR="<你的项目级 skill 目录>"
+mkdir -p "$PROJECT_SKILLS_DIR"
+cp -R software-copyright-materials "$PROJECT_SKILLS_DIR/"
 ```
 
-在本仓库目录中可以直接执行：
-
-```bash
-claude --plugin-dir .
-```
-
-Claude Code 手动调用时使用插件命名空间：
-
-```text
-/software-copyright-materials:software-copyright-materials
-```
-
-如果只想在某个项目里使用，Codex 可复制到该项目的 `.codex/skills/`：
-
-```bash
-PROJECT_DIR="<你的项目目录>"
-mkdir -p "$PROJECT_DIR/.codex/skills"
-cp -R software-copyright-materials "$PROJECT_DIR/.codex/skills/"
-```
-
-Claude Code 可在目标项目目录启动时指定本仓库：
-
-```bash
-cd "<你的项目目录>"
-claude --plugin-dir "<SoftwareCopyright-Skill 仓库路径>"
-```
-
-修改 README 或 skill 后，重启会话，或在 Claude Code 中执行 `/reload-plugins` 重新加载。
+复制完成后，按你的 coding agent 软件要求重启会话、刷新 skill 列表或重新加载配置。
 
 ## 运行要求和环境校验
 
 ### 必需环境
 
-- **支持 Skill / Plugin 的代码助手**：Codex 可按 skill 目录加载；Claude Code 可按插件目录加载。
+- **支持 Skill 的 coding agent 软件**：能够从本地 skill 目录加载 `software-copyright-materials/`。
 - **Python 3.10+ 和 python-docx**：生成流程依赖 `software-copyright-materials/scripts/` 下的 Python 脚本，用于分析项目、生成草稿、抽取真实代码、校验字段和生成正式资料。
 - **可读取的项目源码**：代码材料必须从真实项目中抽取，所以需要在代码助手中打开或指定你的项目目录。
 
@@ -146,8 +118,8 @@ python3 -m pip install python-docx
 
 - **.NET SDK 8.0+**：用于启用更完整的 DOCX OpenXML 生成和校验能力。没有 .NET SDK 也可以继续使用基础 DOCX 兜底生成。
 - **Chrome DevTools MCP**：只有在你希望自动截取网页截图时才需要。
-- **Codex Computer Use**：仅 Codex 环境需要桌面界面操作和截图时使用。
-- **用户自行截图**：如果没有 MCP 或 Computer Use，也可以手动把截图放到指定目录，或者直接跳过截图。
+- **桌面控制能力**：仅在你的 coding agent 软件支持并且需要操作桌面界面或截图时使用。
+- **用户自行截图**：如果没有 MCP 或桌面控制能力，也可以手动把截图放到指定目录，或者直接跳过截图。
 
 ### 使用过程中会自动检查吗？
 
@@ -170,7 +142,7 @@ python3 -m pip install python-docx
 1. 安装完整 DOCX 环境。
 2. 使用基础 DOCX 兜底继续。
 
-它不会在你不确认的情况下静默安装依赖。截图也一样，会先让你选择 Chrome DevTools MCP、Codex Computer Use、用户自行截图或跳过截图；如果你跳过截图，操作手册里会保留可见的截图预留位置。
+它不会在你不确认的情况下静默安装依赖。截图也一样，会先让你选择 Chrome DevTools MCP、coding agent 桌面控制能力、用户自行截图或跳过截图；如果你跳过截图，操作手册里会保留可见的截图预留位置。
 
 ## 基本使用
 
@@ -180,11 +152,7 @@ python3 -m pip install python-docx
 使用 software-copyright-materials 生成当前项目的软件著作权申请资料
 ```
 
-在 Claude Code 中也可以手动调用：
-
-```text
-/software-copyright-materials:software-copyright-materials 读取当前目录中的项目，生成软件著作权申请资料草稿
-```
+如果你的 coding agent 软件支持手动调用 skill，请按该软件的调用格式选择 `software-copyright-materials`。
 
 代码助手会按流程引导填写信息、确认草稿，并在当前项目目录下生成 `软件著作权申请资料/`。
 

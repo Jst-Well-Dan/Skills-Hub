@@ -9,18 +9,11 @@ import path from 'path';
 //   New installs write project config at .impeccable/live/config.json instead.
 export const PER_PROJECT_SCRIPT_ARTIFACTS = new Set(['config.json']);
 
-const DETECTOR_BUNDLE_DIR = 'cli/engine';
-
-// Detector source files that live OUTSIDE `cli/engine` but are imported by the
-// bundled engine. `cli/engine/cli/main.mjs` imports `../../lib/impeccable-config.mjs`,
-// which in the source CLI resolves to `cli/lib/impeccable-config.mjs`. The detector
-// bundle copies `cli/engine/**` to `scripts/detector/**`, so from the bundled
-// `scripts/detector/cli/main.mjs` that same `../../lib/...` import resolves to
-// `scripts/lib/impeccable-config.mjs`. Copy the dependency there or the bundled
-// detector fails at import time with "Cannot find module .../lib/impeccable-config.mjs".
-const DETECTOR_EXTERNAL_DEPS = [
-  { src: 'cli/lib/impeccable-config.mjs', dest: 'lib/impeccable-config.mjs' },
-];
+// Platform binaries under `scripts/bin/<os>-<arch>/` are fetched per machine
+// (scripts/fetch-engine.mjs) and never part of the source skill read: the
+// release build stages them into provider output separately, and the launcher
+// downloads them on first run when they are absent.
+export const SKILL_BINARY_DIR = 'bin';
 
 // Walk the harness-dir skill tree and return any per-project script
 // artifacts found, ready for restoration after a full sync rm+recopy.
@@ -52,46 +45,6 @@ export function restorePerProjectArtifacts(rootDir, stashed) {
   }
 }
 
-function readDetectorBundleScripts(rootDir) {
-  const detectorDir = path.join(rootDir, DETECTOR_BUNDLE_DIR);
-  if (!fs.existsSync(detectorDir)) return [];
-
-  const scripts = [];
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const entryPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(entryPath);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      const relPath = path.relative(detectorDir, entryPath).split(path.sep).join('/');
-      scripts.push({
-        name: `detector/${relPath}`,
-        content: fs.readFileSync(entryPath, 'utf-8'),
-        filePath: entryPath,
-        generated: true,
-      });
-    }
-  };
-  walk(detectorDir);
-
-  // Pull in engine dependencies that live outside the bundle dir so the
-  // generated detector is self-contained (see DETECTOR_EXTERNAL_DEPS).
-  for (const { src, dest } of DETECTOR_EXTERNAL_DEPS) {
-    const srcPath = path.join(rootDir, src);
-    if (!fs.existsSync(srcPath)) continue;
-    scripts.push({
-      name: dest,
-      content: fs.readFileSync(srcPath, 'utf-8'),
-      filePath: srcPath,
-      generated: true,
-    });
-  }
-
-  return scripts;
-}
-
 function readSkillScripts(scriptsDir) {
   const scripts = [];
 
@@ -102,6 +55,7 @@ function readSkillScripts(scriptsDir) {
     for (const entry of entries) {
       const entryPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
+        if (dir === scriptsDir && entry.name === SKILL_BINARY_DIR) continue;
         walk(entryPath);
         continue;
       }
@@ -109,10 +63,13 @@ function readSkillScripts(scriptsDir) {
       if (PER_PROJECT_SCRIPT_ARTIFACTS.has(entry.name)) continue;
 
       const relPath = path.relative(scriptsDir, entryPath).split(path.sep).join('/');
+      // `mode` travels with the entry so the launcher keeps its executable
+      // bit in every provider copy (see writeScriptFile in the transformer).
       scripts.push({
         name: relPath,
         content: fs.readFileSync(entryPath, 'utf-8'),
         filePath: entryPath,
+        mode: fs.statSync(entryPath).mode & 0o777,
       });
     }
   };
@@ -242,8 +199,8 @@ export function readFilesRecursive(dir, fileList = []) {
  * The source manifest is `SKILL.src.md`, NOT `SKILL.md`, on purpose: the
  * `vercel-labs/skills` CLI discovers a skill by finding a literal `SKILL.md`
  * and copies that directory verbatim. If `skill/SKILL.md` existed, `npx skills`
- * would install the UNCOMPILED source (unresolved `{{placeholders}}`, no vendored
- * detector). Naming it `SKILL.src.md` hides it from discovery so the CLI falls
+ * would install the UNCOMPILED source (unresolved `{{placeholders}}` and
+ * `{{scripts_path}}`). Naming it `SKILL.src.md` hides it from discovery so the CLI falls
  * through to a compiled harness dir (`.agents/skills/impeccable`) instead.
  */
 export function readSourceFiles(rootDir) {
@@ -280,7 +237,6 @@ export function readSourceFiles(rootDir) {
   if (fs.existsSync(scriptsDir)) {
     scripts.push(...readSkillScripts(scriptsDir));
   }
-  scripts.push(...readDetectorBundleScripts(rootDir));
 
   const agents = [];
   const agentsDir = path.join(skillDir, 'agents');
@@ -362,22 +318,9 @@ export function writeFile(filePath, content) {
   fs.writeFileSync(filePath, content, 'utf-8');
 }
 
-/**
- * Extract DO/DON'T patterns from a skill markdown file, grouped by section
- * (h3 `### ` headings). Recognizes both formats:
- *   - Markdown bullet form:  `**DO**: …`  /  `**DON'T**: …`
- *   - Prose form:            `DO …`       /  `DO NOT …`
- *
- * Defaults to the main impeccable SKILL.md but accepts any relative path so
- * rules in `cli/engine/detect-antipatterns.mjs` can anchor to register-specific
- * reference files (e.g. `reference/editorial.md`) via an optional `skillFile`
- * field. Callers that don't pass `relativePath` get the legacy behavior.
- *
- * Returns { patterns: [...], antipatterns: [...] }
- */
-// Curated short-list for the homepage Antidote section. Intentionally
-// hand-written (not auto-extracted) so the copy stays tight and
-// editorial. The long-form catalog lives on /slop — this is the teaser.
+// Curated short-list for the homepage Antidote section. This intentionally
+// stays independent of SKILL.md extraction so the copy remains tight and
+// editorial.
 const CURATED_CATEGORIES = [
   {
     name: 'Typography',
@@ -459,103 +402,10 @@ const CURATED_CATEGORIES = [
 ];
 
 export function readPatterns(_rootDir, _relativePath) {
-  // Hand-curated list — see CURATED_CATEGORIES above. The homepage
-  // Antidote teaser uses this; the full catalog lives on /slop.
   return {
     patterns: CURATED_CATEGORIES.map((c) => ({ name: c.name, items: c.do })),
     antipatterns: CURATED_CATEGORIES.map((c) => ({ name: c.name, items: c.dont })),
   };
-}
-
-// Previous SKILL.md parser retained below but disabled; kept as a
-// reference for how prefix-style extraction used to work.
-function _legacyReadPatterns(rootDir, relativePath = 'skill/SKILL.src.md') {
-  const skillPath = path.join(rootDir, relativePath);
-
-  if (!fs.existsSync(skillPath)) {
-    return { patterns: [], antipatterns: [] };
-  }
-
-  const content = fs.readFileSync(skillPath, 'utf-8');
-  const lines = content.split('\n');
-
-  const patternsMap = {};  // category -> items[]
-  const antipatternsMap = {};  // category -> items[]
-  let currentSection = null;
-
-  const pushPattern = (item) => {
-    if (!currentSection) return;
-    if (!patternsMap[currentSection]) patternsMap[currentSection] = [];
-    patternsMap[currentSection].push(item);
-  };
-  const pushAntipattern = (item) => {
-    if (!currentSection) return;
-    if (!antipatternsMap[currentSection]) antipatternsMap[currentSection] = [];
-    antipatternsMap[currentSection].push(item);
-  };
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    // Track section headings (### Typography, ### Color & Theme, etc.)
-    if (trimmed.startsWith('### ')) {
-      currentSection = trimmed.slice(4).trim();
-      // Normalize "Color & Theme" to "Color & Contrast" for consistency
-      if (currentSection === 'Color & Theme') {
-        currentSection = 'Color & Contrast';
-      }
-      continue;
-    }
-
-    // Markdown bullet form (legacy): **DO**: ... and **DON'T**: ...
-    if (trimmed.startsWith('**DO**:')) {
-      pushPattern(trimmed.slice(7).trim());
-      continue;
-    }
-    if (trimmed.startsWith("**DON'T**:")) {
-      pushAntipattern(trimmed.slice(10).trim());
-      continue;
-    }
-
-    // XML-block prose form (current). Both space and colon variants:
-    //   "DO NOT use ..."  /  "DO NOT: Use ..."
-    //   "DO use ..."      /  "DO: Use ..."
-    // IMPORTANT: check `DO NOT` BEFORE `DO` so the prefix doesn't get
-    // gobbled by the wrong matcher.
-    if (trimmed.startsWith('DO NOT: ')) {
-      pushAntipattern(trimmed.slice('DO NOT: '.length).trim());
-      continue;
-    }
-    if (trimmed.startsWith('DO NOT ')) {
-      pushAntipattern(trimmed.slice('DO NOT '.length).trim());
-      continue;
-    }
-    if (trimmed.startsWith('DO: ')) {
-      pushPattern(trimmed.slice('DO: '.length).trim());
-      continue;
-    }
-    if (trimmed.startsWith('DO ')) {
-      pushPattern(trimmed.slice('DO '.length).trim());
-      continue;
-    }
-  }
-
-  // Convert maps to arrays in consistent order
-  const sectionOrder = ['Typography', 'Color & Contrast', 'Layout & Space', 'Visual Details', 'Motion', 'Interaction', 'Responsive', 'UX Writing'];
-
-  const patterns = [];
-  const antipatterns = [];
-
-  for (const section of sectionOrder) {
-    if (patternsMap[section] && patternsMap[section].length > 0) {
-      patterns.push({ name: section, items: patternsMap[section] });
-    }
-    if (antipatternsMap[section] && antipatternsMap[section].length > 0) {
-      antipatterns.push({ name: section, items: antipatternsMap[section] });
-    }
-  }
-
-  return { patterns, antipatterns };
 }
 
 /**
@@ -571,31 +421,41 @@ export const PROVIDER_PLACEHOLDERS = {
   'cursor': {
     model: 'the model',
     config_file: '.cursorrules',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
+    command_prefix: '/'
+  },
+  'dsh': {
+    model: 'DeepSeek',
+    config_file: 'AGENTS.md',
+    ask_instruction: 'STOP and call the ask_user_question tool to clarify.',
     command_prefix: '/'
   },
   'gemini': {
     model: 'Gemini',
     config_file: 'GEMINI.md',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   },
   'codex': {
     model: 'GPT',
     config_file: 'AGENTS.md',
+    // Each value is a complete capitalized sentence, because every
+    // {{ask_instruction}} call site is sentence-initial. That is enforced by
+    // validateAskInstructionSites() in scripts/build.js, not left to authors:
+    // four reference files had already spliced the placeholder mid-sentence.
     ask_instruction: "STOP and use Codex's structured user-input/question tool when available; if unavailable, ask directly in chat to clarify what you cannot infer.",
     command_prefix: '$'
   },
   'agents': {
     model: 'the model',
     config_file: '.github/copilot-instructions.md',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   },
   'kiro': {
     model: 'Claude',
     config_file: '.kiro/settings.json',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   },
   opencode: {
@@ -607,37 +467,74 @@ export const PROVIDER_PLACEHOLDERS = {
   'pi': {
     model: 'the model',
     config_file: 'AGENTS.md',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   },
   'qoder': {
     model: 'the model',
     config_file: 'AGENTS.md',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   },
   'trae': {
     model: 'the model',
     config_file: 'RULES.md',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   },
   'rovo-dev': {
     model: 'Rovo Dev',
     config_file: 'AGENTS.md',
-    ask_instruction: 'ask the user directly to clarify what you cannot infer.',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
+    command_prefix: '/'
+  },
+  veto: {
+    model: 'the selected model',
+    config_file: '~/.veto/config.json',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
+    command_prefix: '/',
+  },
+  'vibe': {
+    model: 'Mistral',
+    config_file: 'AGENTS.md',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
+    command_prefix: '/'
+  },
+  'grok': {
+    model: 'Grok',
+    config_file: 'AGENTS.md',
+    ask_instruction: 'STOP and call the AskUserQuestion tool to clarify.',
+    command_prefix: '/'
+  },
+  'antigravity': {
+    model: 'Gemini',
+    config_file: 'AGENTS.md',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
+    command_prefix: '/'
+  },
+  'hermes': {
+    // Hermes is provider-agnostic and reads AGENTS.md / CLAUDE.md / .cursorrules
+    // for project context. "the model" matches the pi/opencode phrasing used
+    // for harnesses without a vendor-fixed assistant name.
+    model: 'the model',
+    config_file: 'AGENTS.md',
+    ask_instruction: 'Ask the user directly to clarify what you cannot infer.',
     command_prefix: '/'
   }
 };
 
 export const PROVIDER_BLOCK_TAGS = new Set([
   'agents',
+  'antigravity',
   'claude',
   'claude-code',
   'codex',
   'cursor',
+  'dsh',
   'gemini',
   'github',
+  'grok',
+  'hermes',
   'kiro',
   'opencode',
   'pi',
@@ -645,6 +542,8 @@ export const PROVIDER_BLOCK_TAGS = new Set([
   'rovo-dev',
   'trae',
   'trae-cn',
+  'vibe',
+  'veto',
 ]);
 
 /**
@@ -740,13 +639,15 @@ export function replacePlaceholders(content, provider, commandNames = [], allSki
 
   // Replace `/skillname` invocations with the correct command prefix for this provider
   // (e.g., `/normalize` → `$normalize` for Codex). Require the slash to be
-  // outside a path or URL so `.github/hooks/impeccable.json` and
-  // `.codex/skills/impeccable` remain untouched.
+  // outside a path or URL so `.github/hooks/impeccable.json`,
+  // `.codex/skills/impeccable`, and the launcher invocation
+  // `{{scripts_path}}/impeccable <verb>` (a `}}`-preceded path segment,
+  // resolved after this pass) remain untouched.
   if (cmdPrefix !== '/' && allSkillNames.length > 0) {
     const sorted = [...allSkillNames].sort((a, b) => b.length - a.length);
     for (const name of sorted) {
       result = result.replace(
-        new RegExp(`(?<![a-zA-Z0-9_./-])\\/(?=${escapeRegex(name)}(?:[^a-zA-Z0-9_-]|$))`, 'g'),
+        new RegExp(`(?<![a-zA-Z0-9_./}>-])\\/(?=${escapeRegex(name)}(?:[^a-zA-Z0-9_-]|$))`, 'g'),
         cmdPrefix
       );
     }
@@ -759,16 +660,19 @@ export function replacePlaceholders(content, provider, commandNames = [], allSki
  * Render the one explicit provider marker allowed in executable skill scripts.
  *
  * Do not run replacePlaceholders() across JavaScript source: slash-command
- * heuristics can collide with regex literals and runtime paths. Scripts import
- * their command prefix from lib/provider.mjs, whose declaration is replaced
- * here by an exact string match.
+ * heuristics can collide with regex literals and runtime paths. Only exact
+ * marker lines are replaced. The shipped scripts today (the launcher and the
+ * page JS) carry no marker; the binary derives its provider from its install
+ * path or IMPECCABLE_PROVIDER_ID at run time.
  */
-export function replaceScriptProviderMarker(content, provider) {
+export function replaceScriptProviderMarker(content, provider, buildProvider = provider) {
   const placeholders = PROVIDER_PLACEHOLDERS[provider] || PROVIDER_PLACEHOLDERS.cursor;
   const commandPrefix = placeholders.command_prefix || '/';
-  const marker = "export const IMPECCABLE_COMMAND_PREFIX = '/'; // @impeccable-provider-command-prefix";
-  const rendered = `export const IMPECCABLE_COMMAND_PREFIX = ${JSON.stringify(commandPrefix)};`;
-  return content.replace(marker, rendered);
+  const prefixMarker = "export const IMPECCABLE_COMMAND_PREFIX = '/'; // @impeccable-provider-command-prefix";
+  const providerMarker = "export const IMPECCABLE_PROVIDER_ID = 'source'; // @impeccable-provider-id";
+  return content
+    .replace(prefixMarker, `export const IMPECCABLE_COMMAND_PREFIX = ${JSON.stringify(commandPrefix)};`)
+    .replace(providerMarker, `export const IMPECCABLE_PROVIDER_ID = ${JSON.stringify(buildProvider)};`);
 }
 
 /**
@@ -849,6 +753,9 @@ export function generateYamlFrontmatter(data) {
           lines.push(`  - ${formatYamlScalar(item)}`);
         }
       }
+    } else if (value && typeof value === 'object') {
+      lines.push(`${key}:`);
+      appendYamlObject(lines, value, 2);
     } else if (typeof value === 'boolean') {
       lines.push(`${key}: ${value}`);
     } else {

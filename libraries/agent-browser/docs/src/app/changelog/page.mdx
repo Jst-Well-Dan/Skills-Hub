@@ -1,5 +1,184 @@
 # Changelog
 
+## v0.37.1
+
+<p className="text-[#888] text-sm">September 8, 2026</p>
+
+### Bug Fixes
+
+- Fixed **Windows headless Chrome desktop artifacts** by isolating owned headless Chrome on a private desktop and ensuring its process tree is cleaned up when the daemon exits or is forcibly terminated. Headed and externally connected browsers retain their existing desktop behavior (#1498, #1820)
+
+---
+
+## v0.37.0
+
+<p className="text-[#888] text-sm">September 7, 2026</p>
+
+### New Features
+
+- Added **higher-quality video recording**: `record start` and `record restart` now capture the current active page at 30 fps by default, support `--fps 1-60`, use `Page.startScreencast` for smoother motion, and preserve wall-clock timing. WebM and MP4 output are documented, and `doctor` reports the ffmpeg recording dependencies (#1763, #1776, #1778)
+- Added **WebMCP availability output** so navigation responses advertise when a page exposes allowed WebMCP tools, including availability metadata for CLI, JSON, and MCP clients (#1760)
+- Added **session setup inheritance for new tabs**. Tabs opened with `tab new` or through page clicks now inherit the active session's headers, credentials, user agent, locale, timezone, geolocation, offline mode, routes, color scheme, and init scripts before their first navigation (#1777)
+
+### Bug Fixes
+
+- Fixed **recording startup validation** so missing ffmpeg, extensionless output paths, and invalid recording options fail before browser or recording state changes. Failed replacements preserve the active take, and ffmpeg errors now include useful diagnostics (#1778)
+- Fixed **recording navigation state** so URL navigation during recording clears stale element refs, frame scope, and page WebMCP state like normal navigation (#1776)
+
+---
+
+## v0.36.0
+
+<p className="text-[#888] text-sm">September 1, 2026</p>
+
+### New Features
+
+- Added experimental **WebMCP support** for discovering and invoking tools provided by the current page, including frame-aware tool selection, detached results, cancellation, bounded metadata and output handling, and an opt-in MCP tool profile. WebMCP is enabled by default for locally managed Chrome and can be disabled with `--no-webmcp` or `AGENT_BROWSER_NO_WEBMCP`.
+- Added a **WebMCP generation skill** that helps agents expose existing page workflows as validated page tools while recording safety constraints, deterministic checks, and fallback behavior.
+
+### Improvements
+
+- Updated the **eve integration** to 0.47.3 and raised its compatibility floor to 0.39.1.
+- Updated **brace-expansion dependency resolutions** across the project lockfiles.
+
+### Bug Fixes
+
+- Removed the obsolete **Lightpanda session timeout** argument so launches use the current supported server options.
+
+---
+
+## v0.35.2
+
+<p className="text-[#888] text-sm">August 31, 2026</p>
+
+### Security
+
+- Hardened **dashboard origin validation and reverse-proxy access** with same-origin provenance enforcement that defends against DNS rebinding, form/header smuggling, and cross-origin requests. Reverse-proxied origins now require exact HTTPS allowlisting and generated token authentication, while tokenless IPv4 and IPv6 loopback access remains supported. Dashboard options are validated strictly, and CLI and MCP lifecycle behavior is aligned (#1738)
+
+### Bug Fixes
+
+- Fixed **root remote CDP WebSocket URLs with query strings** to insert the required slash before the query while preserving the encoded query (#1735)
+
+---
+
+## v0.35.1
+
+<p className="text-[#888] text-sm">August 26, 2026</p>
+
+### Bug Fixes
+
+- Fixed **Windows ARM64 launcher selection** to prefer a native ARM64 executable when present and fall back to the published x64 executable through Windows emulation when it is not (#1725)
+- Fixed **stream URL tracking** to emit active main-frame URL updates for full-document, History API, and fragment navigation, while rebinding correctly after active-tab changes and ignoring child-frame or background-tab navigation (#1682)
+- Fixed **snapshot diff element references** by resetting ref numbering for each diff, invalidating refs across URL navigations, and preserving the previous refs when a diff fails (#1719)
+
+### Improvements
+
+- Updated **Rust dependencies** to `rustls-webpki` 0.103.13 and `quinn-proto` 0.11.17 (#1723, #1720)
+
+---
+
+## v0.35.0
+
+<p className="text-[#888] text-sm">August 24, 2026</p>
+
+### New Features
+
+- Added **private proxy CA trust for locally launched Chromium on Linux**. Use `--ca-cert <path>`, `AGENT_BROWSER_CA_CERT`, or `caCert` in config and MCP to import a PEM bundle or DER certificate into an isolated NSS trust store without disabling hostname, validity, or unrelated-authority verification. The effective CA persists across commands in a running session, equivalent certificate content reuses Chromium, and `--no-ca-cert` explicitly clears retained trust. Unsupported launch modes and conflicting CA options return actionable errors (#1669)
+
+### Improvements
+
+- Added a bundled **protected Vercel deployments skill** that guides agents through short-lived Trusted Sources OIDC authentication, authorized automation bypasses, and explicit human handoffs for dashboard-only configuration (#1705)
+
+---
+
+## v0.34.0
+
+<p className="text-[#888] text-sm">August 10, 2026</p>
+
+### New Features
+
+- Added **persistent session-to-tab binding for shared Chrome sessions**. Named sessions connected through `--cdp` or `--auto-connect` now remember their CDP target across commands and daemon restarts, and CDP target ids can be used directly as tab references. Start each session with `--pin-tab` to make the binding strict, so a tab closed externally returns a stable `tab_gone` error instead of silently adopting a neighboring tab. JSON output includes `data.targetId` and an optional sanitized `data.lastUrl`; batch exposes the same recovery data under `result` (#1589)
+
+### Improvements
+
+- Added a **Remote Agent Browser provider guide** covering Vercel authentication, disposable and stable sessions, custom VCR images, snapshots, and live-view URLs (#1648)
+
+### Bug Fixes
+
+- Fixed **parallel sessions sharing one Chrome hijacking each other's tabs**. Event-discovered targets no longer steal a pinned session's active tab, re-attach restores the persisted target instead of selecting index 0, and preliminary plus existing-daemon `--cdp` and `--auto-connect` paths preserve explicit pin enable and disable. Agent skill guidance now requires a named `--session` before the first command (#1589)
+- Fixed **`agent-browser doctor` hanging on Chrome version detection**. Windows reads the version from the executable resource table without spawning Chrome; other platforms bound the version subprocess with a deadline, kill, and reap so inherited output handles cannot block forever or leave an orphan browser (#1641)
+
+---
+
+## v0.33.2
+
+<p className="text-[#888] text-sm">July 31, 2026</p>
+
+### New Features
+
+- Added **input priority and per-client delivery settings** to the stream server: each WebSocket connection now splits into a reader task and a writer loop, so clicks and keystrokes dispatch to the browser without queueing behind a frame write. Adds a per-client `{"type":"config","maxFps":N}` cap (1 to 120, `0` uncapped) and opt-in ack pacing via `{"type":"config","pacing":"ack"}` with `{"type":"ack","seq":N}`, which keeps one frame in flight so a stalled client never drains a backlog. Both settings can also be declared on the connection URL (`?pacing=ack&maxFps=10`), the only way to cover the opening frame. Every frame now carries a monotonic `seq` (#1594)
+- Added **configurable stream encoding**: frames were hardcoded to jpeg quality 80 at the session viewport, so frame rate was the only bandwidth lever. `AGENT_BROWSER_STREAM_QUALITY`, `AGENT_BROWSER_STREAM_MAX_WIDTH` and `AGENT_BROWSER_STREAM_MAX_HEIGHT` are read once per daemon and cut bytes without dropping frames: on a busy page at 1280x720, quality 20 takes a frame from 54 KB to 25 KB, and quality 20 at 640x360 takes it to 9 KB, frame rate unchanged in both. Width and height default to the session viewport, so a larger viewport is never downscaled unless both are set (#1626)
+
+### Behavior Changes
+
+- **Frame delivery is now latest-wins.** The stream server holds only the newest frame and reads it at send time, so frames produced while an earlier one is still being written are skipped. A client that assumed it received every frame from the WebSocket now receives fewer. Nothing in this repo consumes the stream that way, since `record` captures through CDP and the dashboard is a viewer, so this affects external consumers only (#1594)
+- **`metadata.timestamp` now carries a real value.** It was always 0, because CDP sends the capture time as a float in seconds and the code read it as an integer. It is now epoch milliseconds, so a client can measure how stale the frame it is drawing is. A client that treated 0 as unknown is unaffected (#1594)
+
+### Bug Fixes
+
+- Fixed **keyboard input over the stream**, which worked in none of the three shapes the docs publish: an absent `key`, `code`, or `text` reached CDP as an explicit null, which rejects the whole command, so every key release and every non-printable key was silently dropped, the dashboard's own payloads included (#1594)
+- Fixed **click latency behind mouse movement**: input dispatch awaited Chrome's reply before reading the next message, so a click sat one round trip behind every queued mouse move. After a 300-event sweep a click landed 2471ms late; it now lands in 6ms (#1627)
+- Fixed **`stream disable`** returning while a slow client's input reader was still running (#1594)
+
+---
+
+## v0.33.1
+
+<p className="text-[#888] text-sm">July 28, 2026</p>
+
+### Behavior Changes
+
+- The daemon now ships a **default idle timeout of 1 hour**: after an hour with no commands or dashboard input it saves configured restore state, closes the browser, and exits, so integrations that die without calling `close` no longer leak the daemon and its Chrome tree indefinitely. Sessions without `--restore` or another restore key discard transient browser state and open tabs when they shut down. Set `AGENT_BROWSER_IDLE_TIMEOUT_MS=0` to restore the old always-persist behavior, or any other value to tune it. Dashboard mouse, keyboard, and touch input reset the timer. The default never closes headed browsers, including Safari and iOS WebDriver sessions, or user-attached browsers that may be in direct human use. Provider-owned cloud browsers remain eligible for cleanup, and an explicitly configured timeout applies to all browsers, as before (#1605)
+
+### Bug Fixes
+
+- Fixed **tab recovery and selection** to avoid daemon hangs on Memory Saver-discarded tabs by selecting a live renderer on CDP connect, reviving tabs on switch or after close, treating dialog-blocked tabs as live, preserving refs on rejected operations, and surfacing recovery state across CLI, JSON, and MCP output (#1543)
+- Fixed **a11y selector errors** to report invalid CSS selectors cleanly instead of exposing raw browser evaluation stack traces in text and JSON output (#1604)
+
+---
+
+## v0.33.0
+
+<p className="text-[#888] text-sm">July 23, 2026</p>
+
+### New Features
+
+- Added **axe-core accessibility audits** with `agent-browser a11y [url]`, WCAG tag filtering, selector scoping, iframe-aware text and JSON results, an embedded offline and CSP-safe audit engine, and a matching MCP tool (#1596)
+
+---
+
+## v0.32.4
+
+<p className="text-[#888] text-sm">July 22, 2026</p>
+
+### Bug Fixes
+
+- Fixed **find role** to match implicit ARIA roles and browser-computed accessible names through the accessibility tree, so semantic elements like `<h2>` (heading) and `<ul>` (list) resolve, with case-insensitive substring name matching that mirrors Playwright's `getByRole` (#1552)
+- Fixed **element-not-found errors** to preserve the locator detail (selector, role, name, or index) instead of flattening every miss into one generic message, and aligned the advertised `find` actions with the set the dispatcher actually accepts (#1553)
+
+---
+
+## v0.32.3
+
+<p className="text-[#888] text-sm">July 19, 2026</p>
+
+### New Features
+
+- Added **HAR response body capture** with text bodies embedded by default and configurable `all`, `text`, and `none` content modes across the CLI and MCP surfaces (#1578)
+- Added a **derive-client skill** for recording browser traffic and generating reusable API clients from HAR request and response data (#1578)
+
+---
+
 ## v0.32.2
 
 <p className="text-[#888] text-sm">July 17, 2026</p>

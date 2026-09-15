@@ -16,10 +16,13 @@
 - `agent-browser`：[`extracted-skills/agent-browser/agent-browser`](../extracted-skills/agent-browser/agent-browser)
 - `agentcore`：[`extracted-skills/agent-browser/agentcore`](../extracted-skills/agent-browser/agentcore)
 - `core`：[`extracted-skills/agent-browser/core`](../extracted-skills/agent-browser/core)
+- `derive-client`：[`extracted-skills/agent-browser/derive-client`](../extracted-skills/agent-browser/derive-client)
 - `dogfood`：[`extracted-skills/agent-browser/dogfood`](../extracted-skills/agent-browser/dogfood)
 - `electron`：[`extracted-skills/agent-browser/electron`](../extracted-skills/agent-browser/electron)
+- `protected-vercel-deployments`：[`extracted-skills/agent-browser/protected-vercel-deployments`](../extracted-skills/agent-browser/protected-vercel-deployments)
 - `slack`：[`extracted-skills/agent-browser/slack`](../extracted-skills/agent-browser/slack)
 - `vercel-sandbox`：[`extracted-skills/agent-browser/vercel-sandbox`](../extracted-skills/agent-browser/vercel-sandbox)
+- `webmcp-gen`：[`extracted-skills/agent-browser/webmcp-gen`](../extracted-skills/agent-browser/webmcp-gen)
 
 ### agent-skills
 
@@ -32,10 +35,12 @@
 
 复制 [`extracted-skills/anthropic`](../extracted-skills/anthropic) 下需要的 skill 到 `~/.claude/skills/`。
 
+- `academy-guide`：[`extracted-skills/anthropic/academy-guide`](../extracted-skills/anthropic/academy-guide)
 - `algorithmic-art`：[`extracted-skills/anthropic/algorithmic-art`](../extracted-skills/anthropic/algorithmic-art)
 - `brand-guidelines`：[`extracted-skills/anthropic/brand-guidelines`](../extracted-skills/anthropic/brand-guidelines)
 - `canvas-design`：[`extracted-skills/anthropic/canvas-design`](../extracted-skills/anthropic/canvas-design)
 - `claude-api`：[`extracted-skills/anthropic/claude-api`](../extracted-skills/anthropic/claude-api)
+- `discernment-nudge`：[`extracted-skills/anthropic/discernment-nudge`](../extracted-skills/anthropic/discernment-nudge)
 - `doc-coauthoring`：[`extracted-skills/anthropic/doc-coauthoring`](../extracted-skills/anthropic/doc-coauthoring)
 - `docx`：[`extracted-skills/anthropic/docx`](../extracted-skills/anthropic/docx)
 - `frontend-design`：[`extracted-skills/anthropic/frontend-design`](../extracted-skills/anthropic/frontend-design)
@@ -273,6 +278,7 @@
 - `huashu-proofreading`：[`extracted-skills/huashu-skills/huashu-proofreading`](../extracted-skills/huashu-skills/huashu-proofreading)
 - `huashu-research`：[`extracted-skills/huashu-skills/huashu-research`](../extracted-skills/huashu-skills/huashu-research)
 - `huashu-script-polish`：[`extracted-skills/huashu-skills/huashu-script-polish`](../extracted-skills/huashu-skills/huashu-script-polish)
+- `huashu-skill-updater`：[`extracted-skills/huashu-skills/huashu-skill-updater`](../extracted-skills/huashu-skills/huashu-skill-updater)
 - `huashu-slides`：[`extracted-skills/huashu-skills/huashu-slides`](../extracted-skills/huashu-skills/huashu-slides)
 - `huashu-speech-coach`：[`extracted-skills/huashu-skills/huashu-speech-coach`](../extracted-skills/huashu-skills/huashu-speech-coach)
 - `huashu-topic-gen`：[`extracted-skills/huashu-skills/huashu-topic-gen`](../extracted-skills/huashu-skills/huashu-topic-gen)
@@ -283,7 +289,7 @@
 
 ### hyperframes
 
-推荐 `npx skills add heygen-com/hyperframes --full-depth`；也可从 [`extracted-skills/hyperframes`](../extracted-skills/hyperframes) 手动复制。
+推荐 `npx skills add heygen-com/hyperframes`；也可从 [`extracted-skills/hyperframes`](../extracted-skills/hyperframes) 手动复制。
 
 - `embedded-captions`：[`extracted-skills/hyperframes/embedded-captions`](../extracted-skills/hyperframes/embedded-captions)
 - `faceless-explainer`：[`extracted-skills/hyperframes/faceless-explainer`](../extracted-skills/hyperframes/faceless-explainer)
@@ -291,6 +297,7 @@
 - `general-video`：[`extracted-skills/hyperframes/general-video`](../extracted-skills/hyperframes/general-video)
 - `hyperframes`：[`extracted-skills/hyperframes/hyperframes`](../extracted-skills/hyperframes/hyperframes)
 - `hyperframes-animation`：[`extracted-skills/hyperframes/hyperframes-animation`](../extracted-skills/hyperframes/hyperframes-animation)
+- `hyperframes-audio`：[`extracted-skills/hyperframes/hyperframes-audio`](../extracted-skills/hyperframes/hyperframes-audio)
 - `hyperframes-cli`：[`extracted-skills/hyperframes/hyperframes-cli`](../extracted-skills/hyperframes/hyperframes-cli)
 - `hyperframes-core`：[`extracted-skills/hyperframes/hyperframes-core`](../extracted-skills/hyperframes/hyperframes-core)
 - `hyperframes-creative`：[`extracted-skills/hyperframes/hyperframes-creative`](../extracted-skills/hyperframes/hyperframes-creative)
@@ -307,13 +314,14 @@
 
 ### impeccable
 
-推荐 `npx impeccable skills install`；也可从 [`extracted-skills/impeccable`](../extracted-skills/impeccable) 手动复制。
+复制 [`extracted-skills/impeccable`](../extracted-skills/impeccable) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `impeccable`：[`extracted-skills/impeccable/impeccable`](../extracted-skills/impeccable/impeccable)
+- `impeccable-2`：[`extracted-skills/impeccable/impeccable-2`](../extracted-skills/impeccable/impeccable-2)
 
 ### kami
 
-推荐 `npx skills add tw93/kami/plugins/kami -a universal -g -y`；也可从 [`extracted-skills/kami`](../extracted-skills/kami) 手动复制。
+推荐 `npx skills add tw93/kami -a claude-code codex cursor -g -y`；也可从 [`extracted-skills/kami`](../extracted-skills/kami) 手动复制。
 
 - `kami`：[`extracted-skills/kami/kami`](../extracted-skills/kami/kami)
 
@@ -324,11 +332,11 @@
 - `ljg-blind`：[`extracted-skills/ljg-skills/ljg-blind`](../extracted-skills/ljg-skills/ljg-blind)
 - `ljg-book`：[`extracted-skills/ljg-skills/ljg-book`](../extracted-skills/ljg-skills/ljg-book)
 - `ljg-card`：[`extracted-skills/ljg-skills/ljg-card`](../extracted-skills/ljg-skills/ljg-card)
+- `ljg-classic`：[`extracted-skills/ljg-skills/ljg-classic`](../extracted-skills/ljg-skills/ljg-classic)
 - `ljg-constraint`：[`extracted-skills/ljg-skills/ljg-constraint`](../extracted-skills/ljg-skills/ljg-constraint)
 - `ljg-invest`：[`extracted-skills/ljg-skills/ljg-invest`](../extracted-skills/ljg-skills/ljg-invest)
+- `ljg-is`：[`extracted-skills/ljg-skills/ljg-is`](../extracted-skills/ljg-skills/ljg-is)
 - `ljg-learn`：[`extracted-skills/ljg-skills/ljg-learn`](../extracted-skills/ljg-skills/ljg-learn)
-- `ljg-library`：[`extracted-skills/ljg-skills/ljg-library`](../extracted-skills/ljg-skills/ljg-library)
-- `ljg-map`：[`extracted-skills/ljg-skills/ljg-map`](../extracted-skills/ljg-skills/ljg-map)
 - `ljg-paper`：[`extracted-skills/ljg-skills/ljg-paper`](../extracted-skills/ljg-skills/ljg-paper)
 - `ljg-plain`：[`extracted-skills/ljg-skills/ljg-plain`](../extracted-skills/ljg-skills/ljg-plain)
 - `ljg-present`：[`extracted-skills/ljg-skills/ljg-present`](../extracted-skills/ljg-skills/ljg-present)
@@ -339,6 +347,7 @@
 - `ljg-relationship`：[`extracted-skills/ljg-skills/ljg-relationship`](../extracted-skills/ljg-skills/ljg-relationship)
 - `ljg-roundtable`：[`extracted-skills/ljg-skills/ljg-roundtable`](../extracted-skills/ljg-skills/ljg-roundtable)
 - `ljg-structure`：[`extracted-skills/ljg-skills/ljg-structure`](../extracted-skills/ljg-skills/ljg-structure)
+- `ljg-teach`：[`extracted-skills/ljg-skills/ljg-teach`](../extracted-skills/ljg-skills/ljg-teach)
 - `ljg-think`：[`extracted-skills/ljg-skills/ljg-think`](../extracted-skills/ljg-skills/ljg-think)
 - `ljg-word`：[`extracted-skills/ljg-skills/ljg-word`](../extracted-skills/ljg-skills/ljg-word)
 - `ljg-writes`：[`extracted-skills/ljg-skills/ljg-writes`](../extracted-skills/ljg-skills/ljg-writes)
@@ -354,29 +363,25 @@
 复制 [`extracted-skills/mattpocock-skills`](../extracted-skills/mattpocock-skills) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `ask-matt`：[`extracted-skills/mattpocock-skills/ask-matt`](../extracted-skills/mattpocock-skills/ask-matt)
-- `batch-grill-me`：[`extracted-skills/mattpocock-skills/batch-grill-me`](../extracted-skills/mattpocock-skills/batch-grill-me)
 - `claude-handoff`：[`extracted-skills/mattpocock-skills/claude-handoff`](../extracted-skills/mattpocock-skills/claude-handoff)
 - `code-review`：[`extracted-skills/mattpocock-skills/code-review`](../extracted-skills/mattpocock-skills/code-review)
 - `codebase-design`：[`extracted-skills/mattpocock-skills/codebase-design`](../extracted-skills/mattpocock-skills/codebase-design)
-- `design-an-interface`：[`extracted-skills/mattpocock-skills/design-an-interface`](../extracted-skills/mattpocock-skills/design-an-interface)
 - `diagnosing-bugs`：[`extracted-skills/mattpocock-skills/diagnosing-bugs`](../extracted-skills/mattpocock-skills/diagnosing-bugs)
 - `domain-modeling`：[`extracted-skills/mattpocock-skills/domain-modeling`](../extracted-skills/mattpocock-skills/domain-modeling)
-- `edit-article`：[`extracted-skills/mattpocock-skills/edit-article`](../extracted-skills/mattpocock-skills/edit-article)
 - `git-guardrails-claude-code`：[`extracted-skills/mattpocock-skills/git-guardrails-claude-code`](../extracted-skills/mattpocock-skills/git-guardrails-claude-code)
 - `grill-me`：[`extracted-skills/mattpocock-skills/grill-me`](../extracted-skills/mattpocock-skills/grill-me)
 - `grill-with-docs`：[`extracted-skills/mattpocock-skills/grill-with-docs`](../extracted-skills/mattpocock-skills/grill-with-docs)
 - `grilling`：[`extracted-skills/mattpocock-skills/grilling`](../extracted-skills/mattpocock-skills/grilling)
 - `handoff`：[`extracted-skills/mattpocock-skills/handoff`](../extracted-skills/mattpocock-skills/handoff)
 - `implement`：[`extracted-skills/mattpocock-skills/implement`](../extracted-skills/mattpocock-skills/implement)
+- `implement-spec`：[`extracted-skills/mattpocock-skills/implement-spec`](../extracted-skills/mattpocock-skills/implement-spec)
 - `improve-codebase-architecture`：[`extracted-skills/mattpocock-skills/improve-codebase-architecture`](../extracted-skills/mattpocock-skills/improve-codebase-architecture)
 - `loop-me`：[`extracted-skills/mattpocock-skills/loop-me`](../extracted-skills/mattpocock-skills/loop-me)
 - `migrate-to-shoehorn`：[`extracted-skills/mattpocock-skills/migrate-to-shoehorn`](../extracted-skills/mattpocock-skills/migrate-to-shoehorn)
-- `obsidian-vault`：[`extracted-skills/mattpocock-skills/obsidian-vault`](../extracted-skills/mattpocock-skills/obsidian-vault)
 - `prototype`：[`extracted-skills/mattpocock-skills/prototype`](../extracted-skills/mattpocock-skills/prototype)
-- `qa`：[`extracted-skills/mattpocock-skills/qa`](../extracted-skills/mattpocock-skills/qa)
-- `request-refactor-plan`：[`extracted-skills/mattpocock-skills/request-refactor-plan`](../extracted-skills/mattpocock-skills/request-refactor-plan)
 - `research`：[`extracted-skills/mattpocock-skills/research`](../extracted-skills/mattpocock-skills/research)
 - `resolving-merge-conflicts`：[`extracted-skills/mattpocock-skills/resolving-merge-conflicts`](../extracted-skills/mattpocock-skills/resolving-merge-conflicts)
+- `retro`：[`extracted-skills/mattpocock-skills/retro`](../extracted-skills/mattpocock-skills/retro)
 - `scaffold-exercises`：[`extracted-skills/mattpocock-skills/scaffold-exercises`](../extracted-skills/mattpocock-skills/scaffold-exercises)
 - `setup-matt-pocock-skills`：[`extracted-skills/mattpocock-skills/setup-matt-pocock-skills`](../extracted-skills/mattpocock-skills/setup-matt-pocock-skills)
 - `setup-pre-commit`：[`extracted-skills/mattpocock-skills/setup-pre-commit`](../extracted-skills/mattpocock-skills/setup-pre-commit)
@@ -387,13 +392,20 @@
 - `to-spec`：[`extracted-skills/mattpocock-skills/to-spec`](../extracted-skills/mattpocock-skills/to-spec)
 - `to-tickets`：[`extracted-skills/mattpocock-skills/to-tickets`](../extracted-skills/mattpocock-skills/to-tickets)
 - `triage`：[`extracted-skills/mattpocock-skills/triage`](../extracted-skills/mattpocock-skills/triage)
-- `ubiquitous-language`：[`extracted-skills/mattpocock-skills/ubiquitous-language`](../extracted-skills/mattpocock-skills/ubiquitous-language)
+- `wait-what`：[`extracted-skills/mattpocock-skills/wait-what`](../extracted-skills/mattpocock-skills/wait-what)
 - `wayfinder`：[`extracted-skills/mattpocock-skills/wayfinder`](../extracted-skills/mattpocock-skills/wayfinder)
 - `wizard`：[`extracted-skills/mattpocock-skills/wizard`](../extracted-skills/mattpocock-skills/wizard)
 - `writing-beats`：[`extracted-skills/mattpocock-skills/writing-beats`](../extracted-skills/mattpocock-skills/writing-beats)
+- `writing-for-agents`：[`extracted-skills/mattpocock-skills/writing-for-agents`](../extracted-skills/mattpocock-skills/writing-for-agents)
 - `writing-fragments`：[`extracted-skills/mattpocock-skills/writing-fragments`](../extracted-skills/mattpocock-skills/writing-fragments)
-- `writing-great-skills`：[`extracted-skills/mattpocock-skills/writing-great-skills`](../extracted-skills/mattpocock-skills/writing-great-skills)
 - `writing-shape`：[`extracted-skills/mattpocock-skills/writing-shape`](../extracted-skills/mattpocock-skills/writing-shape)
+
+### mindmap-skills
+
+复制 [`extracted-skills/mindmap-skills`](../extracted-skills/mindmap-skills) 下需要的 skill 到 `~/.claude/skills/`。
+
+- `mindmap`：[`extracted-skills/mindmap-skills/mindmap`](../extracted-skills/mindmap-skills/mindmap)
+- `mindmap-zh`：[`extracted-skills/mindmap-skills/mindmap-zh`](../extracted-skills/mindmap-skills/mindmap-zh)
 
 ### mineru
 
@@ -403,7 +415,7 @@
 
 ### notebooklm
 
-推荐 `npx skills add teng-lin/notebooklm-py`；也可从 [`extracted-skills/notebooklm`](../extracted-skills/notebooklm) 手动复制。
+复制 [`extracted-skills/notebooklm`](../extracted-skills/notebooklm) 下需要的 skill 到 `~/.claude/skills/`。
 
 - `notebooklm`：[`extracted-skills/notebooklm/notebooklm`](../extracted-skills/notebooklm/notebooklm)
 
@@ -413,6 +425,7 @@
 
 - `defuddle`：[`extracted-skills/obsidian-skills/defuddle`](../extracted-skills/obsidian-skills/defuddle)
 - `json-canvas`：[`extracted-skills/obsidian-skills/json-canvas`](../extracted-skills/obsidian-skills/json-canvas)
+- `knap`：[`extracted-skills/obsidian-skills/knap`](../extracted-skills/obsidian-skills/knap)
 - `obsidian-bases`：[`extracted-skills/obsidian-skills/obsidian-bases`](../extracted-skills/obsidian-skills/obsidian-bases)
 - `obsidian-cli`：[`extracted-skills/obsidian-skills/obsidian-cli`](../extracted-skills/obsidian-skills/obsidian-cli)
 - `obsidian-markdown`：[`extracted-skills/obsidian-skills/obsidian-markdown`](../extracted-skills/obsidian-skills/obsidian-markdown)
@@ -456,6 +469,7 @@
 - `dbs-xhs-title`：[`extracted-skills/pluviobyte-rnskill/dbs-xhs-title`](../extracted-skills/pluviobyte-rnskill/dbs-xhs-title)
 - `editorial-collage-motion`：[`extracted-skills/pluviobyte-rnskill/editorial-collage-motion`](../extracted-skills/pluviobyte-rnskill/editorial-collage-motion)
 - `editorial-dot-cover`：[`extracted-skills/pluviobyte-rnskill/editorial-dot-cover`](../extracted-skills/pluviobyte-rnskill/editorial-dot-cover)
+- `grok-build-cli`：[`extracted-skills/pluviobyte-rnskill/grok-build-cli`](../extracted-skills/pluviobyte-rnskill/grok-build-cli)
 - `heygen-digital-avatar`：[`extracted-skills/pluviobyte-rnskill/heygen-digital-avatar`](../extracted-skills/pluviobyte-rnskill/heygen-digital-avatar)
 - `ian-xiaohei-illustrations`：[`extracted-skills/pluviobyte-rnskill/ian-xiaohei-illustrations`](../extracted-skills/pluviobyte-rnskill/ian-xiaohei-illustrations)
 - `ian-xiaohei-svg-motion`：[`extracted-skills/pluviobyte-rnskill/ian-xiaohei-svg-motion`](../extracted-skills/pluviobyte-rnskill/ian-xiaohei-svg-motion)
@@ -477,14 +491,18 @@
 - `rn-bw-text-opener`：[`extracted-skills/pluviobyte-rnskill/rn-bw-text-opener`](../extracted-skills/pluviobyte-rnskill/rn-bw-text-opener)
 - `rn-cover-skill`：[`extracted-skills/pluviobyte-rnskill/rn-cover-skill`](../extracted-skills/pluviobyte-rnskill/rn-cover-skill)
 - `rn-dark-saas-video`：[`extracted-skills/pluviobyte-rnskill/rn-dark-saas-video`](../extracted-skills/pluviobyte-rnskill/rn-dark-saas-video)
+- `rn-human-motion-extractor`：[`extracted-skills/pluviobyte-rnskill/rn-human-motion-extractor`](../extracted-skills/pluviobyte-rnskill/rn-human-motion-extractor)
 - `rn-motion-director`：[`extracted-skills/pluviobyte-rnskill/rn-motion-director`](../extracted-skills/pluviobyte-rnskill/rn-motion-director)
 - `rn-motion-replica`：[`extracted-skills/pluviobyte-rnskill/rn-motion-replica`](../extracted-skills/pluviobyte-rnskill/rn-motion-replica)
+- `rn-niulai-style-image`：[`extracted-skills/pluviobyte-rnskill/rn-niulai-style-image`](../extracted-skills/pluviobyte-rnskill/rn-niulai-style-image)
 - `rn-replica-qc`：[`extracted-skills/pluviobyte-rnskill/rn-replica-qc`](../extracted-skills/pluviobyte-rnskill/rn-replica-qc)
 - `skill-captions`：[`extracted-skills/pluviobyte-rnskill/skill-captions`](../extracted-skills/pluviobyte-rnskill/skill-captions)
 - `skill-cover`：[`extracted-skills/pluviobyte-rnskill/skill-cover`](../extracted-skills/pluviobyte-rnskill/skill-cover)
 - `tts-skill`：[`extracted-skills/pluviobyte-rnskill/tts-skill`](../extracted-skills/pluviobyte-rnskill/tts-skill)
 - `video-use`：[`extracted-skills/pluviobyte-rnskill/video-use`](../extracted-skills/pluviobyte-rnskill/video-use)
 - `xhs-article-to-images`：[`extracted-skills/pluviobyte-rnskill/xhs-article-to-images`](../extracted-skills/pluviobyte-rnskill/xhs-article-to-images)
+- `孙割`：[`extracted-skills/pluviobyte-rnskill/孙割`](../extracted-skills/pluviobyte-rnskill/孙割)
+- `孙宇晨`：[`extracted-skills/pluviobyte-rnskill/孙宇晨`](../extracted-skills/pluviobyte-rnskill/孙宇晨)
 
 ### ponytail
 
@@ -522,40 +540,89 @@
 
 - `accelevents-api`：[`extracted-skills/swyxio-skills/accelevents-api`](../extracted-skills/swyxio-skills/accelevents-api)
 - `accelevents-speaker-sync`：[`extracted-skills/swyxio-skills/accelevents-speaker-sync`](../extracted-skills/swyxio-skills/accelevents-speaker-sync)
+- `agents-sdk`：[`extracted-skills/swyxio-skills/agents-sdk`](../extracted-skills/swyxio-skills/agents-sdk)
+- `ai-devblog`：[`extracted-skills/swyxio-skills/ai-devblog`](../extracted-skills/swyxio-skills/ai-devblog)
+- `ai-engineering`：[`extracted-skills/swyxio-skills/ai-engineering`](../extracted-skills/swyxio-skills/ai-engineering)
+- `ai-readme`：[`extracted-skills/swyxio-skills/ai-readme`](../extracted-skills/swyxio-skills/ai-readme)
+- `align-me`：[`extracted-skills/swyxio-skills/align-me`](../extracted-skills/swyxio-skills/align-me)
 - `antislop-codebase`：[`extracted-skills/swyxio-skills/antislop-codebase`](../extracted-skills/swyxio-skills/antislop-codebase)
 - `app-ux-paradigms`：[`extracted-skills/swyxio-skills/app-ux-paradigms`](../extracted-skills/swyxio-skills/app-ux-paradigms)
 - `autoreview`：[`extracted-skills/swyxio-skills/autoreview`](../extracted-skills/swyxio-skills/autoreview)
+- `blog-system-design`：[`extracted-skills/swyxio-skills/blog-system-design`](../extracted-skills/swyxio-skills/blog-system-design)
+- `cassandra-creator`：[`extracted-skills/swyxio-skills/cassandra-creator`](../extracted-skills/swyxio-skills/cassandra-creator)
+- `ceo-creator`：[`extracted-skills/swyxio-skills/ceo-creator`](../extracted-skills/swyxio-skills/ceo-creator)
 - `claude-session-introspect`：[`extracted-skills/swyxio-skills/claude-session-introspect`](../extracted-skills/swyxio-skills/claude-session-introspect)
-- `codebase-maintainability-guardrails`：[`extracted-skills/swyxio-skills/codebase-maintainability-guardrails`](../extracted-skills/swyxio-skills/codebase-maintainability-guardrails)
+- `cli-ux`：[`extracted-skills/swyxio-skills/cli-ux`](../extracted-skills/swyxio-skills/cli-ux)
+- `cloudflare`：[`extracted-skills/swyxio-skills/cloudflare`](../extracted-skills/swyxio-skills/cloudflare)
+- `cloudflare-do-turn-based-multiplayer`：[`extracted-skills/swyxio-skills/cloudflare-do-turn-based-multiplayer`](../extracted-skills/swyxio-skills/cloudflare-do-turn-based-multiplayer)
+- `cloudflare-email-service`：[`extracted-skills/swyxio-skills/cloudflare-email-service`](../extracted-skills/swyxio-skills/cloudflare-email-service)
+- `cloudflare-one`：[`extracted-skills/swyxio-skills/cloudflare-one`](../extracted-skills/swyxio-skills/cloudflare-one)
+- `cloudflare-one-migrations`：[`extracted-skills/swyxio-skills/cloudflare-one-migrations`](../extracted-skills/swyxio-skills/cloudflare-one-migrations)
+- `cloudflare-production-builder`：[`extracted-skills/swyxio-skills/cloudflare-production-builder`](../extracted-skills/swyxio-skills/cloudflare-production-builder)
 - `conference-developer-endpoints`：[`extracted-skills/swyxio-skills/conference-developer-endpoints`](../extracted-skills/swyxio-skills/conference-developer-endpoints)
 - `conference-transcribe`：[`extracted-skills/swyxio-skills/conference-transcribe`](../extracted-skills/swyxio-skills/conference-transcribe)
 - `data-chatbots`：[`extracted-skills/swyxio-skills/data-chatbots`](../extracted-skills/swyxio-skills/data-chatbots)
+- `data-visualization-quality`：[`extracted-skills/swyxio-skills/data-visualization-quality`](../extracted-skills/swyxio-skills/data-visualization-quality)
+- `deep-trajectory-analysis`：[`extracted-skills/swyxio-skills/deep-trajectory-analysis`](../extracted-skills/swyxio-skills/deep-trajectory-analysis)
+- `design-apps-with-imagegen`：[`extracted-skills/swyxio-skills/design-apps-with-imagegen`](../extracted-skills/swyxio-skills/design-apps-with-imagegen)
+- `design-preferences`：[`extracted-skills/swyxio-skills/design-preferences`](../extracted-skills/swyxio-skills/design-preferences)
+- `diy-netlify`：[`extracted-skills/swyxio-skills/diy-netlify`](../extracted-skills/swyxio-skills/diy-netlify)
 - `download-video`：[`extracted-skills/swyxio-skills/download-video`](../extracted-skills/swyxio-skills/download-video)
 - `download-x-video`：[`extracted-skills/swyxio-skills/download-x-video`](../extracted-skills/swyxio-skills/download-x-video)
+- `durable-objects`：[`extracted-skills/swyxio-skills/durable-objects`](../extracted-skills/swyxio-skills/durable-objects)
 - `europe-developer-api`：[`extracted-skills/swyxio-skills/europe-developer-api`](../extracted-skills/swyxio-skills/europe-developer-api)
+- `face-matching`：[`extracted-skills/swyxio-skills/face-matching`](../extracted-skills/swyxio-skills/face-matching)
+- `forge`：[`extracted-skills/swyxio-skills/forge`](../extracted-skills/swyxio-skills/forge)
+- `future-only`：[`extracted-skills/swyxio-skills/future-only`](../extracted-skills/swyxio-skills/future-only)
+- `generalize`：[`extracted-skills/swyxio-skills/generalize`](../extracted-skills/swyxio-skills/generalize)
+- `gsuite-setup`：[`extracted-skills/swyxio-skills/gsuite-setup`](../extracted-skills/swyxio-skills/gsuite-setup)
+- `latent-space-thumbnail-director`：[`extracted-skills/swyxio-skills/latent-space-thumbnail-director`](../extracted-skills/swyxio-skills/latent-space-thumbnail-director)
+- `live-ai-pipelines`：[`extracted-skills/swyxio-skills/live-ai-pipelines`](../extracted-skills/swyxio-skills/live-ai-pipelines)
+- `location-input`：[`extracted-skills/swyxio-skills/location-input`](../extracted-skills/swyxio-skills/location-input)
+- `long-running-operation-ux`：[`extracted-skills/swyxio-skills/long-running-operation-ux`](../extracted-skills/swyxio-skills/long-running-operation-ux)
+- `media-heavy-workflows`：[`extracted-skills/swyxio-skills/media-heavy-workflows`](../extracted-skills/swyxio-skills/media-heavy-workflows)
 - `media-transform`：[`extracted-skills/swyxio-skills/media-transform`](../extracted-skills/swyxio-skills/media-transform)
+- `mobile-webapp-ux`：[`extracted-skills/swyxio-skills/mobile-webapp-ux`](../extracted-skills/swyxio-skills/mobile-webapp-ux)
 - `multimodal-extraction`：[`extracted-skills/swyxio-skills/multimodal-extraction`](../extracted-skills/swyxio-skills/multimodal-extraction)
 - `new-mac-setup`：[`extracted-skills/swyxio-skills/new-mac-setup`](../extracted-skills/swyxio-skills/new-mac-setup)
+- `next-steps`：[`extracted-skills/swyxio-skills/next-steps`](../extracted-skills/swyxio-skills/next-steps)
 - `observability-hardening`：[`extracted-skills/swyxio-skills/observability-hardening`](../extracted-skills/swyxio-skills/observability-hardening)
+- `person-profile-writing`：[`extracted-skills/swyxio-skills/person-profile-writing`](../extracted-skills/swyxio-skills/person-profile-writing)
 - `podcast-publishing-assistant`：[`extracted-skills/swyxio-skills/podcast-publishing-assistant`](../extracted-skills/swyxio-skills/podcast-publishing-assistant)
 - `productionize-app-with-services`：[`extracted-skills/swyxio-skills/productionize-app-with-services`](../extracted-skills/swyxio-skills/productionize-app-with-services)
+- `programmatic-agents`：[`extracted-skills/swyxio-skills/programmatic-agents`](../extracted-skills/swyxio-skills/programmatic-agents)
 - `public-qa-chatbot`：[`extracted-skills/swyxio-skills/public-qa-chatbot`](../extracted-skills/swyxio-skills/public-qa-chatbot)
+- `pulp-fiction-writing`：[`extracted-skills/swyxio-skills/pulp-fiction-writing`](../extracted-skills/swyxio-skills/pulp-fiction-writing)
 - `release-readiness-hardening`：[`extracted-skills/swyxio-skills/release-readiness-hardening`](../extracted-skills/swyxio-skills/release-readiness-hardening)
+- `research-grounded-writing`：[`extracted-skills/swyxio-skills/research-grounded-writing`](../extracted-skills/swyxio-skills/research-grounded-writing)
 - `reserved-handle-policy`：[`extracted-skills/swyxio-skills/reserved-handle-policy`](../extracted-skills/swyxio-skills/reserved-handle-policy)
+- `resilient-computer-use`：[`extracted-skills/swyxio-skills/resilient-computer-use`](../extracted-skills/swyxio-skills/resilient-computer-use)
+- `sandbox-sdk`：[`extracted-skills/swyxio-skills/sandbox-sdk`](../extracted-skills/swyxio-skills/sandbox-sdk)
 - `schedule-design`：[`extracted-skills/swyxio-skills/schedule-design`](../extracted-skills/swyxio-skills/schedule-design)
 - `security-hardening`：[`extracted-skills/swyxio-skills/security-hardening`](../extracted-skills/swyxio-skills/security-hardening)
+- `sessionize-automation`：[`extracted-skills/swyxio-skills/sessionize-automation`](../extracted-skills/swyxio-skills/sessionize-automation)
+- `skill-cutter`：[`extracted-skills/swyxio-skills/skill-cutter`](../extracted-skills/swyxio-skills/skill-cutter)
 - `slackbot-builder`：[`extracted-skills/swyxio-skills/slackbot-builder`](../extracted-skills/swyxio-skills/slackbot-builder)
 - `smart-entity-resolution`：[`extracted-skills/swyxio-skills/smart-entity-resolution`](../extracted-skills/swyxio-skills/smart-entity-resolution)
 - `summarize-anything`：[`extracted-skills/swyxio-skills/summarize-anything`](../extracted-skills/swyxio-skills/summarize-anything)
+- `swyx-writing`：[`extracted-skills/swyxio-skills/swyx-writing`](../extracted-skills/swyxio-skills/swyx-writing)
 - `sync-accelevents`：[`extracted-skills/swyxio-skills/sync-accelevents`](../extracted-skills/swyxio-skills/sync-accelevents)
 - `sync-url-navigation`：[`extracted-skills/swyxio-skills/sync-url-navigation`](../extracted-skills/swyxio-skills/sync-url-navigation)
 - `test-strategy-hardening`：[`extracted-skills/swyxio-skills/test-strategy-hardening`](../extracted-skills/swyxio-skills/test-strategy-hardening)
 - `testing-schedule-preview`：[`extracted-skills/swyxio-skills/testing-schedule-preview`](../extracted-skills/swyxio-skills/testing-schedule-preview)
 - `thumbnail-extraction`：[`extracted-skills/swyxio-skills/thumbnail-extraction`](../extracted-skills/swyxio-skills/thumbnail-extraction)
 - `transcribe-anything`：[`extracted-skills/swyxio-skills/transcribe-anything`](../extracted-skills/swyxio-skills/transcribe-anything)
+- `turnstile-spin`：[`extracted-skills/swyxio-skills/turnstile-spin`](../extracted-skills/swyxio-skills/turnstile-spin)
 - `twitter-x-scraping`：[`extracted-skills/swyxio-skills/twitter-x-scraping`](../extracted-skills/swyxio-skills/twitter-x-scraping)
+- `vercel-production-cost-review`：[`extracted-skills/swyxio-skills/vercel-production-cost-review`](../extracted-skills/swyxio-skills/vercel-production-cost-review)
+- `video-talk-to-essay`：[`extracted-skills/swyxio-skills/video-talk-to-essay`](../extracted-skills/swyxio-skills/video-talk-to-essay)
+- `visual-playtest`：[`extracted-skills/swyxio-skills/visual-playtest`](../extracted-skills/swyxio-skills/visual-playtest)
 - `web-animation-perf`：[`extracted-skills/swyxio-skills/web-animation-perf`](../extracted-skills/swyxio-skills/web-animation-perf)
+- `web-perf`：[`extracted-skills/swyxio-skills/web-perf`](../extracted-skills/swyxio-skills/web-perf)
+- `workers-best-practices`：[`extracted-skills/swyxio-skills/workers-best-practices`](../extracted-skills/swyxio-skills/workers-best-practices)
+- `wrangler`：[`extracted-skills/swyxio-skills/wrangler`](../extracted-skills/swyxio-skills/wrangler)
 - `youtube-api`：[`extracted-skills/swyxio-skills/youtube-api`](../extracted-skills/swyxio-skills/youtube-api)
+- `youtube-channel-operator`：[`extracted-skills/swyxio-skills/youtube-channel-operator`](../extracted-skills/swyxio-skills/youtube-channel-operator)
 - `youtube-publish`：[`extracted-skills/swyxio-skills/youtube-publish`](../extracted-skills/swyxio-skills/youtube-publish)
 - `youtube-studio-batch-upload`：[`extracted-skills/swyxio-skills/youtube-studio-batch-upload`](../extracted-skills/swyxio-skills/youtube-studio-batch-upload)
 - `youtube-studio-computer-use`：[`extracted-skills/swyxio-skills/youtube-studio-computer-use`](../extracted-skills/swyxio-skills/youtube-studio-computer-use)
@@ -604,23 +671,21 @@
 
 推荐 `npx skills add mcncarl/yichen-skills --skill yichen-x-slicer`；也可从 [`extracted-skills/yichen-skills`](../extracted-skills/yichen-skills) 手动复制。
 
+- `x-article-draft-uploader`：[`extracted-skills/yichen-skills/x-article-draft-uploader`](../extracted-skills/yichen-skills/x-article-draft-uploader)
 - `yichen-agent-memory`：[`extracted-skills/yichen-skills/yichen-agent-memory`](../extracted-skills/yichen-skills/yichen-agent-memory)
 - `yichen-asr`：[`extracted-skills/yichen-skills/yichen-asr`](../extracted-skills/yichen-skills/yichen-asr)
 - `yichen-bookmarks-export`：[`extracted-skills/yichen-skills/yichen-bookmarks-export`](../extracted-skills/yichen-skills/yichen-bookmarks-export)
 - `yichen-chatgpt-web-research`：[`extracted-skills/yichen-skills/yichen-chatgpt-web-research`](../extracted-skills/yichen-skills/yichen-chatgpt-web-research)
+- `yichen-codex-chatgpt`：[`extracted-skills/yichen-skills/yichen-codex-chatgpt`](../extracted-skills/yichen-skills/yichen-codex-chatgpt)
 - `yichen-content-archive`：[`extracted-skills/yichen-skills/yichen-content-archive`](../extracted-skills/yichen-skills/yichen-content-archive)
 - `yichen-grok-consult`：[`extracted-skills/yichen-skills/yichen-grok-consult`](../extracted-skills/yichen-skills/yichen-grok-consult)
-- `yichen-jianying-editor`：[`extracted-skills/yichen-skills/yichen-jianying-editor`](../extracted-skills/yichen-skills/yichen-jianying-editor)
 - `yichen-mac-wechat-dual-open`：[`extracted-skills/yichen-skills/yichen-mac-wechat-dual-open`](../extracted-skills/yichen-skills/yichen-mac-wechat-dual-open)
-- `yichen-social-bookmarks-exporter`：[`extracted-skills/yichen-skills/yichen-social-bookmarks-exporter`](../extracted-skills/yichen-skills/yichen-social-bookmarks-exporter)
-- `yichen-summary`：[`extracted-skills/yichen-skills/yichen-summary`](../extracted-skills/yichen-skills/yichen-summary)
 - `yichen-unified-search`：[`extracted-skills/yichen-skills/yichen-unified-search`](../extracted-skills/yichen-skills/yichen-unified-search)
-- `yichen-video-content`：[`extracted-skills/yichen-skills/yichen-video-content`](../extracted-skills/yichen-skills/yichen-video-content)
 - `yichen-volc-asr`：[`extracted-skills/yichen-skills/yichen-volc-asr`](../extracted-skills/yichen-skills/yichen-volc-asr)
 - `yichen-web-research`：[`extracted-skills/yichen-skills/yichen-web-research`](../extracted-skills/yichen-skills/yichen-web-research)
 - `yichen-wechat-local-vault`：[`extracted-skills/yichen-skills/yichen-wechat-local-vault`](../extracted-skills/yichen-skills/yichen-wechat-local-vault)
 - `yichen-wechat-mp-batch-exporter`：[`extracted-skills/yichen-skills/yichen-wechat-mp-batch-exporter`](../extracted-skills/yichen-skills/yichen-wechat-mp-batch-exporter)
+- `yichen-wechat-windows-reader`：[`extracted-skills/yichen-skills/yichen-wechat-windows-reader`](../extracted-skills/yichen-skills/yichen-wechat-windows-reader)
 - `yichen-wecom-local-vault`：[`extracted-skills/yichen-skills/yichen-wecom-local-vault`](../extracted-skills/yichen-skills/yichen-wecom-local-vault)
 - `yichen-wecom-operations`：[`extracted-skills/yichen-skills/yichen-wecom-operations`](../extracted-skills/yichen-skills/yichen-wecom-operations)
-- `yichen-x-article-draft-uploader`：[`extracted-skills/yichen-skills/yichen-x-article-draft-uploader`](../extracted-skills/yichen-skills/yichen-x-article-draft-uploader)
 - `yichen-x-slicer`：[`extracted-skills/yichen-skills/yichen-x-slicer`](../extracted-skills/yichen-skills/yichen-x-slicer)

@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 
 from content_sources import load_reviews, reviews_by_skill, translation_file
-from skillhub_common import ROOT, load_category_labels, load_registry, parse_frontmatter
+from skillhub_common import ROOT, load_agents, load_category_labels, load_registry, parse_frontmatter
 
 CATEGORY_LABELS = load_category_labels()
 
@@ -57,6 +57,7 @@ def build_payload(projects: list[dict]) -> dict:
 
     return {
         "generated_at": date.today().isoformat(),
+        "agents": load_agents().get("agents", []),
         "summary": {
             "project_count": len(projects),
             "skill_count": skill_count,
@@ -130,6 +131,10 @@ def html_template() -> str:
     .segment{min-width:84px;height:30px;padding:0 14px;border:0;border-radius:7px;background:transparent;color:rgba(244,239,230,.72);cursor:pointer;font-family:var(--mono);font-size:11px;transition:all .18s var(--ease)}
     .segment.active{background:var(--cream);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.18)}
     .segment:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+    #deployScope{background:var(--paper);border:1px solid var(--line);box-shadow:inset 0 1px 2px rgba(15,26,20,.08)}
+    #deployScope .segment{color:var(--muted);font-weight:600}
+    #deployScope .segment:hover{color:var(--ink)}
+    #deployScope .segment.active{background:var(--ink);color:var(--paper);box-shadow:0 1px 3px rgba(15,26,20,.28)}
     .admin-chip{min-height:36px;padding:0 12px;border:1px solid var(--line);background:var(--cream);color:var(--ink);font-family:var(--mono);font-size:12px;cursor:pointer;transition:border-color .15s var(--ease), background .15s var(--ease), color .15s var(--ease)}
     .admin-bar .admin-chip{background:transparent;border-color:rgba(244,239,230,.22);color:var(--paper)}
     .admin-bar .admin-chip option{color:var(--ink);background:var(--cream)}
@@ -243,6 +248,17 @@ def html_template() -> str:
     .bottom-dock .hint{font-family:var(--mono);font-size:11px;color:var(--muted)}
     .bottom-dock input[type="text"]{height:36px;border:1px solid var(--line);background:var(--cream);padding:0 10px;font-family:var(--mono);font-size:12px;min-width:200px;flex:1}
     .bottom-dock select{height:36px;border:1px solid var(--line);background:var(--cream);padding:0 8px;font-family:var(--mono);font-size:12px}
+    .bottom-dock select#deployAgent{max-width:210px}
+    .bottom-dock select#deployFav{max-width:210px}
+    #browseFavRow{margin-top:2px}
+    #browseFavRow .admin-chip{font-size:11px;min-height:28px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+    #favSaveBtn{width:36px;padding:0;font-size:15px;line-height:1}
+    #favSaveBtn.starred{color:var(--orange);border-color:var(--orange)}
+    .deploy-actions{display:none;gap:6px;align-items:center;padding:4px 6px 4px 0}
+    body.admin-b2 .layout:not(.mode-organize) .deploy-actions{display:inline-flex}
+    .deploy-actions button{min-height:28px;padding:0 8px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+    .deploy-actions button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+    .deploy-actions button:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
     .flash{animation:flash .9s var(--ease)}
     @keyframes flash{0%{background:rgba(216,108,58,.18)}100%{background:var(--cream)}}
     .admin-modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(15,26,20,.38);padding:16px}
@@ -335,13 +351,23 @@ def html_template() -> str:
   </div>
   <div class="bottom-dock" id="bottomDockDeploy" aria-label="部署底坞">
     <strong id="dockDeployCount">已选 0 个 skill + 0 个项目</strong>
-    <button class="admin-chip" id="selectCategorySkillsBtn" title="全选当前过滤分类下所有 skills">全选当前分类的 skills</button>
-    <input type="text" id="deployRoot" placeholder="目标路径，如 E:\Code\my-app">
-    <button class="admin-chip" id="browseBtn">浏览</button>
-    <select id="deployDir"><option value=".claude">.claude</option><option value=".codex">.codex</option><option value=".agents">.agents</option><option value=".pi">.pi</option><option value="custom">自定义…</option></select>
+    <span class="hint">范围</span>
+    <div class="segmented" id="deployScope" role="tablist" aria-label="部署范围">
+      <button type="button" class="segment active" data-scope="project" role="tab" aria-selected="true" title="部署到某个项目的 skills 目录">项目</button>
+      <button type="button" class="segment" data-scope="global" role="tab" aria-selected="false" title="部署到该 Agent 的用户全局 skills 目录（如 ~/.claude/skills/），所有项目通用">全局</button>
+    </div>
+    <select id="deployAgent" aria-label="目标 Agent" title="目标 Agent（路径来自 registry/agents.json）"></select>
+    <span id="deployProjectRow" style="display:contents">
+      <input type="text" id="deployRoot" placeholder="目标路径，如 E:\Code\my-app">
+      <button class="admin-chip" id="browseBtn">浏览</button>
+      <button class="admin-chip" id="favSaveBtn" title="收藏当前路径" aria-pressed="false" aria-label="收藏当前路径">☆</button>
+      <select id="deployFav" aria-label="收藏路径" title="收藏路径：选择常用目标目录"></select>
+    </span>
+    <select id="deployDir" style="display:none" aria-label="自定义 skill 目录"><option value=".claude">.claude</option><option value=".codex">.codex</option><option value=".agents">.agents</option><option value=".pi">.pi</option><option value="custom">自定义…</option></select>
     <input type="text" id="deployCustomDir" placeholder="自定义目录" style="display:none;min-width:120px">
     <button class="admin-chip primary" id="deployBtn">部署选中</button>
     <span class="hint" id="deployHint"></span>
+    <span class="hint" id="deployDestPreview" style="flex-basis:100%"></span>
   </div>
 
   <div class="drawer" id="drawer" aria-hidden="true">
@@ -397,6 +423,7 @@ def html_template() -> str:
         <button class="admin-chip" id="browseUpBtn" title="上级目录">⬆ 上级</button>
         <button class="admin-chip primary" id="browseSelectBtn">选定此目录</button>
       </div>
+      <div id="browseFavRow" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
       <div id="browseList" style="max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;display:grid;gap:4px;background:var(--paper)"></div>
       <div class="admin-modal-actions">
         <button class="admin-chip" id="browseCancelBtn">取消</button>
@@ -503,7 +530,8 @@ def html_template() -> str:
     el("drawerBackdrop").addEventListener("click",closeDrawer);
     document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeDrawer();closeAdminDrawers();const m=el("adminModal");if(m) m.classList.remove("open");const bm=el("browseModal");if(bm) bm.classList.remove("open")}});
     // ===== Admin B2 dual-mode =====
-    const ADMIN_API="http://127.0.0.1:5173";
+    // 单端口同源模式：相对路径即可；旧双服务模式可用 ?api=http://127.0.0.1:8080 覆盖
+    const ADMIN_API=new URLSearchParams(location.search).get("api")||"";
     const isAdmin=new URLSearchParams(location.search).has("admin")||localStorage.getItem("skill-hub-admin")==="1";
     const adminState={selected:new Set(), dragging:null, mode: localStorage.getItem("skill-hub-admin-mode")||"organize", skillSelected: new Set(), currentDrawerId:null};
     function isOrganize(){return adminState.mode==="organize";}
@@ -517,7 +545,7 @@ def html_template() -> str:
     function flash(el2, msg){
       if(!el2) return; el2.textContent=msg; el2.parentElement?.classList.add("flash"); setTimeout(()=> el2.parentElement?.classList.remove("flash"), 900);
     }
-    async function adminFetch(path,opts){try{const r=await fetch(ADMIN_API+path,opts);const j=await r.json();if(!r.ok) throw new Error(j.error||r.statusText);return j}catch(e){throw e}}
+    async function adminFetch(path,opts){const url=ADMIN_API+path;try{const r=await fetch(url,opts);const j=await r.json();if(!r.ok) throw new Error(j.error||r.statusText);return j}catch(e){if(location.protocol==="file:"&&!ADMIN_API) throw new Error("请通过工作台地址打开页面（不要双击本地文件），或加 ?api= 参数指定后端");throw e}}
     function adminSlug(v){return String(v||"").trim().toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g,"-").replace(/^-|-$/g,"")||""}
     function adminRefreshBatchTargets(){
       const sel=el("batchTargetOrganize"); if(!sel) return;
@@ -767,17 +795,75 @@ def html_template() -> str:
         }catch(e){ hint.textContent=e.message; }
       }
     });
-    // deploy logic
-    const deployState = { targetRoot: localStorage.getItem("skill-hub-deploy-root")||"", skillDir: localStorage.getItem("skill-hub-deploy-dir")||".claude" };
+    // deploy logic: scope(项目/全局) + agent 映射 + 收藏路径
+    const AGENT_LIST = Array.isArray(data.agents) ? data.agents : [];
+    const agentById = (id)=> AGENT_LIST.find(a=>a.id===id);
+    const deployState = { targetRoot: localStorage.getItem("skill-hub-deploy-root")||"", skillDir: localStorage.getItem("skill-hub-deploy-dir")||".claude", scope: localStorage.getItem("skill-hub-deploy-scope")||"project", agent: localStorage.getItem("skill-hub-deploy-agent")||"claude-code" };
+    if(deployState.scope!=="project"&&deployState.scope!=="global") deployState.scope="project";
+    if(deployState.agent!=="custom"&&!agentById(deployState.agent)) deployState.agent="claude-code";
     function deploySetHint(msg,isError){ const h=el("deployHint"); if(h){ h.textContent=msg; h.style.color=isError?"#b42318":"#166534"; } }
     function deployGetSkillDir(){ const sel=el("deployDir")?.value; if(sel==="custom") return el("deployCustomDir")?.value.trim()||".claude"; return sel||".claude"; }
+    // 收藏路径（localStorage，存本机常用目标目录）
+    const FAV_KEY="skill-hub-deploy-favorites";
+    function favList(){ try{ const v=JSON.parse(localStorage.getItem(FAV_KEY)||"[]"); return Array.isArray(v)?v.filter(x=>typeof x==="string"&&x.trim()).slice(0,20):[]; }catch{ return []; } }
+    function favSet(list){ localStorage.setItem(FAV_KEY, JSON.stringify(list.slice(0,20))); }
+    function renderFavOptions(){
+      const sel=el("deployFav"); if(!sel) return;
+      const favs=favList();
+      sel.innerHTML=`<option value="">★ 收藏路径${favs.length?`（${favs.length}）`:""}…</option>`+favs.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("");
+    }
+    function renderBrowseFav(){
+      const row=el("browseFavRow"); if(!row) return;
+      const favs=favList();
+      row.innerHTML = favs.length ? `<span class="hint">★ 收藏：</span>`+favs.map(p=>`<button class="admin-chip" data-fav-path="${escapeHtml(p)}" title="${escapeHtml(p)}">★ ${escapeHtml(p.length>32?"…"+p.slice(-31):p)}</button>`).join("") : `<span class="hint">★ 暂无收藏：在底坞填好目标路径后点 ★ 即可收藏</span>`;
+      row.querySelectorAll("[data-fav-path]").forEach(b=>b.addEventListener("click", ()=>browseLoad(b.dataset.favPath)));
+    }
+    function deployDestPreview(){
+      const prev=el("deployDestPreview"); if(!prev) return;
+      if(deployState.scope==="global"){
+        const a=agentById(deployState.agent);
+        prev.textContent = a ? (a.global?`全局目标：${a.global}（所有项目通用，无需填目标路径）`:`「${a.name}」仅支持项目级目录，请切回「项目」模式`) : "请先选择 Agent";
+      } else if(deployState.agent==="custom"){
+        prev.textContent="";
+      } else {
+        const a=agentById(deployState.agent);
+        const root=el("deployRoot")?.value.trim()||"<目标路径>";
+        prev.textContent = a ? `部署目标：${root}${root.endsWith("\\")||root.endsWith("/")?"":(root==="<目标路径>"?"":"\\")}${a.project}` : "";
+      }
+    }
+    function deployRefreshScopeUI(){
+      document.querySelectorAll("#deployScope .segment").forEach(b=>{ const on=b.dataset.scope===deployState.scope; b.classList.toggle("active",on); b.setAttribute("aria-selected",on); });
+      const row=el("deployProjectRow"); if(row) row.style.display = deployState.scope==="global"?"none":"contents";
+      const sd=el("deployDir"), cd=el("deployCustomDir");
+      const showCustom = deployState.scope==="project" && deployState.agent==="custom";
+      if(sd) sd.style.display = showCustom?"":"none";
+      if(cd) cd.style.display = (showCustom && sd?.value==="custom")?"":"none";
+      deployDestPreview();
+    }
+    function renderAgentOptions(){
+      const sel=el("deployAgent"); if(!sel) return;
+      const opt=(a)=>`<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} · ${escapeHtml(a.project)}${a.global?"":"（仅项目）"}</option>`;
+      const common=AGENT_LIST.filter(a=>a.common), rest=AGENT_LIST.filter(a=>!a.common);
+      sel.innerHTML=`<optgroup label="常用">${common.map(opt).join("")}</optgroup><optgroup label="全部 Agent">${rest.map(opt).join("")}</optgroup><optgroup label="其他"><option value="custom">自定义目录…</option></optgroup>`;
+      if(![...sel.options].some(o=>o.value===deployState.agent)) deployState.agent="claude-code";
+      sel.value=deployState.agent;
+    }
     if(isAdmin){
+      renderAgentOptions();
+      renderFavOptions();
       const tr=el("deployRoot"), sd=el("deployDir"), cd=el("deployCustomDir");
       if(tr) tr.value=deployState.targetRoot;
-      if(sd){ sd.value=[".claude",".codex",".agents",".pi"].includes(deployState.skillDir)?deployState.skillDir:"custom"; if(sd.value==="custom" && cd){ cd.style.display=""; cd.value=deployState.skillDir; } }
-      tr?.addEventListener("input", ()=>{ deployState.targetRoot=tr.value.trim(); localStorage.setItem("skill-hub-deploy-root", deployState.targetRoot); });
+      if(sd){ sd.value=[".claude",".codex",".agents",".pi"].includes(deployState.skillDir)?deployState.skillDir:"custom"; if(sd.value==="custom" && cd){ cd.value=deployState.skillDir; } }
+      deployRefreshScopeUI();
+      tr?.addEventListener("input", ()=>{ deployState.targetRoot=tr.value.trim(); localStorage.setItem("skill-hub-deploy-root", deployState.targetRoot); deployDestPreview(); });
       sd?.addEventListener("change", ()=>{ if(sd.value==="custom"){ cd.style.display=""; cd.focus(); } else { cd.style.display="none"; deployState.skillDir=sd.value; localStorage.setItem("skill-hub-deploy-dir", deployState.skillDir); } });
       cd?.addEventListener("input", ()=>{ deployState.skillDir=cd.value.trim()||".claude"; localStorage.setItem("skill-hub-deploy-dir", deployState.skillDir); });
+      el("deployAgent")?.addEventListener("change", e=>{ deployState.agent=e.target.value; localStorage.setItem("skill-hub-deploy-agent", deployState.agent); deployRefreshScopeUI(); });
+      el("deployScope")?.addEventListener("click", (e)=>{ const b=e.target.closest(".segment"); if(!b||!b.dataset.scope||b.dataset.scope===deployState.scope) return; deployState.scope=b.dataset.scope; try{localStorage.setItem("skill-hub-deploy-scope", deployState.scope);}catch{} deployRefreshScopeUI(); });
+      // 收藏路径：下拉直选 / ★收藏当前 / ✕删除选中
+      el("deployFav")?.addEventListener("change", e=>{ const v=e.target.value; if(!v) return; el("deployRoot").value=v; deployState.targetRoot=v; localStorage.setItem("skill-hub-deploy-root", v); deployDestPreview(); flash(el("deployHint"),`已填入收藏路径：${v}`); });
+      el("favSaveBtn")?.addEventListener("click", ()=>{ const v=el("deployRoot")?.value.trim(); if(!v) return flash(el("deployHint"),"请先填写或浏览选择目标路径"); const favs=favList().filter(p=>p!==v); favs.unshift(v); favSet(favs); renderFavOptions(); el("deployFav").value=v; flash(el("deployHint"),`已收藏：${v}`); });
+      el("favDelBtn")?.addEventListener("click", ()=>{ const v=el("deployFav")?.value; if(!v) return flash(el("deployHint"),"请先在下拉框里选中一条收藏"); favSet(favList().filter(p=>p!==v)); renderFavOptions(); flash(el("deployHint"),`已删除收藏：${v}`); });
       el("selectCategorySkillsBtn")?.addEventListener("click", ()=>{
         if(state.category==="all") return flash(el("deployHint"),"请先在左栏选择一个分类");
         const list=data.projects.filter(p=>p.category===state.category);
@@ -785,22 +871,42 @@ def html_template() -> str:
         flash(el("deployHint"),`已全选「${categoryLabel(state.category)}」下 ${adminState.skillSelected.size} 个 skills`); updateAdminDocks(); render();
       });
       el("deployBtn")?.addEventListener("click", async ()=>{
-        const targetRoot = el("deployRoot")?.value.trim();
-        if(!targetRoot) return flash(el("deployHint"),"请先填写目标路径");
-        localStorage.setItem("skill-hub-deploy-root", targetRoot);
-        const skillDir = deployGetSkillDir();
-        localStorage.setItem("skill-hub-deploy-dir", skillDir);
         const skillIds = [...adminState.skillSelected];
         for(const pid of [...adminState.selected]){
           const proj=data.projects.find(p=>p.id===pid);
           if(proj){ for(const sk of proj.skills||[]) if(!skillIds.includes(sk.path||sk.id)) skillIds.push(sk.path||sk.id); }
         }
         if(!skillIds.length) return flash(el("deployHint"),"请先勾选 skill 或项目");
-        flash(el("deployHint"),`部署中… ${skillIds.length} 个 skill → ${targetRoot}\\${skillDir}`);
+        const scope=deployState.scope, agentId=deployState.agent;
+        let body, destLabel;
+        if(scope==="global"){
+          const a=agentById(agentId);
+          if(!a) return flash(el("deployHint"),"请先选择 Agent");
+          if(!a.global) return flash(el("deployHint"),`「${a.name}」仅支持项目级目录，请切回「项目」模式`);
+          body={scope, agent:agentId, skillIds};
+          destLabel=`全局 ${a.name} ${a.global}`;
+        } else if(agentId==="custom"){
+          const targetRoot = el("deployRoot")?.value.trim();
+          if(!targetRoot) return flash(el("deployHint"),"请先填写目标路径");
+          localStorage.setItem("skill-hub-deploy-root", targetRoot);
+          const skillDir = deployGetSkillDir();
+          localStorage.setItem("skill-hub-deploy-dir", skillDir);
+          body={scope:"project", targetRoot, skillDir, skillIds};
+          destLabel=`${targetRoot}\\${skillDir}`;
+        } else {
+          const a=agentById(agentId);
+          if(!a) return flash(el("deployHint"),"请先选择 Agent");
+          const targetRoot = el("deployRoot")?.value.trim();
+          if(!targetRoot) return flash(el("deployHint"),"请先填写目标路径（或从 ★ 收藏路径选择）");
+          localStorage.setItem("skill-hub-deploy-root", targetRoot);
+          body={scope:"project", agent:agentId, targetRoot, skillIds};
+          destLabel=`${targetRoot}\\${a.project}`;
+        }
+        flash(el("deployHint"),`部署中… ${skillIds.length} 个 skill → ${destLabel}`);
         try{
-          const res = await adminFetch("/api/deploy", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({targetRoot, skillDir, skillIds})});
+          const res = await adminFetch("/api/deploy", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
           const ok = res.deployed||[], over=res.overwritten||[], err=res.errors||[];
-          flash(el("deployHint"), `完成：新增 ${ok.length}，覆盖 ${over.length}` + (err.length?`，失败 ${err.length}`:""));
+          flash(el("deployHint"), `完成：新增 ${ok.length}，覆盖 ${over.length}` + (err.length?`，失败 ${err.length}`:"") + (res.destBase?` → ${res.destBase}`:""));
         }catch(e){
           flash(el("deployHint"),"部署失败："+e.message);
         }
@@ -825,7 +931,7 @@ def html_template() -> str:
           if(list) list.innerHTML=`<div style="padding:12px;color:#b42318">${escapeHtml(e.message)}</div>`;
         }
       }
-      el("browseBtn")?.addEventListener("click", ()=>{ el("browseModal")?.classList.add("open"); const cur=el("deployRoot")?.value.trim()||""; browseLoad(cur); });
+      el("browseBtn")?.addEventListener("click", ()=>{ el("browseModal")?.classList.add("open"); renderBrowseFav(); const cur=el("deployRoot")?.value.trim()||""; browseLoad(cur); });
       el("browseCancelBtn")?.addEventListener("click", ()=>el("browseModal")?.classList.remove("open"));
       el("browseModal")?.addEventListener("click", e=>{ if(e.target===el("browseModal")) el("browseModal").classList.remove("open"); });
       el("browseUpBtn")?.addEventListener("click", async ()=>{

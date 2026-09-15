@@ -4,7 +4,7 @@ One-page quick reference. Scan before filling a template or tweaking a detail. F
 
 ## Ten invariants
 
-1. Page background `#f5f4ed` (parchment), never pure white
+1. Default page background `#f5f4ed` (parchment); the white-paper print variant is an explicit exception
 2. Single accent: ink-blue `#1B365D`
 3. All grays **warm-toned** (yellow-brown undertone), no cool blue-gray
 4. One serif font per page (headings + body). `--sans` is a CSS alias for the same family; introduce a real sans only for genuinely UI-style chrome
@@ -12,19 +12,12 @@ One-page quick reference. Scan before filling a template or tweaking a detail. F
 6. Line-height: headlines 1.1-1.3 / dense 1.4-1.45 / reading 1.5-1.55
 7. Letter-spacing: Chinese body with TsangerJinKai 0.1-0.2pt (dense layouts may push to 0.3pt); English body 0; small labels and all-caps overlines get +0.2-1pt
 8. Tag backgrounds solid hex, no rgba (WeasyPrint double-rectangle bug)
-9. Depth via ring / whisper shadow, no hard drop shadows
+9. No decorative ticks, short rules, or side accents; every line must encode separation, state, or relationship
 10. No italic in templates or demos
 
 ## Sources and Materials
 
-
-| Trigger                                                   | Do first                                                            |
-| --------------------------------------------------------- | ------------------------------------------------------------------- |
-| Latest product / version / launch / funding / market data | Check reliable sources first                                        |
-| Company / product / project branded doc                   | Confirm logo, product image, or UI screenshot                       |
-| Key number or result                                      | Record the source; if unverifiable, write magnitude or mark missing |
-| Missing material                                          | Mark the gap or ask the user; do not use unrelated imagery          |
-
+Full pass in SKILL.md Step 2.1. The one contract worth repeating: a number you cannot verify ships as a magnitude or a marked gap, never as fake precision.
 
 ## Color
 
@@ -32,11 +25,12 @@ One-page quick reference. Scan before filling a template or tweaking a detail. F
 | Role         | Hex           | Use                                                 |
 | ------------ | ------------- | --------------------------------------------------- |
 | Parchment    | `#f5f4ed`     | Page background                                     |
-| Ivory        | `#faf9f5`     | Card / lifted container                             |
+| Ivory        | `#faf9f5`     | Quiet filled container                              |
+| Inline Code  | `#f0eee6`     | Screen annotation, slightly darker than paper       |
 | Warm Sand    | `#e8e6dc`     | Button / interactive surface                        |
 | Dark Surface | `#30302e`     | Dark container                                      |
 | Deep Dark    | `#141413`     | Dark page background                                |
-| **Brand**    | **`#1B365D`** | **Accent · CTA · title left bar (≤ 5% of surface)** |
+| **Brand**    | **`#1B365D`** | **Accent · CTA · key labels (≤ 5% of surface)**     |
 | Ink Light    | `#2D5A8A`     | Links on dark surfaces                              |
 | Near Black   | `#141413`     | Primary text                                        |
 | Dark Warm    | `#3d3d3a`     | Secondary text · table headers · links              |
@@ -46,16 +40,13 @@ One-page quick reference. Scan before filling a template or tweaking a detail. F
 | Border Soft  | `#e5e3d8`     | Secondary border · row separator                    |
 
 
-**rgba -> solid** (parchment base + ink-blue):
+**Registered solid tints** (never substitute `rgba()`):
 
 
-| Alpha    | Solid                       |
-| -------- | --------------------------- |
-| 0.08     | `#EEF2F7`                   |
-| 0.14     | `#E4ECF5`                   |
-| **0.18** | **`#E4ECF5`** ← default tag |
-| 0.22     | `#D0DCE9`                   |
-| 0.30     | `#D6E1EE`                   |
+| Role        | Solid                       |
+| ----------- | --------------------------- |
+| Quiet fill  | `#EEF2F7`                   |
+| Default tag | **`#E4ECF5`**               |
 
 
 ## Type (print pt)
@@ -77,6 +68,16 @@ One-page quick reference. Scan before filling a template or tweaking a detail. F
 
 Screen (px) ≈ pt × 1.33.
 Minimum floor: web text >= 12px, PDF text >= 9pt.
+
+### Typography cross-check (from Pierrick Calvez, "A Five-Minute Guide to Better Typography")
+
+- **Set blocks, not glyphs**: judge a paragraph as an even gray shape, not one nice letter at a time.
+- **Measure**: reading body ~40-70 characters per line; hold screen prose to the ~720px reading column, print to the A4 margins.
+- **Optical > mathematical alignment**: aligned when it looks aligned; nudge back quotes, bullets, and big display caps by eye.
+- **Line-spacing maps onto Kami tiers**: short ~1.2x → tight/dense tiers; long reading ~1.5x → reading tier. Never invent 1.6+ on a print body.
+- **Hierarchy = contrast (size / weight / space)**, not ornament. Use the next registered size step, never an in-between size or a decorative rule.
+- **Left-align body; centre only short display lines.** No centred paragraphs or lists.
+- **Do NOT import multi-weight**: the guide wants Light/Regular/Medium/Bold; Kami serif is 400 body + 500 headings only, no 700, no Light. Emphasis is size, space, and ink-blue. Also skip its em-dash / ornamental-punctuation habits (see `AGENTS.md`, anti-patterns #28). Full cross-check: `references/design.md` §2 «External principles cross-check».
 
 ## Font stacks
 
@@ -146,7 +147,9 @@ Any font-family that may render Chinese or Japanese must include a CJK fallback,
 
 ## Radius scale
 
-`4pt -> 6pt -> 8pt (default) -> 12pt -> 16pt -> 24pt -> 32pt (hero)`
+Print radii stay within `2-6pt` and follow physical scale, from compact chips to
+large media frames. Screen: `8px` for blocks and `999px` only for pill actions.
+Do not use radius alone to create emphasis.
 
 ## Common CSS snippets
 
@@ -154,46 +157,45 @@ Any font-family that may render Chinese or Japanese must include a CJK fallback,
 
 ```css
 .card {
-  background: var(--ivory);
-  border: 0.5pt solid var(--border-cream);
-  border-radius: 8pt;
+  background: var(--ivory);       /* one quiet grouping cue; no border/shadow */
+  border-radius: 4pt;
   padding: 16pt 20pt;
-  transition: box-shadow 0.2s;
-}
-.card:hover {
-  box-shadow: 0 4pt 24pt rgba(0, 0, 0, 0.05);  /* whisper shadow */
 }
 ```
 
-### Tag (default lightest solid)
+A sub-1pt closed border plus a radius renders as a double ring (production.md
+pitfall #2) and fails `scripts/build.py --check`. To give a card more weight,
+strengthen its label or opening sentence. Do not add an accent edge.
+
+### Tag (solid fill, never rgba)
 
 ```css
 .tag {
-  background: #EEF2F7;            /* 0.08 equivalent */
+  background: var(--tag-bg);
   color: var(--brand);
-  font-size: 9pt; font-weight: 600;
+  font-size: 9pt; font-weight: 500;
   padding: 1pt 5pt;
-  border-radius: 2pt;
-  letter-spacing: 0.4pt;
-  text-transform: uppercase;
+  border-radius: 3pt;
+  letter-spacing: 0.3pt;
 }
 ```
 
-### Section title (brand left bar is the signature move)
+### Section title
 
 ```css
-.section-title {
+h2 {
   font-family: var(--serif);
-  font-size: 14pt; font-weight: 500;
+  font-size: 16pt; font-weight: 500;
   color: var(--near-black);
-  margin: 24pt 0 10pt 0;
-  border-left: 2.5pt solid var(--brand);
-  border-radius: 1.5pt;
-  padding-left: 8pt;
+  margin-bottom: 6pt;
 }
 ```
 
-Resume exception: `resume*.html` uses a quiet bottom rule instead of the brand left bar. Keep project rows borderless so section titles do not create double rules or lonely page-top lines.
+Type carries the hierarchy; a section head needs no rule, bar, or underline.
+This also applies to `changelog*.html`: release groups stay scannable through
+type, numbering, and spacing. `resume*.html` uses a quiet full-width bottom
+rule because it separates major content regions, and keeps project rows
+borderless so section titles never create double rules or lonely page-top lines.
 
 ### Table (kami-table)
 
@@ -206,21 +208,27 @@ table, .kami-table {
   font-size: 9.5pt; margin: 12pt 0; break-inside: avoid;
 }
 table th { text-align: left; font-weight: 500; color: var(--dark-warm);
-  padding: 6pt 8pt; border-bottom: 1pt solid var(--border); }
-table td { padding: 5pt 8pt; border-bottom: 0.3pt solid var(--border-soft);
+  padding: 6pt 8pt; border-bottom: 0.6pt solid var(--border); }
+table td { padding: 5pt 8pt; border-bottom: 0.25pt solid var(--border);
   vertical-align: top; }
+table.compact th { padding: 3pt 6pt; font-size: 8pt; }
+table.compact td { padding: 2.5pt 6pt; font-size: 8pt; line-height: 1.4; }
+table .total td { font-weight: 500; border-top: 0.6pt solid var(--border);
+  border-bottom: none; }
 ```
 
 
 | Variant   | Class              | Effect                                               |
 | --------- | ------------------ | ---------------------------------------------------- |
-| Compact   | `.compact`         | 8pt font, tight padding (data-dense tables)          |
+| Compact   | `.compact`         | 8pt font, 3pt / 2.5pt vertical padding; use only when density requires it |
 | Financial | `.financial`       | Right-align all columns except first, `tabular-nums` |
-| Striped   | `.striped`         | Alternating `var(--ivory)` row background            |
-| Total row | `.total` on `<tr>` | Bold, brand top border, no bottom border             |
+| Striped   | `.striped`         | Neutral rows only for 8+ body rows that remain hard to track   |
+| Total row | `.total` on `<tr>` | Bold, 0.6pt neutral top rule, no bottom border       |
 
 
-Combine freely: `<table class="kami-table financial striped">`.
+Start without striping. Add it only after the rendered 8+ row table fails the row-tracking check: `<table class="kami-table financial striped">`.
+
+Table acceptance: all rules use `--border`; header and total rules are 0.6pt, body rules are 0.25pt; normal vertical padding is at least 6pt / 5pt, compact padding is at least 3pt / 2.5pt. No tinted header, category-colored value, brand-colored rule, vertical grid, or framed box.
 
 ### Metric (data card)
 
@@ -238,8 +246,8 @@ Combine freely: `<table class="kami-table financial striped">`.
 
 ```css
 .quote {
-  border-left: 2pt solid var(--brand);
-  padding: 4pt 0 4pt 14pt;
+  margin: 12pt 16pt;
+  padding: 4pt 0;
   color: var(--olive);
   line-height: 1.55;
 }
@@ -289,15 +297,13 @@ Alternate light/dark rhythm: add `.sd-alt` to any section container.
 
 ## Verification checks
 
-`python3 scripts/build.py --verify [target]` checks source templates and slides in sequence:
-
-1. Source file exists
-2. WeasyPrint render to PDF for HTML / diagram targets
-3. Page count check for strict targets
-4. Font embedding check
-5. PPTX generation for `slides` / `slides-en`
+`python3 scripts/build.py --verify [target]` covers render, page count, font embedding, and PPTX generation for source templates and slides.
 
 Source templates intentionally keep `{{...}}` fields. Run `python3 scripts/build.py --check-placeholders path/to/filled.html` on completed documents. Run `python3 scripts/build.py --check-density` to warn on pages with >25% trailing whitespace (skips cover).
+
+For new documents built from raw material, validate the content IR before layout and re-check coverage after filling: `python3 scripts/build.py --check-content content.json [filled.html]` (schemas in `references/schemas/`). Before shipping a filled PDF, run `python3 scripts/build.py --check-visual path/to/filled.pdf` and view every exported page image against the printed checklist.
+
+**Strict mathematics**: author formulas only as standard LaTeX `\( inline \)` or `\[ display \]`. Before delivery run `bash scripts/ensure_mathjax.sh`, `python3 scripts/math_render.py --in-place filled.html`, then `python3 scripts/math_render.py --check filled.html`. The accepted HTML/PDF result is MathJax SVG, never Unicode pseudo-formulas, raw TeX, or formula screenshots.
 
 Marp variant deck (opt-in): `assets/templates/marp/`. Render with local `marp-cli`. See design.md §8 + production.md Part 2.5.
 
@@ -308,7 +314,7 @@ Full quality bars in `references/writing.md`. The single most important rule for
 
 | Document      | Core quality rule                                                                    |
 | ------------- | ------------------------------------------------------------------------------------ |
-| Resume        | Every bullet: Action + Scope + Measurable Result + Business Outcome                  |
+| Resume        | Every bullet: action, honest scope, and a concrete result; use verified numbers when available                  |
 | Portfolio     | Open with the problem and stakes, not the project name                               |
 | Slides        | Slide titles are full sentences (assertions), not topic labels                       |
 | Equity Report | Lead with variant perception: what you see that the market doesn't                   |
@@ -357,22 +363,21 @@ Resume visual rule: header and section titles carry the only structural rules. T
 | Need                | Use                                                            |
 | ------------------- | -------------------------------------------------------------- |
 | Headline            | serif 500, line-height 1.10-1.30                               |
-| Reading body (EN)   | serif 400, 9.5-10pt, 1.55                                      |
-| Reading body (CN)   | sans 400, 9.5-10pt, 1.55                                       |
+| Reading body        | serif 400, 9.5-10pt, 1.55 (CN pins `--sans: var(--serif)`)     |
 | Emphasize a number  | `color: var(--brand)`, no bold                                 |
-| Divide two sections | 2.5pt brand left bar, or 0.5pt warm dotted                     |
-| Quote               | 2pt brand left border + olive color                            |
-| Code                | ivory bg + 0.5pt border + 6pt radius + mono                    |
-| Primary button      | brand fill + ivory text                                        |
-| Secondary button    | warm-sand + dark-warm                                          |
-| Chapter start       | serif heading + 2.5pt brand left bar                           |
+| Raise a passage     | `.callout`: ivory fill + 3pt radius, no accent edge              |
+| Quote               | indented olive text with reading space, no fill or side rule     |
+| Code                | `long-doc` `pre` / `code`: ivory fill, 4pt / 2pt radius, no border |
+| Key figures         | `one-pager` `.metric`: baseline row, transparent, not a card    |
+| Buttons             | `landing-page` `.btn-primary` / `.btn-ghost` (screen only)      |
+| Section start       | serif scale and margin only, no tick, side bar, or short rule    |
 | Cover               | Display heading + right-aligned author/date + heavy whitespace |
 | Figure SVG          | `width: 100%; height: auto; max-height: <safe>`. Never `max-height` alone (starves width on wide viewBoxes; production.md #17). |
 | Metric labels (4-col) | Soft cap 14-18 chars at 9pt Charter; trim context, don't wrap (production.md #18). |
 | Multi-column body   | Hold lengths within ±10 chars across parallel columns (production.md #19). |
-| Image references    | Always inside `assets/demos/images/` or `assets/illustrations/`; never `../../sibling-project/...` (production.md #20). |
+| Image references    | Always inside the demo's own `images/` folder (`site/assets/demos/images/` in this repository) or `site/assets/illustrations/`; never `../../sibling-project/...` (production.md #20). |
 | Metric row layout   | Vertical stack (`flex-direction: column`); horizontal baseline-align breaks when any label wraps (production.md #21). |
 | Slide bullets       | Numerals `1. 2. 3.` or `•`; en-dash `–` reads informal at slide scale (production.md #22). Print docs keep en-dash. |
 
 
-Not on the table -> first principles: **serif carries authority, sans carries utility, warm gray carries rhythm, ink-blue carries focus**.
+Not on the table -> first principles: **use type size for hierarchy, spacing for grouping, and ink-blue for emphasis**.

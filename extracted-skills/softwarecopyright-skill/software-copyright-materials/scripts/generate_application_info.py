@@ -587,9 +587,9 @@ def write_application_md(path: Path, fields: dict[str, str], analysis: dict[str,
             raw_name = clean_name.split("建议：")[1].rstrip("）").split("；")[0].strip()
         except (IndexError, ValueError):
             raw_name = clean_name
-    for suffix in ["软件", "平台"]:
-        if raw_name.endswith(suffix):
-            warnings.append(f"软件全称以「{suffix}」结尾，存在被驳回风险。建议考虑去掉「{suffix}」后缀或改用其他命名方式。")
+    recommended_suffixes = ("软件", "平台", "系统")
+    if raw_name and not raw_name.endswith(recommended_suffixes):
+        warnings.append("软件全称未以「软件」「平台」或「系统」结尾，建议结合实际命名补充软件属性后缀。")
 
     main_func = fields.get("软件的主要功能", "")
     if main_func and "待用户确认" not in main_func:

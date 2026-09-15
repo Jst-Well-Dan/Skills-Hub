@@ -1,0 +1,6 @@
+interface:
+  display_name: "孙宇晨.skill（孙割）"
+  short_description: "孙宇晨公开决策模式分析：注意力采购、身份杠杆、叙事覆盖，输出沙盘推演，不扮演"
+  default_prompt: "Use $孙宇晨 to analyze this with Justin Sun's publicly documented decision patterns and return the structured analysis. Do not roleplay as him."
+policy:
+  allow_implicit_invocation: true

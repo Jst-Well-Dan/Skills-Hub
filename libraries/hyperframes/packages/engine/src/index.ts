@@ -53,6 +53,7 @@ export {
   scaleProtocolTimeoutForComposition,
   shouldClampToScreenshotForConcreteGpu,
   applyConcreteGpuScreenshotClamp,
+  explainDrawElementDisabled,
   resolveExtractCacheDir,
   defaultExtractCacheDir,
   EXTRACT_CACHE_DIR_DISABLED_ALIASES,
@@ -126,6 +127,7 @@ export {
   isMemoryExhaustionError,
   type BeforeCaptureHook,
   type DiscardWarmupInnerCapture,
+  type StaticVerificationOutcome,
 } from "./services/frameCapture.js";
 export {
   CaptureFailure,
@@ -195,6 +197,7 @@ export {
   classifyVideoExtractionError,
   isVideoSourceExtractionError,
   runVideoExtractionWithRetry,
+  safeVideoExtractionSourceIdentity,
   VideoSourceExtractionError,
   type VideoElement,
   type ImageElement,
@@ -205,14 +208,28 @@ export {
   type TimelineExtractionWindow,
   type VideoExtractionFailure,
   type VideoExtractionFailureKind,
+  type VideoExtractionFailureGroupDetails,
+  type VideoExtractionFailureRetry,
+  type VideoExtractionFailureStatusClass,
+  type SafeVideoExtractionSourceIdentity,
   type VideoFrameFormat,
   VIDEO_FRAME_FORMATS,
   isVideoFrameFormat,
 } from "./services/videoFrameExtractor.js";
 
+export {
+  resolveReferencedStart,
+  type RefResolverEl,
+  type RefResolverDoc,
+} from "./services/referenceResolver.js";
+
 export { createVideoFrameInjector } from "./services/videoFrameInjector.js";
 
-export { parseAudioElements, processCompositionAudio } from "./services/audioMixer.js";
+export {
+  MIXED_AUDIO_FILENAME,
+  parseAudioElements,
+  processCompositionAudio,
+} from "./services/audioMixer.js";
 export { cloneCaptureWarning, cloneCaptureWarnings } from "./services/captureWarning.js";
 export type {
   AudioElement,
@@ -275,7 +292,16 @@ export {
 } from "./utils/ffprobe.js";
 
 export {
+  NOT_MEDIA_PAYLOAD,
+  NotMediaPayloadError,
+  assertMediaPayload,
+  fingerprintElementId,
+  isNotMediaPayload,
+} from "./utils/notMediaPayload.js";
+
+export {
   assertPublicHttpsUrl,
+  isBlockedNetworkHost,
   downloadToTemp,
   fetchPublicHttpsText,
   isHttpUrl,
@@ -289,6 +315,7 @@ export {
 export {
   runFfmpeg,
   formatFfmpegError,
+  isExternalFfmpegInterruption,
   type RunFfmpegOptions,
   type RunFfmpegResult,
 } from "./utils/runFfmpeg.js";
@@ -380,3 +407,18 @@ export {
   type HdrMasteringMetadata,
 } from "./utils/hdr.js";
 export type { VideoColorSpace } from "./utils/ffprobe.js";
+export {
+  renderProvenanceArgs,
+  appendRenderProvenanceArgs,
+  readRenderProvenance,
+  PROVENANCE_RENDERER_TAG,
+  PROVENANCE_VERSION_TAG,
+  PROVENANCE_RENDERER_NAME,
+  PROVENANCE_VERSION,
+  type RenderProvenance,
+} from "./utils/renderProvenance.js";
+
+export {
+  DrawElementCaptureError,
+  isDrawElementCaptureError,
+} from "./services/drawElementCaptureError.js";

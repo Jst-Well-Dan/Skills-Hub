@@ -13,9 +13,16 @@ build/
 # can copy them into tmp git repos and assert is-generated behavior.
 !tests/framework-fixtures/**/dist/
 !tests/framework-fixtures/**/dist/**
+# Same for the oracle workspaces: live-html carries a dist/generated.html
+# that the generated-file cases point at.
+!tests/oracle/workspaces/**/dist/
+!tests/oracle/workspaces/**/dist/**
 
 # Build artifacts
 *.log
+
+# Cargo (the Rust workspace; Cargo.lock IS tracked, it pins the engine build)
+/target/
 
 # OS files
 .DS_Store
@@ -40,6 +47,8 @@ Thumbs.db
 # Impeccable-owned project files are split: generated sidecars/config may be
 # tracked, but runtime recovery state and local assets should stay local.
 .impeccable/live/server.json
+.impeccable/live/codex-worker.json
+.impeccable/live/codex-worker.log
 # Ephemeral hook cache/state, at the project root and inside generated harness
 # skill dirs (**/skills/impeccable/scripts/.impeccable/). Anchored patterns
 # would miss the nested copies the build/hook writes.
@@ -47,7 +56,11 @@ Thumbs.db
 .impeccable/live/sessions/
 .impeccable/live/previews/
 .impeccable/live/annotations/
+.impeccable/live/artifacts/
+.impeccable/live/accept-receipts/
+.impeccable/live/locks/
 .impeccable/live/cache/
+.impeccable/live/benchmarks/
 .impeccable/live/manual-edit-apply-transaction.json
 .impeccable/live/manual-edit-events.jsonl
 .impeccable/live/manual-edit-evidence/
@@ -61,7 +74,7 @@ src/__impeccable_provider_smoke_*.html
 # Per-run critique snapshots are local artifacts. ignore.md (also under
 # this dir) carries deferrals the user may want to share, so it's
 # explicitly re-included below.
-.impeccable/critique/
+.impeccable/critique/*
 !.impeccable/critique/ignore.md
 
 # Legacy live mode session file + annotation screenshots
@@ -76,6 +89,11 @@ src/lib/impeccable/__runtime.js
 
 # Extension build artifacts
 extension/detector/
+
+# Engine binaries: fetched per platform (scripts/fetch-engine.mjs), never tracked.
+# The launcher next to them (skill/scripts/impeccable) is the tracked file.
+skill/scripts/bin/
+**/skills/impeccable/scripts/bin/
 
 # Legacy design context (pre-v3.1, auto-migrated to PRODUCT.md by load-context.mjs)
 .impeccable.md
@@ -94,19 +112,11 @@ videos/
 talks/
 
 # Generated sub-pages (legacy, now replaced by Astro content collections)
-site/public/docs/
-site/public/anti-patterns/
-site/public/tutorials/
-site/public/visual-mode/
-site/public/slop/
+
+# World design-system cards live in R2 (functions/worlds/cards); only the
+# manifest is tracked. Generate: bun run world-cards; upload: world-cards:publish.
 
 # Build artifacts written to site/public/ so Astro copies them to build/
-site/public/_data/
-site/public/_headers
-site/public/_redirects
-site/public/_routes.json
-site/public/js/detect-antipatterns-browser.js
-site/public/js/generated/
 
 # Note: harness skill directories (.claude/skills/, .cursor/skills/, etc.)
 # are intentionally tracked. npx skills reads them from this repo at install

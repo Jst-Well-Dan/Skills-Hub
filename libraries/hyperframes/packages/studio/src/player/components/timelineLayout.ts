@@ -1,3 +1,4 @@
+import { AUTOMATION_LANE_H } from "./automationLaneHeight";
 import type { ZoomMode } from "../store/playerStore";
 import type { TimelineTimeRange } from "../lib/timelineClipIndex";
 
@@ -9,7 +10,6 @@ export const LANE_H = 28;
 export const RULER_H = 24;
 export const CLIP_Y = 3;
 export const CLIP_HANDLE_W = 18;
-
 export interface TimelineBeatEntry {
   readonly index: number;
   readonly time: number;
@@ -86,6 +86,8 @@ export const TRACKS_LEFT_PAD = 48;
 export interface TimelineTrackHeightClip {
   clipId: string;
   laneCount: number;
+  /** Audio automation lanes shown when expanded, reserved at their own height. */
+  automationLaneCount?: number;
 }
 
 type TimelineTrackHeightInput = readonly (readonly TimelineTrackHeightClip[])[];
@@ -101,12 +103,15 @@ export function trackHeights(
 ): number[] {
   return tracks.map((clips) => {
     let laneCount = 0;
-    if (expandedClipIds) {
-      for (const clip of clips) {
-        if (expandedClipIds.has(clip.clipId)) laneCount = Math.max(laneCount, clip.laneCount);
-      }
+    let automationLanes = 0;
+    for (const clip of clips) {
+      if (!expandedClipIds?.has(clip.clipId)) continue;
+      laneCount = Math.max(laneCount, clip.laneCount);
+      automationLanes = Math.max(automationLanes, clip.automationLaneCount ?? 0);
     }
-    return TRACK_H + Math.max(0, Math.trunc(laneCount)) * LANE_H;
+    return (
+      TRACK_H + Math.max(0, Math.trunc(laneCount)) * LANE_H + automationLanes * AUTOMATION_LANE_H
+    );
   });
 }
 

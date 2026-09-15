@@ -20,7 +20,22 @@ async function loadPuppeteerBrowsers(): Promise<PuppeteerBrowsers> {
   }
 }
 
-const CHROME_VERSION = "152.0.7928.2";
+// Bumped from 152.0.7928.2 on 2026-08-10 to pick up crbug 522872457's fix
+// (CL 8032671, "Force-merge PendingLayer for canvas child descendant", merged
+// 2026-07-07 — after the 152.0.7935.0 canary cut, so the old pin predated it).
+//
+// Measured on the shipping headless-shell binary, drawElementImage vs a CDP
+// screenshot of the identical state:
+//   sibling content dropped from 3D captures  — FIXED
+//   background lost from 3D captures          — FIXED
+//   backface-visibility:hidden ignored        — STILL BROKEN (1.4 dB -> 14.8 dB;
+//                                               better, still far under the
+//                                               32 dB floor)
+// So the 3D compile gate must stay. See PRINFRA-486.
+//
+// Deliberately Beta, not Canary. 153.0.8000.0 measured identical to this build
+// on every probe variant, so crossing a major buys nothing measurable.
+const CHROME_VERSION = "152.0.7977.30";
 const CACHE_ROOT_DIR = join(homedir(), ".cache", "hyperframes");
 const CACHE_DIR = join(homedir(), ".cache", "hyperframes", "chrome");
 // Puppeteer's managed cache — where `@puppeteer/browsers install
@@ -225,12 +240,32 @@ function purgeStaleInstall(installPath: string): void {
 const SYSTEM_CHROME_PATHS: ReadonlyArray<string> =
   process.platform === "darwin"
     ? ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]
-    : [
-        "/usr/bin/google-chrome",
-        "/usr/bin/google-chrome-stable",
-        "/usr/bin/chromium",
-        "/usr/bin/chromium-browser",
-      ];
+    : process.platform === "win32"
+      ? [
+          join(
+            process.env["ProgramW6432"] ?? process.env["PROGRAMFILES"] ?? "C:\\Program Files",
+            "Google",
+            "Chrome",
+            "Application",
+            "chrome.exe",
+          ),
+          join(
+            process.env["PROGRAMFILES(X86)"] ?? "C:\\Program Files (x86)",
+            "Google",
+            "Chrome",
+            "Application",
+            "chrome.exe",
+          ),
+          ...(process.env["LOCALAPPDATA"]
+            ? [join(process.env["LOCALAPPDATA"], "Google", "Chrome", "Application", "chrome.exe")]
+            : []),
+        ]
+      : [
+          "/usr/bin/google-chrome",
+          "/usr/bin/google-chrome-stable",
+          "/usr/bin/chromium",
+          "/usr/bin/chromium-browser",
+        ];
 
 function whichBinary(name: string): string | undefined {
   try {
@@ -239,6 +274,7 @@ function whichBinary(name: string): string | undefined {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
       timeout: 5000,
+      windowsHide: true,
     });
     const first = output
       .split(/\r?\n/)
@@ -332,7 +368,7 @@ async function findFromCache(): Promise<CacheLookupResult> {
   // this is the non-`preferManagedChrome` path, which exists so a user who
   // installed chrome-headless-shell separately (via `@puppeteer/browsers
   // install`) keeps using that binary instead of being silently switched to
-  // the HF-pinned one. Note `CHROME_VERSION` (above) is a Dev-channel pin
+  // the HF-pinned one. Note `CHROME_VERSION` (above) is a pre-Stable pin
   // that may be NEWER than a user's puppeteer-cache Stable build — this is
   // about respecting an explicit prior choice, not "newest wins".
   const fromPuppeteer = findFromPuppeteerCache();
@@ -470,7 +506,7 @@ export function _resetSystemFallbackWarnForTests(): void {
   _warnedSystemFallback = false;
 }
 
-function findFromSystem(): BrowserResult | undefined {
+export function findSystemBrowser(): BrowserResult | undefined {
   for (const p of SYSTEM_CHROME_PATHS) {
     if (existsSync(p)) {
       return { executablePath: p, source: "system" };
@@ -515,7 +551,7 @@ export async function findBrowser(): Promise<BrowserResult | undefined> {
     }
   }
 
-  const fromSystem = findFromSystem();
+  const fromSystem = findSystemBrowser();
   if (fromSystem) {
     warnSystemFallbackOnce(fromSystem.executablePath);
   }
@@ -597,7 +633,7 @@ export async function ensureBrowser(options?: EnsureBrowserOptions): Promise<Bro
     }
 
     if (!options?.preferManagedChrome) {
-      const fromSystem = findFromSystem();
+      const fromSystem = findSystemBrowser();
       if (fromSystem) {
         warnSystemFallbackOnce(fromSystem.executablePath);
         return fromSystem;

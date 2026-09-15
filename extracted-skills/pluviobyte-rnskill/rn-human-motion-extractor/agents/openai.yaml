@@ -1,0 +1,6 @@
+interface:
+  display_name: "RN Human Motion Extractor"
+  short_description: "从获授权参考视频提取逐帧人体与双手轨迹及置信度证据"
+  default_prompt: "Use $rn-human-motion-extractor to extract an anonymized body-and-hand motion trajectory from this authorized reference video."
+policy:
+  allow_implicit_invocation: true

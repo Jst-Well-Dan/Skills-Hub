@@ -15,5 +15,10 @@ export const transformOpenCode = createTransformer(PROVIDERS.opencode);
 export const transformPi = createTransformer(PROVIDERS.pi);
 export const transformQoder = createTransformer(PROVIDERS.qoder);
 export const transformRovoDev = createTransformer(PROVIDERS['rovo-dev']);
+export const transformVibe = createTransformer(PROVIDERS.vibe);
+export const transformGrok = createTransformer(PROVIDERS.grok);
+export const transformAntigravity = createTransformer(PROVIDERS.antigravity);
+export const transformHermes = createTransformer(PROVIDERS.hermes);
+export const transformVeto = createTransformer(PROVIDERS.veto);
 
 export { createTransformer, PROVIDERS };

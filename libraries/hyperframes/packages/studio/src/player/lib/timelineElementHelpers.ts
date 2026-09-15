@@ -11,6 +11,7 @@ import type { TimelineElement } from "../store/playerStore";
 import type { ClipManifestClip } from "./playbackTypes";
 import { isFinitePositive } from "./playbackAdapter";
 import { getSourceScopedSelectorIndex } from "../../utils/sourceScopedSelectorIndex";
+import { HF_AUDIO_GROUP_TAG } from "@hyperframes/core/audio-groups";
 
 // ---------------------------------------------------------------------------
 // Layer-reveal lift transparency
@@ -81,6 +82,14 @@ function normalizePlaybackRate(raw: number): number {
 }
 
 export function isTimelineIgnoredElement(el: Element): boolean {
+  // An `<hf-audio-group>` is a mixer bus, not a clip: it carries the group's
+  // label, fader, mute and FX chain, has no timing of its own, and is drawn as
+  // a GROUP ROW by the group derivation. Left in, the implicit-layer fallback
+  // also gave it an ordinary full-duration track — so a grouped composition
+  // showed "Voiceover • 0.0s – 12.0s" as a phantom clip directly above the real
+  // group header. Harmless-looking, but that row is draggable and trimmable,
+  // and writing timing onto the bus is meaningless.
+  if (el.tagName.toLowerCase() === HF_AUDIO_GROUP_TAG) return true;
   return Boolean(
     el.closest(
       [
@@ -347,6 +356,24 @@ export function getTimelineElementIdentity(element: { key?: string | null; id: s
 }
 
 /**
+ * The id space the RUNTIME matches on — a bare DOM id, never a store key.
+ *
+ * Studio addresses rows by `buildTimelineElementKey`'s composite
+ * `<sourceFile>#<domId>`, but everything audio in `@hyperframes/core` keys off
+ * the live document: `resolveAudioGroups` collects `member.id`,
+ * `resolveCarveSourceIds` goes through `getElementById`. Anything crossing into
+ * that space — a group membership list, a carve source — has to be
+ * converted here first; a composite key silently matches nothing.
+ *
+ * `null` for a row with no DOM id at all (selector-addressed elements): such an
+ * element cannot be grouped, because `resolveAudioGroups` skips
+ * members without an `id` and would build a group that is half there.
+ */
+export function runtimeAudioId(element: { domId?: string | null }): string | null {
+  return element.domId || null;
+}
+
+/**
  * Timeline store key for a z-reorder entry built OUTSIDE the timeline
  * expansion (canvas context menu / LayersPanel), so the reorder commit can
  * update the store's zIndex synchronously. Matches buildTimelineElementKey's
@@ -386,9 +413,12 @@ const MANIFEST_CLIP_ATTRS: ReadonlyArray<[string, (clip: ClipManifestClip) => nu
   ["data-track-index", (clip) => clip.track],
 ];
 
+function nodeMatchesClipTag(node: Element, clip: ClipManifestClip): boolean {
+  return !clip.tagName || node.tagName.toLowerCase() === clip.tagName.toLowerCase();
+}
+
 function nodeMatchesManifestClip(node: Element, clip: ClipManifestClip): boolean {
-  const tagName = clip.tagName?.toLowerCase();
-  if (tagName && node.tagName.toLowerCase() !== tagName) return false;
+  if (!nodeMatchesClipTag(node, clip)) return false;
   // An attribute only constrains the match when it parses to a finite number:
   // missing or garbled reads as "unknown", not "mismatch".
   return MANIFEST_CLIP_ATTRS.every(([attr, expected]) => {
@@ -400,6 +430,7 @@ function nodeMatchesManifestClip(node: Element, clip: ClipManifestClip): boolean
 function findTimelineDomNode(doc: Document, id: string): Element | null {
   return (
     doc.getElementById(id) ??
+    doc.querySelector(`[data-hf-id="${CSS.escape(id)}"]`) ??
     doc.querySelector(`[data-composition-id="${CSS.escape(id)}"]`) ??
     doc.querySelector(`.${CSS.escape(id)}`) ??
     null
@@ -411,15 +442,30 @@ export function findTimelineDomNodeForClip(
   clip: ClipManifestClip,
   fallbackIndex: number,
   usedNodes = new Set<Element>(),
+  getCandidates = () => getTimelineDomNodes(doc),
 ): Element | null {
   const byIdentity = clip.id ? findTimelineDomNode(doc, clip.id) : null;
-  if (byIdentity && !usedNodes.has(byIdentity)) return byIdentity;
+  if (byIdentity && !usedNodes.has(byIdentity) && nodeMatchesClipTag(byIdentity, clip))
+    return byIdentity;
 
-  const candidates = getTimelineDomNodes(doc).filter((node) => !usedNodes.has(node));
+  const candidates = getCandidates().filter((node) => !usedNodes.has(node));
   const exact = candidates.find((node) => nodeMatchesManifestClip(node, clip));
   if (exact) return exact;
 
-  return candidates[fallbackIndex] ?? null;
+  const positional = candidates[fallbackIndex];
+  return positional && nodeMatchesClipTag(positional, clip) ? positional : null;
+}
+
+/** One synchronous hydration pass: snapshot only on a miss, never across reloads. */
+export function createTimelineDomNodeResolver(doc: Document) {
+  let candidates: Element[] | undefined;
+  const usedNodes = new Set<Element>();
+  const getCandidates = () => (candidates ??= getTimelineDomNodes(doc));
+  return (clip: ClipManifestClip, index: number): Element | null => {
+    const node = findTimelineDomNodeForClip(doc, clip, index, usedNodes, getCandidates);
+    if (node) usedNodes.add(node);
+    return node;
+  };
 }
 
 // ---------------------------------------------------------------------------

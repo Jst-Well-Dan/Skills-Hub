@@ -2,9 +2,12 @@
 """
 本地分类工作台后端 — 仅本地使用，不对外暴露。
 
-启动:
+启动（单端口：静态站 + API，无需任何参数，端口自动选择并自动打开浏览器）:
   python scripts/admin_server.py
-  python scripts/admin_server.py --port 5173 --host 127.0.0.1
+
+高级用法:
+  python scripts/admin_server.py --port 8080 --host 127.0.0.1
+  python scripts/admin_server.py --no-open
 
 能力:
   - GET  /api/categories           -> {categories: {id: label}}
@@ -12,6 +15,9 @@
   - GET  /api/projects             -> {projects: [{id, name, category, skill_count}]}
   - POST /api/projects/move        body: {ids: ["lottie", ...], category: "content-creation"}
   - POST /api/regenerate           -> 重新生成 docs/ 和 site/
+  - GET  /api/browse?path=...        -> 浏览本机目录（部署目标选择器用）
+  - GET  /api/agents                -> agent skills 路径映射表（registry/agents.json）
+  - POST /api/deploy                -> 一键部署（支持 scope=project|global + agent）
   - GET  /api/health
 
 所有写操作直接落盘 registry/projects.yaml 与 registry/categories.yaml，
@@ -23,10 +29,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import mimetypes
 import re
+import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
@@ -36,6 +44,8 @@ from skillhub_common import (
     CATEGORIES_FILE,
     EXTRACTED_SKILLS_DIR,
     PROJECTS_FILE,
+    agent_index,
+    load_agents,
     load_category_labels,
     save_category_labels,
     load_registry,
@@ -44,6 +54,25 @@ from skillhub_common import (
 )
 
 ADMIN_TOKEN = None  # 可通过环境变量 ADMIN_TOKEN 覆盖
+
+SITE_DIR = ROOT / "site"
+
+# 首选端口被占用 / 被系统保留时的顺延候选
+FALLBACK_PORTS = (8080, 8081, 8000, 8001, 9000, 3000, 7000)
+
+def _port_in_use(host, port, timeout=1.0):
+    """主动探测端口是否已有服务在监听。
+
+    Windows 下 SO_REUSEADDR 允许多次 bind 同一端口而不报错，
+    光靠捕获 OSError 发现不了冲突，所以 bind 前先尝试连接一次：
+    能连上 = 已被占用，跳过；拒绝 = 空闲，继续 bind。
+    """
+    import socket
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
 
 def _cors_headers(handler: BaseHTTPRequestHandler):
     handler.send_header("Access-Control-Allow-Origin", "*")
@@ -95,6 +124,16 @@ class AdminHandler(BaseHTTPRequestHandler):
             labels = load_category_labels()
             # 按文件顺序返回，增加 uncategorized 兜底
             return _json(self, {"categories": labels})
+        if path == "/api/agents":
+            payload = load_agents()
+            # 附带服务端展开后的全局路径，方便前端展示（如 ~ -> C:\Users\x）
+            for a in payload.get("agents", []):
+                g = a.get("global")
+                try:
+                    a["global_resolved"] = str(Path(g).expanduser()) if g else None
+                except Exception:
+                    a["global_resolved"] = g
+            return _json(self, payload)
         if path == "/api/projects":
             data = load_registry()
             projects = data.get("projects", [])
@@ -144,10 +183,34 @@ class AdminHandler(BaseHTTPRequestHandler):
                 return _json(self, {"path": str(p), "parent": parent, "dirs": dirs})
             except Exception as e:
                 return _json(self, {"error": str(e)}, 500)
-        # 静态兜底：若访问 / 则返回提示
-        if path == "/" or path == "/admin":
-            return _json(self, {"message": "Skills-Hub Admin API. Use /api/categories, /api/projects, /api/projects/move, /api/regenerate. Open site/index.html?admin=1 for UI."})
-        return _json(self, {"error": "not found"}, 404)
+        if path.startswith("/api/"):
+            return _json(self, {"error": "not found"}, 404)
+        # 单端口模式：非 /api/* 一律托管 site/ 静态文件
+        return self._serve_static(path)
+
+    def _serve_static(self, path):
+        rel = unquote(path.lstrip("/")) or "index.html"
+        target = (SITE_DIR / rel).resolve()
+        try:
+            target.relative_to(SITE_DIR.resolve())
+        except ValueError:
+            return _json(self, {"error": "forbidden"}, 403)
+        if target.is_dir():
+            target = target / "index.html"
+        if not target.is_file():
+            return _json(self, {"error": "not found"}, 404)
+        ctype, _ = mimetypes.guess_type(str(target))
+        try:
+            data = target.read_bytes()
+        except Exception as e:
+            return _json(self, {"error": str(e)}, 500)
+        self.send_response(200)
+        self.send_header("Content-Type", ctype or "application/octet-stream")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-cache")
+        _cors_headers(self)
+        self.end_headers()
+        self.wfile.write(data)
 
     def do_POST(self):
         if not _check_auth(self):
@@ -268,29 +331,63 @@ class AdminHandler(BaseHTTPRequestHandler):
         return _json(self, {"ok": True, "moved": moved, "not_found": not_found, "target": target})
 
     def _handle_deploy(self, body):
-        """一键部署：本地 extracted-skills 拷贝到本机任意路径"""
+        """一键部署：本地 extracted-skills 拷贝到本机任意路径。
+
+        两种范围（scope）：
+        - project（默认）：targetRoot（项目根）+ skill 目录。传 agent
+          （registry/agents.json 中的 id）可自动解析项目级路径，否则
+          用 skillDir（兼容旧前端，如 .claude / 自定义子路径）。
+        - global：直接部署到该 agent 的用户全局 skills 目录
+          （如 ~/.claude/skills/），无需 targetRoot，必须传 agent。
+        """
         import shutil
         target_root = (body.get("targetRoot") or body.get("target_root") or "").strip()
-        skill_dir = (body.get("skillDir") or body.get("skill_dir") or ".claude").strip()
+        skill_dir = (body.get("skillDir") or body.get("skill_dir") or "").strip()
+        agent_id = (body.get("agent") or "").strip()
+        scope = (body.get("scope") or "project").strip().lower() or "project"
         # 兼容 skillIds / skillPaths / ids
         skill_ids = body.get("skillIds") or body.get("skill_ids") or body.get("skillPaths") or body.get("ids") or []
         if isinstance(skill_ids, str):
             skill_ids = [skill_ids]
-        if not target_root:
-            return _json(self, {"error": "targetRoot required (e.g. E:\\Code\\my-app)"}, 400)
-        if not skill_ids:
-            return _json(self, {"error": "skillIds required"}, 400)
-        # 规范化 skill_dir：允许 .claude/.codex/.agents/.pi 或任意子路径
-        skill_dir = skill_dir.strip().strip("/\\")
-        if not skill_dir:
-            skill_dir = ".claude"
-        # 安全：仅允许 127.0.0.1 本地，且 target 必须存在或是可创建的本地路径
-        target_path = Path(target_root)
-        # 展开 ~ 与环境变量
-        try:
-            target_path = Path(target_path.expanduser()).resolve()
-        except Exception:
-            return _json(self, {"error": f"invalid targetRoot: {target_root}"}, 400)
+        agents = agent_index()
+        entry = agents.get(agent_id) if agent_id else None
+        if agent_id and not entry:
+            return _json(self, {"error": f"unknown agent: {agent_id}（GET /api/agents 查看支持列表）"}, 400)
+        if scope not in ("project", "global"):
+            return _json(self, {"error": "scope must be project|global"}, 400)
+        if scope == "global":
+            # 根目录（全局）部署：无需目标项目，直接写用户家目录下的 agent skills 目录
+            if not entry:
+                return _json(self, {"error": "global scope requires agent"}, 400)
+            if not entry.get("global"):
+                return _json(self, {"error": f"agent {agent_id} 仅支持项目级目录（无全局路径）"}, 400)
+            skill_dir = entry["global"]
+            try:
+                dest_base = Path(skill_dir).expanduser().resolve()
+            except Exception:
+                return _json(self, {"error": f"invalid global path for agent {agent_id}"}, 400)
+            target_path = dest_base
+        else:
+            if not target_root:
+                return _json(self, {"error": "targetRoot required (e.g. E:\\Code\\my-app)"}, 400)
+            if entry:
+                # agent 感知：项目级路径直接来自映射表（如 .claude/skills/）
+                skill_dir = entry["project"]
+            # 规范化 skill_dir：允许 .claude/.codex/.agents/.pi 或任意子路径
+            skill_dir = skill_dir.strip().strip("/\\")
+            if not skill_dir:
+                skill_dir = ".claude"
+            # 安全：仅允许 127.0.0.1 本地，且 target 必须存在或是可创建的本地路径
+            # 展开 ~ 与环境变量
+            try:
+                target_path = Path(target_root).expanduser().resolve()
+            except Exception:
+                return _json(self, {"error": f"invalid targetRoot: {target_root}"}, 400)
+            dest_base = target_path / skill_dir
+            # Agent 技能根目录（.claude/.codex/.agents/.pi）下，SKILL.md 统一放在 skills/<名字>/ 子目录
+            # 例如 .pi → .pi/skills/eli5/SKILL.md；若用户已输入 .pi/skills 等含 skills 的路径则不重复追加
+            if Path(skill_dir).name in (".claude", ".codex", ".agents", ".pi"):
+                dest_base = dest_base / "skills"
         # 构建 skill 索引：支持三种输入 -> extracted 路径
         registry = load_registry()
         # 建立 id -> skill 映射（skill 全量 id 如 agent-browser/core，或 project 级展开）
@@ -336,22 +433,15 @@ class AdminHandler(BaseHTTPRequestHandler):
             if key not in seen:
                 seen.add(key)
                 uniq.append(sk)
+        if not skill_ids:
+            return _json(self, {"error": "skillIds required"}, 400)
         if not uniq:
             return _json(self, {"error": "no valid skills to deploy", "requested": skill_ids}, 400)
-        # 确保目标根存在
-        try:
-            target_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            return _json(self, {"error": f"cannot create targetRoot: {e}"}, 400)
-        dest_base = target_path / skill_dir
-        # Agent 技能根目录（.claude/.codex/.agents/.pi）下，SKILL.md 统一放在 skills/<名字>/ 子目录
-        # 例如 .pi → .pi/skills/eli5/SKILL.md；若用户已输入 .pi/skills 等含 skills 的路径则不重复追加
-        if Path(skill_dir).name in (".claude", ".codex", ".agents", ".pi"):
-            dest_base = dest_base / "skills"
+        # 确保目标目录存在（dest_base 已在上方按 scope/agent 解析完毕）
         try:
             dest_base.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            return _json(self, {"error": f"cannot create skillDir: {e}"}, 400)
+            return _json(self, {"error": f"cannot create dest dir {dest_base}: {e}"}, 400)
         deployed = []
         overwritten = []
         errors = []
@@ -380,6 +470,8 @@ class AdminHandler(BaseHTTPRequestHandler):
                 errors.append({"skill": sk["id"], "error": str(e)})
         return _json(self, {
             "ok": len(errors) == 0,
+            "scope": scope,
+            "agent": agent_id or None,
             "target": str(target_path),
             "skillDir": skill_dir,
             "destBase": str(dest_base),
@@ -408,20 +500,45 @@ class AdminHandler(BaseHTTPRequestHandler):
         sys.stderr.write(f"[admin] {format % args}\n")
 
 def main():
-    parser = argparse.ArgumentParser(description="Skills-Hub 本地分类工作台后端")
+    parser = argparse.ArgumentParser(description="Skills-Hub 本地工作台（单端口：静态站 + API）")
     parser.add_argument("--host", default="127.0.0.1", help="监听地址，默认 127.0.0.1（仅本地）")
-    parser.add_argument("--port", type=int, default=5173, help="端口，默认 5173")
+    parser.add_argument("--port", type=int, default=None, help="可选：指定首选端口；不指定则自动选择空闲端口（优先 8080）")
+    parser.add_argument("--open", dest="open_browser", action="store_true", default=True, help="启动后自动打开浏览器（默认开启）")
+    parser.add_argument("--no-open", dest="open_browser", action="store_false", help="不自动打开浏览器")
     args = parser.parse_args()
 
-    addr = (args.host, args.port)
-    print(f"Skills-Hub Admin 正在启动 http://{args.host}:{args.port}")
-    print(f"  API: http://{args.host}:{args.port}/api/categories")
-    print(f"  前端入口: 打开 site/index.html?admin=1 （确保后端已启动）")
-    print(f"  重新生成: POST http://{args.host}:{args.port}/api/regenerate")
+    candidates = ([args.port] if args.port else []) + [p for p in FALLBACK_PORTS if p != args.port]
+    httpd = None
+    bound_port = None
+    for port in candidates:
+        if _port_in_use(args.host, port):
+            continue
+        try:
+            httpd = HTTPServer((args.host, port), AdminHandler)
+            bound_port = port
+            break
+        except OSError:
+            continue
+    if httpd is None:  # 候选全灭时用系统随机端口兜底
+        httpd = HTTPServer((args.host, 0), AdminHandler)
+        bound_port = httpd.server_address[1]
+    if args.port and bound_port != args.port:
+        print(f"提示: 端口 {args.port} 被占用/被系统保留，已自动顺延到 {bound_port}")
+    elif not args.port:
+        print(f"已自动选择空闲端口 {bound_port}")
+
+    base = f"http://{args.host}:{bound_port}"
+    print(f"Skills-Hub 工作台已启动 {base}/index.html?admin=1")
+    print(f"  前端: {base}/index.html?admin=1")
+    print(f"  API : {base}/api/health")
     if not CATEGORIES_FILE.exists():
         print(f"  提示: {CATEGORIES_FILE.relative_to(ROOT)} 不存在，已使用内置默认分类")
+    if args.open_browser:
+        try:
+            webbrowser.open(f"{base}/index.html?admin=1")
+        except Exception as e:
+            print(f"  提示: 自动打开浏览器失败，请手动访问（{e}）")
     try:
-        httpd = HTTPServer(addr, AdminHandler)
         httpd.serve_forever()
     except KeyboardInterrupt:
         print("\n已停止")

@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { attachPlayerStoreDevHandle } from "./playerStoreDevHandle";
+import { nextSelectionSet, revealTargetsSelection } from "./playerStoreSelection";
 import type { MusicBeatAnalysis } from "@hyperframes/core/beats";
 import type { GsapAnimation } from "@hyperframes/core/gsap-parser";
 import type { BeatEditState } from "../../utils/beatEditing";
@@ -10,76 +12,24 @@ import {
 } from "../../utils/studioUiPreferences";
 import { clampTimelineZoomPercent, computePinnedZoomPercent } from "../components/timelineZoom";
 import { createKeyframeSlice, type KeyframeCacheEntry, type KeyframeSlice } from "./keyframeSlice";
+import {
+  createAutomationSelectionSlice,
+  type AutomationSelectionSlice,
+} from "./automationSelectionSlice";
+import { createEditingModeSlice, type EditingModeSlice } from "./editingModeSlice";
 import { createTimelineFocusRequest, type TimelineFocusRequest } from "./timelineFocusState";
 import { createThumbnailSlice, type ThumbnailSlice } from "./thumbnailSlice";
 
 export type { KeyframeCacheEntry } from "./keyframeSlice";
 export { liveTime } from "./liveTime";
 
-export interface TimelineElement {
-  id: string;
-  label?: string;
-  key?: string;
-  kind?: ClipManifestClip["kind"];
-  tag: string;
-  start: number;
-  duration: number;
-  track: number;
-  /**
-   * The data-track-index as written in the source file. Set at the manifest
-   * translation boundary (createTimelineElementFromManifestClip) from the
-   * runtime clip's verbatim track, and preserved through display-lane remaps
-   * (normalizeToZones packs sparse authored tracks onto contiguous display
-   * lanes; expanded sub-comp children get synthetic display rows). Lane edits
-   * must persist THIS space — writing a display-lane number into a sparse file
-   * re-targets the wrong track. For an expanded child the value is in its OWN
-   * source file's coordinate space, not the host timeline's.
-   */
-  authoredTrack?: number;
-  /** Resolved z-index for stacking-aware timeline ordering. */
-  zIndex?: number;
-  /** True when the effective z-index was authored inline or through CSS, not auto. */
-  hasExplicitZIndex?: boolean;
-  /** Canonical CSS stacking context this element's z-index participates in. */
-  stackingContextId?: string | null;
-  /** Nearest parent composition context, matching RuntimeTimelineClip. */
-  parentCompositionId?: string | null;
-  /** Composition ancestry from root to nearest parent, matching RuntimeTimelineClip. */
-  compositionAncestors?: string[];
-  domId?: string;
-  /** Stable `data-hf-id` attribute value — used as primary patch target when present */
-  hfId?: string;
-  /** Best-effort selector used when patching source HTML back from timeline edits */
-  selector?: string;
-  /** Zero-based occurrence index for non-unique selectors */
-  selectorIndex?: number;
-  /** Source composition file that owns this element, when known */
-  sourceFile?: string;
-  src?: string;
-  playbackStart?: number;
-  playbackStartAttr?: "media-start" | "playback-start";
-  playbackRate?: number;
-  sourceDuration?: number;
-  volume?: number;
-  /** Path from data-composition-src — identifies sub-composition elements */
-  compositionSrc?: string;
-  /** Whether this row came from authored clip timing or Studio's full-duration layer fallback. */
-  timingSource?: "authored" | "implicit";
-  /** Set by data-timeline-locked on the host element — disables move and trim in Studio. */
-  timelineLocked?: boolean;
-  /** Set by data-hidden on the host element — hides the clip in preview and render. */
-  hidden?: boolean;
-  /** Value of data-timeline-role attribute — used to identify music vs. voiceover. */
-  timelineRole?: string;
-  /**
-   * Set by useExpandedTimelineElements on an inline-expanded sub-composition
-   * child: the absolute master-timeline start of the sub-comp host the child
-   * lives in. Presence marks the element as expanded; edits subtract it to get
-   * the child's local (sourceFile-relative) time. Works at any nesting depth.
-   */
-  expandedParentStart?: number;
-  expandedHostKey?: string;
-}
+import type {
+  TimelineElement,
+  TimelineElementPatch,
+  SubCompositionHostState,
+} from "./timelineElement";
+
+export type { TimelineElement, SubCompositionHostState };
 export type ZoomMode = "fit" | "manual";
 type TimelineTool = "select" | "razor";
 
@@ -104,7 +54,8 @@ function resolveElementSelection(
   };
 }
 
-interface PlayerState extends KeyframeSlice, ThumbnailSlice {
+interface PlayerState
+  extends KeyframeSlice, AutomationSelectionSlice, ThumbnailSlice, EditingModeSlice {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -119,6 +70,7 @@ interface PlayerState extends KeyframeSlice, ThumbnailSlice {
   selectedElementId: string | null;
   playbackRate: number;
   audioMuted: boolean;
+  audioVolume: number;
   loopEnabled: boolean;
   /** Timeline zoom: 'fit' auto-scales to viewport, 'manual' uses manualZoomPercent */
   zoomMode: ZoomMode;
@@ -143,20 +95,6 @@ interface PlayerState extends KeyframeSlice, ThumbnailSlice {
    *  (drag, resize, rotate) target this instead of recomputing from playhead. */
   activeKeyframePct: number | null;
   setActiveKeyframePct: (pct: number | null) => void;
-  /** Motion-path "set destination" mode. Armed from the preview toolbar (replaces
-   *  the old double-click-on-canvas UX); while armed, one canvas click places the
-   *  new path's destination. `available` is published by MotionPathOverlay so the
-   *  toolbar shows the button only when the selected element can take a path. */
-  motionPathArmed: boolean;
-  setMotionPathArmed: (armed: boolean) => void;
-  motionPathCreateAvailable: boolean;
-  setMotionPathCreateAvailable: (available: boolean) => void;
-  /** Global toggle for the "Add keyframe" diamond in the timeline toolbar (#1808).
-   *  When false, a manual drag/resize/rotate edit on an element that already has
-   *  a live tween shifts every keyframe by the edit's delta (preserving the
-   *  animation's shape) instead of inserting/updating a keyframe at the playhead. */
-  autoKeyframeEnabled: boolean;
-  setAutoKeyframeEnabled: (enabled: boolean) => void;
 
   /** Multi-select: additional selected elements beyond selectedElementId. */
   selectedElementIds: Set<string>;
@@ -189,6 +127,7 @@ interface PlayerState extends KeyframeSlice, ThumbnailSlice {
   setDuration: (duration: number) => void;
   setPlaybackRate: (rate: number) => void;
   setAudioMuted: (muted: boolean) => void;
+  setAudioVolume: (volume: number) => void;
   setLoopEnabled: (enabled: boolean) => void;
   setTimelineReady: (ready: boolean) => void;
   setBeatDragging: (dragging: boolean) => void;
@@ -196,15 +135,7 @@ interface PlayerState extends KeyframeSlice, ThumbnailSlice {
   setSelectedElementId: (id: string | null, options?: SelectElementOptions) => void;
   /** Move the selection anchor within an active multi-selection without collapsing it. */
   setSelectionAnchor: (id: string | null) => void;
-  updateElement: (
-    elementId: string,
-    updates: Partial<
-      Pick<
-        TimelineElement,
-        "start" | "duration" | "track" | "zIndex" | "hasExplicitZIndex" | "playbackStart" | "hidden"
-      >
-    >,
-  ) => void;
+  updateElement: (elementId: string, updates: TimelineElementPatch) => void;
   setZoomMode: (mode: ZoomMode) => void;
   setManualZoomPercent: (percent: number) => void;
   bumpZEditVersion: () => void;
@@ -222,6 +153,32 @@ interface PlayerState extends KeyframeSlice, ThumbnailSlice {
   requestedSeekTime: number | null;
   requestSeek: (time: number) => void;
   clearSeekRequest: () => void;
+
+  /**
+   * Request the transport start or stop from outside the player loop.
+   *
+   * The FX rack auditions a preset by writing it to the running graph, which is
+   * silent while the transport is paused — so hovering one has to start
+   * playback, and leaving has to put the playhead back where it was. Hovering is
+   * not an edit and must not cost the author their place.
+   *
+   * A nonce rather than a bare boolean: two hovers in a row both want play, and
+   * without it the second request is indistinguishable from the first having
+   * already been served.
+   */
+  playbackRequest: { playing: boolean; returnTo: number | null; nonce: number } | null;
+  requestPlayback: (playing: boolean, returnTo?: number | null) => void;
+  clearPlaybackRequest: () => void;
+
+  /**
+   * Request the timeline to scroll a clip into view (e.g. clicking an
+   * already-added asset card in the sidebar). Consumed and cleared by
+   * useTimelineRevealClip. The nonce makes repeat requests for the same
+   * clip observable so a second click re-reveals after the user scrolls away.
+   */
+  clipRevealRequest: { elementId: string; nonce: number } | null;
+  requestClipReveal: (elementId: string) => void;
+  clearClipRevealRequest: () => void;
 
   timelineFocus: TimelineFocusRequest | null;
   timelineFocusNonce: number;
@@ -259,6 +216,14 @@ interface PlayerState extends KeyframeSlice, ThumbnailSlice {
    */
   domClipChildren: DomClipChild[];
   setDomClipChildren: (children: DomClipChild[]) => void;
+  /**
+   * Host-element state for every id'd element inside a sub-composition, keyed by
+   * dom id. Collected from the live preview because it is the only place that
+   * sees it: these elements are filtered out of `elements` before the flat store
+   * is built, and the clip manifest carries timing, not attributes.
+   */
+  subCompositionHostState: Map<string, SubCompositionHostState>;
+  setSubCompositionHostState: (state: Map<string, SubCompositionHostState>) => void;
 }
 
 /** A sub-comp DOM-only timeline child (no data-start) and its nesting context. */
@@ -269,6 +234,19 @@ export interface DomClipChild {
   hostId: string;
   label: string;
   stackingContextId: string;
+  /**
+   * The child's audio-group state, read off its live element during the DOM
+   * walk — the only place that sees it. A sub-composition can declare a group
+   * and its members entirely within itself, and those members never reach the
+   * flat store, so an expanded child has no twin to inherit membership from.
+   */
+  audioGroup?: string;
+  audioGroupLabel?: string;
+  audioGroupVolume?: number;
+  audioGroupHidden?: boolean;
+  audioGroupFxChain?: string;
+  /** The group element's `data-automation`, mirrored the same way. */
+  audioGroupAutomation?: string;
 }
 
 interface BeatHistoryEntry {
@@ -294,8 +272,16 @@ export function createTimelineResetState() {
     motionPathArmed: false,
     motionPathCreateAvailable: false,
     selectedKeyframes: new Set<string>(),
+    // Ephemeral like every other selection here. A range surviving a project
+    // switch can match a same-keyed clip in the new project and redirect a
+    // paste through `sel.elementKey === paste.elementKey` to a stale t0.
+    automationSelection: null,
     expandedClipIds: new Set<string>(),
+    // Per-composition: ids from comp A match nothing in B, silencing all of it.
+    collapsedGroupIds: new Set<string>(),
+    expandedLaneOwnerIds: new Set<string>(),
     focusedEaseSegment: null,
+    revealedAudioFxTarget: null,
     selectedElementIds: new Set<string>(),
     requestedSeekTime: null,
     lintFindingsByElement: new Map<string, { count: number; messages: string[] }>(),
@@ -310,6 +296,7 @@ export function createTimelineResetState() {
     clipManifest: null,
     clipParentMap: new Map<string, string>(),
     domClipChildren: [],
+    subCompositionHostState: new Map<string, SubCompositionHostState>(),
   };
 }
 
@@ -325,6 +312,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   selectedElementId: null,
   playbackRate: readStudioUiPreferences().playbackRate ?? 1,
   audioMuted: readStudioUiPreferences().audioMuted ?? false,
+  audioVolume: readStudioUiPreferences().audioVolume ?? 1,
   loopEnabled: false,
   zoomMode: "fit",
   manualZoomPercent: 100,
@@ -343,14 +331,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   })),
   ...createThumbnailSlice(set),
 
+  ...createAutomationSelectionSlice(set),
+  ...createEditingModeSlice(set),
+
   activeKeyframePct: null,
   setActiveKeyframePct: (pct) => set({ activeKeyframePct: pct }),
-  motionPathArmed: false,
-  setMotionPathArmed: (armed) => set({ motionPathArmed: armed }),
-  motionPathCreateAvailable: false,
-  setMotionPathCreateAvailable: (available) => set({ motionPathCreateAvailable: available }),
-  autoKeyframeEnabled: true,
-  setAutoKeyframeEnabled: (enabled) => set({ autoKeyframeEnabled: enabled }),
 
   selectedElementIds: new Set<string>(),
   setSelection: (ids, anchor) => set(resolveElementSelection(ids, anchor)),
@@ -372,6 +357,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   requestedSeekTime: null,
   requestSeek: (time) => set({ requestedSeekTime: time }),
   clearSeekRequest: () => set({ requestedSeekTime: null }),
+
+  playbackRequest: null,
+  requestPlayback: (playing, returnTo = null) =>
+    set((s) => ({
+      playbackRequest: { playing, returnTo, nonce: (s.playbackRequest?.nonce ?? 0) + 1 },
+    })),
+  clearPlaybackRequest: () => set({ playbackRequest: null }),
+
+  clipRevealRequest: null,
+  requestClipReveal: (elementId) =>
+    set((s) => ({
+      clipRevealRequest: { elementId, nonce: (s.clipRevealRequest?.nonce ?? 0) + 1 },
+    })),
+  clearClipRevealRequest: () => set({ clipRevealRequest: null }),
 
   timelineFocus: null,
   timelineFocusNonce: 0,
@@ -444,6 +443,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setClipParentMap: (map) => set({ clipParentMap: map }),
   domClipChildren: [],
   setDomClipChildren: (children) => set({ domClipChildren: children }),
+  subCompositionHostState: new Map(),
+  setSubCompositionHostState: (state) => set({ subCompositionHostState: state }),
 
   setIsPlaying: (playing) => {
     if (get().isPlaying === playing) return;
@@ -456,6 +457,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setAudioMuted: (muted) => {
     writeStudioUiPreferences({ audioMuted: muted });
     set({ audioMuted: muted });
+  },
+  setAudioVolume: (volume) => {
+    const nextVolume = Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 1;
+    writeStudioUiPreferences({ audioVolume: nextVolume });
+    set({ audioVolume: nextVolume });
   },
   setLoopEnabled: (enabled) => set({ loopEnabled: enabled }),
   setZoomMode: (mode) => set({ zoomMode: mode }),
@@ -523,18 +529,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   // echoes that must preserve a group go through setSelectionAnchor instead.
   setSelectedElementId: (id, options) =>
     set((s) => {
-      const preserveSet = Boolean(options?.preserveSet && id && s.selectedElementIds.has(id));
-      const selectedElementIds = preserveSet
-        ? new Set(s.selectedElementIds)
-        : options?.preserveSet
-          ? new Set<string>()
-          : id
-            ? new Set([id])
-            : new Set<string>();
+      const selectedElementIds = nextSelectionSet(s.selectedElementIds, id, options?.preserveSet);
       // Selecting a different element drops any active keyframe selection — otherwise
       // a stale activeKeyframePct from a prior diamond click would force the next drag
       // to "modify" a keyframe on the new element. A diamond click sets the pct AFTER
       // calling setSelectedElementId, so this never clobbers a genuine keyframe select.
+      // A reveal request survives the selection it is FOR. `openClipFxRack`
+      // raises the request and then selects the clip asynchronously, so the
+      // selection lands afterwards and used to clear the very request that
+      // caused it — the panel then read null and the section never opened.
+      // Any OTHER selection still drops it: a request aimed elsewhere is stale.
+      //
+      // Compared across the ID-SPACE BOUNDARY, which is why this needs saying:
+      // a request carries the BARE dom id (`runtimeAudioId`, because the panel
+      // and the runtime speak that), while this store's ids are
+      // `sourceFile#domId`. A direct `===` was silently never true — the exact
+      // shape of failure the id-space split produces.
+      const revealSurvives = revealTargetsSelection(s.revealedAudioFxTarget, id);
       return id !== s.selectedElementId
         ? {
             selectedElementId: id,
@@ -542,6 +553,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
             activeKeyframePct: null,
             motionPathArmed: false,
             focusedEaseSegment: null,
+            ...(revealSurvives ? {} : { revealedAudioFxTarget: null }),
           }
         : { selectedElementId: id, selectedElementIds };
     }),
@@ -583,15 +595,4 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   reset: () => set(createTimelineResetState()),
 }));
 
-function isDevBuild(): boolean {
-  try {
-    return import.meta.env.DEV === true;
-  } catch {
-    // Turbopack and other non-Vite bundlers may not provide import.meta.env.
-    return false;
-  }
-}
-if (isDevBuild() && typeof window !== "undefined") {
-  // Console handle for dumping live Studio state during bug-bash reproduction.
-  (window as unknown as { __playerStore?: typeof usePlayerStore }).__playerStore = usePlayerStore;
-}
+attachPlayerStoreDevHandle(usePlayerStore);

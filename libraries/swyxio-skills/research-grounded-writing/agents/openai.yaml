@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research-Grounded Writing"
+  short_description: "Ground substantial nonfiction in traceable evidence"
+  default_prompt: "Use $research-grounded-writing to research and draft this nonfiction with traceable claims and clear uncertainty."

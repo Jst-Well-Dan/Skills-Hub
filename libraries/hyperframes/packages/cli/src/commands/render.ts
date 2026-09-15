@@ -4,10 +4,11 @@ import type { Example } from "./_examples.js";
 import { mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync, rmSync } from "node:fs";
 import { createRenderPlan, resolveBrowserGpuForCli, type RenderFormat } from "./render/plan.js";
 import { seedProjectAuthoringSkill } from "../utils/projectConfig.js";
+import type { CatalogUsage } from "../utils/catalogUsage.js";
 import { presentRenderPlan } from "./render/present.js";
-import { executeRenderPlan, renderLintContinuationHint } from "./render/execute.js";
+import { executeRenderPlan, renderLintContinuationHint, runRenderLint } from "./render/execute.js";
 // Test-only seams retained at the command boundary for render behavior tests.
-export { resolveBrowserGpuForCli, renderLintContinuationHint };
+export { resolveBrowserGpuForCli, renderLintContinuationHint, runRenderLint };
 
 export const examples: Example[] = [
   ["Render to MP4", "hyperframes render --output output.mp4"],
@@ -53,7 +54,14 @@ import { resolve, dirname, join, basename } from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { loadProducer } from "../utils/producer.js";
 import { c } from "../ui/colors.js";
-import { formatBytes, formatRenderSummaryDetail, errorBox } from "../ui/format.js";
+import {
+  formatBytes,
+  formatRenderSummaryDetail,
+  formatRenderPipelineDetail,
+  formatScreenshotFallbackHint,
+  resolvePrintedCaptureMode,
+  errorBox,
+} from "../ui/format.js";
 import { warnIfWebmAlphaDropped } from "../utils/webmAlphaCheck.js";
 import { renderProgress } from "../ui/progress.js";
 import {
@@ -69,7 +77,6 @@ import {
   writeConfigWithResult,
   type HyperframesConfig,
 } from "../telemetry/config.js";
-import { shouldTrack } from "../telemetry/client.js";
 import { renderJobObservabilityTelemetryPayload } from "../telemetry/renderObservability.js";
 import { bytesToMb } from "../telemetry/system.js";
 import { VERSION } from "../version.js";
@@ -77,16 +84,21 @@ import { isDevMode } from "../utils/env.js";
 import { buildDockerRunArgs, resolveDockerPlatform } from "../utils/dockerRunArgs.js";
 import { normalizeErrorMessage } from "../utils/errorMessage.js";
 import { runEnvironmentChecks } from "../browser/preflight.js";
-import { detectH264EncoderMode } from "../browser/ffmpeg.js";
+import {
+  detectH264EncoderMode,
+  getFFmpegInstallHint,
+  H264EncoderUnavailableError,
+} from "../browser/ffmpeg.js";
 import { chromeLaunchRemediation } from "../browser/linuxDeps.js";
 import { macosOldChromeCrashRemediation } from "../browser/macosOldChromeCrash.js";
+import { windowsChromeCrashRemediation } from "../browser/windowsCrash.js";
 import { killOrphanedProcesses } from "../utils/orphanCleanup.js";
 import {
   markRenderSucceeded,
   runPostRenderStep,
   runPostRenderStepAsync,
 } from "../utils/render-success-state.js";
-import type { ProducerLogger, RenderJob } from "@hyperframes/producer";
+import type { ProducerLogger, RenderJob, RenderPerfSummary } from "@hyperframes/producer";
 import { EXTRACT_CACHE_DIR_DISABLED_ALIASES, type VideoFrameFormat } from "@hyperframes/engine";
 import {
   checkOutputResolutionCompatibility,
@@ -137,8 +149,9 @@ export default defineCommand({
     quality: {
       type: "string",
       alias: "q",
-      description: "Quality: draft, standard, high",
-      default: "standard",
+      description:
+        "Quality: draft, looks, delivery, or standard/high. looks is the default (CRF 16). delivery is high. MOV always uses the fixed alpha-preserving ProRes 4444 profile.",
+      default: "looks",
     },
     skill: {
       type: "string",
@@ -190,11 +203,13 @@ export default defineCommand({
     },
     crf: {
       type: "string",
-      description: "Override encoder CRF. Mutually exclusive with --video-bitrate.",
+      description:
+        "Override MP4/WebM encoder CRF. Mutually exclusive with --video-bitrate; unsupported for MOV.",
     },
     "video-bitrate": {
       type: "string",
-      description: "Target video bitrate such as 10M. Mutually exclusive with --crf.",
+      description:
+        "Target MP4/WebM video bitrate such as 10M. Mutually exclusive with --crf; unsupported for MOV.",
     },
     "vp9-cpu-used": {
       type: "string",
@@ -377,6 +392,12 @@ export interface RenderOptions {
   quality: "draft" | "standard" | "high";
   /** Authoring workflow skill that drove this render (telemetry attribution). */
   authoringSkill?: string;
+  /**
+   * Catalog items installed in this project and those the rendered composition
+   * reaches. Resolved once in the render plan; absent on programmatic callers
+   * that build options by hand, which simply omit the catalog properties.
+   */
+  catalogUsage?: CatalogUsage;
   format: RenderFormat;
   gifLoop?: number;
   workers?: number;
@@ -424,21 +445,26 @@ export interface RenderOptions {
   /** Skip the interactive feedback prompt after a successful render. */
   skipFeedback?: boolean;
   /**
-   * OPT IN to the DE parallel-router CLI trial
-   * (`maybeEnableDeParallelRouterTrial`) for this render. Default OFF —
+   * OPT IN to managing the DE parallel-router circuit breaker
+   * (`applyDeParallelRouterCircuitBreaker`) for this render. Default OFF —
    * only the top-level CLI render command's own call sites should ever set
-   * this (review): the trial mechanism shares one process-wide env var and
-   * two module-level flags across every `renderLocal` call in the process,
+   * this (review): the mechanism shares one process-wide env var and two
+   * module-level flags across every `renderLocal` call in the process,
    * which is safe for SEQUENTIAL calls (single render, single-concurrency
    * batch rows) but not for genuinely concurrent ones — racing invocations
    * could tear down or misattribute each other's outcome. Programmatic
    * consumers importing `renderLocal` (a future studio-server path, test
-   * harnesses, distributed runners) therefore get NO trial unless they
-   * explicitly opt in AND guarantee sequential invocation. The CLI sets
-   * this for single renders and for `--batch` at concurrency 1; it leaves
-   * it unset for `--batch-concurrency N>=2`.
+   * harnesses, distributed runners) therefore do not manage the breaker
+   * unless they explicitly opt in AND guarantee sequential invocation. The
+   * CLI sets this for single renders and for `--batch` at concurrency 1; it
+   * leaves it unset for `--batch-concurrency N>=2`.
+   *
+   * NOTE the asymmetry: the ROUTER itself is default-on for every consumer
+   * (the producer decides that). This flag only governs whether we
+   * additionally enforce the per-install breaker, because that is the part
+   * with process-wide state.
    */
-  enableDeParallelRouterTrial?: boolean;
+  manageDeParallelRouterBreaker?: boolean;
 }
 
 /**
@@ -758,6 +784,7 @@ async function renderDocker(
       docker: true,
       gpu: options.gpu,
       authoringSkill: options.authoringSkill,
+      catalogUsage: options.catalogUsage,
       ...getMemorySnapshot(),
     }),
   );
@@ -825,6 +852,16 @@ export async function renderLocal(
     try {
       encoderMode = detectH264EncoderMode(preflight.ffmpegPath, false);
     } catch (error) {
+      // HDR MP4 uses HEVC; auto mode cannot resolve the codec until sources
+      // have been inspected. Only forced SDR is definitely H.264 here.
+      if (error instanceof H264EncoderUnavailableError && options.hdrMode === "force-sdr") {
+        errorBox(
+          "MP4 H.264 encoder unavailable",
+          error.message,
+          `Install an FFmpeg build with libx264 support (${getFFmpegInstallHint()}), or render WebM instead: hyperframes render --format webm --output output.webm`,
+        );
+        failCommand();
+      }
       // Capability probing is advisory. Let the real encode surface the
       // authoritative FFmpeg error instead of failing here with a bare stack.
       if (!options.quiet) {
@@ -841,10 +878,12 @@ export async function renderLocal(
   }
 
   const producer = await loadProducer();
-  const deParallelRouterTrialArmed = maybeEnableDeParallelRouterTrial(
-    options.quiet,
-    options.enableDeParallelRouterTrial === true,
-  );
+  const deParallelRouterActive =
+    options.manageDeParallelRouterBreaker === true
+      ? applyDeParallelRouterCircuitBreaker(options.quiet)
+      : // Not managing the breaker: the router still runs (producer default),
+        // we just don't enforce or record the per-install trip.
+        false;
 
   const startTime = Date.now();
   const logger = createRenderTelemetryLogger(
@@ -853,6 +892,13 @@ export async function renderLocal(
 
   const engineConfig = producer.resolveConfig({
     browserGpuMode: options.browserGpuMode ?? "software",
+    // Local auto opts out of the software-GPU screenshot clamp. Docker and
+    // --no-browser-gpu request software; --resolution supersamples via screenshot.
+    ...(options.browserGpuMode === "auto" &&
+    options.outputResolution == null &&
+    process.env.PRODUCER_FORCE_SCREENSHOT !== "true"
+      ? { forceScreenshot: false }
+      : {}),
     ...(options.pageNavigationTimeoutMs != null
       ? { pageNavigationTimeout: options.pageNavigationTimeoutMs }
       : {}),
@@ -894,13 +940,16 @@ export async function renderLocal(
   try {
     await producer.executeRenderJob(job, projectDir, outputPath, onProgress);
   } catch (error: unknown) {
-    maybeConsumeDeParallelRouterTrial(deParallelRouterTrialArmed, job, options.quiet);
+    maybeConsumeDeParallelRouterTrial(deParallelRouterActive, job, options.quiet);
+    // The render container sets `ENV CONTAINER=true`; suggesting `--docker`
+    // from inside it is a misdirection (heygen-com/hyperframes#3370).
+    const inContainer = process.env.CONTAINER === "true";
     handleRenderError(
       error,
       options,
       startTime,
       false,
-      "Try --docker for containerized rendering",
+      inContainer ? "" : "Try --docker for containerized rendering",
       job.failedStage,
       job,
     );
@@ -913,7 +962,7 @@ export async function renderLocal(
   // (win32/x64, CLI 0.7.58): valid MP4 on disk, exited 1 with no error print.
   markRenderSucceeded();
 
-  maybeConsumeDeParallelRouterTrial(deParallelRouterTrialArmed, job, options.quiet);
+  maybeConsumeDeParallelRouterTrial(deParallelRouterActive, job, options.quiet);
   const elapsed = Date.now() - startTime;
   if (job.outcome === "completed_with_warnings") {
     for (const warning of job.warnings) {
@@ -926,8 +975,8 @@ export async function renderLocal(
       outputPath,
       elapsed,
       options.quiet,
-      job.perfSummary?.compositionDurationSeconds,
-      job.perfSummary?.totalFrames,
+      job.perfSummary,
+      options.browserGpuMode,
     ),
   );
   runPostRenderStep("warnIfWebmAlphaDropped", () =>
@@ -1072,37 +1121,40 @@ function createNoopProducerLogger(): ProducerLogger {
   };
 }
 
-/** Backstop cap: even absent an actual router failure, stop offering the
- * trial after this many engaged (routed or reverted) renders for an
- * install. Without this, a healthy router that never reverts would stay
- * force-enabled on every eligible render forever (review finding). */
-const DE_PARALLEL_ROUTER_TRIAL_MAX_RENDERS = 25;
-
 /**
- * True across every `renderLocal` call in THIS process once the trial has
- * armed `HF_DE_PARALLEL_ROUTER` here — distinct from the env var's own
- * value, which stays "true" across an entire `--batch` run. Without this,
- * a second batch row's `process.env.HF_DE_PARALLEL_ROUTER !== undefined`
- * check can't tell "we set this ourselves on row 1" from "the user set
- * this" and would wrongly treat itself as un-armed, silently dropping that
- * row's outcome from ever reaching `maybeConsumeDeParallelRouterTrial`
- * (review finding).
+ * The 25-render exposure cap that bounded the old opt-in TRIAL is gone: the
+ * router is default-ON as of 2026-07-27, so "stop offering it after N
+ * renders" would mean switching a shipped default off behind the user's
+ * back. What survives is the half that was always safety rather than
+ * sampling — the per-install circuit breaker below, which latches the router
+ * off for good the first time a render has to fall back.
  */
-let deParallelRouterTrialManagedByUs = false;
 
 /**
- * In-process latch mirroring `deParallelRouterTrialFired`: set the moment we
- * DECIDE the trial is over, independent of whether persisting that decision
- * to `~/.hyperframes/config.json` succeeds. `writeConfig` swallows all fs
+ * The user set `HF_DE_PARALLEL_ROUTER` themselves (either polarity), latched
+ * once at first observation. Their choice wins over the circuit breaker in
+ * BOTH directions: we never overwrite an explicit opt-in with `"false"` on a
+ * fallback, and never overwrite an explicit opt-out either. Latched rather
+ * than re-read because the breaker itself writes the var — after the first
+ * write a live `process.env` read could no longer tell "the user set this"
+ * from "we set this" (the same distinction the old trial needed for
+ * `--batch` rows sharing one process).
+ */
+let deParallelRouterUserManaged = false;
+let deParallelRouterUserManagedResolved = false;
+
+/**
+ * In-process latch mirroring the persisted `deParallelRouterTrialFired`: set
+ * the moment the breaker trips, independent of whether persisting that to
+ * `~/.hyperframes/config.json` succeeds. `writeConfig` swallows all fs
  * errors (by design — telemetry must never break the CLI), so on an
- * unwritable config (root-owned file, disk full) the fired flag can never
- * stick on disk; without this latch the trial would silently re-arm and
- * re-fail on every subsequent render in this process forever (review
- * finding). Later processes still re-arm — disk is the only cross-process
- * channel — but each process now stops after at most one failure it
- * couldn't record.
+ * unwritable config (root-owned file, disk full) the flag can never stick on
+ * disk; without this latch the router would re-enable and re-fail on every
+ * subsequent render in this process. Later processes re-arm — disk is the
+ * only cross-process channel — but each process now stops after at most one
+ * failure it couldn't record.
  */
-let deParallelRouterTrialFiredThisProcess = false;
+let deParallelRouterBreakerTrippedThisProcess = false;
 
 /**
  * Test-only reset for the module-level trial state — a real CLI process
@@ -1111,112 +1163,130 @@ let deParallelRouterTrialFiredThisProcess = false;
  * one imported module instance.
  */
 export function __resetDeParallelRouterTrialStateForTests(): void {
-  deParallelRouterTrialManagedByUs = false;
-  deParallelRouterTrialFiredThisProcess = false;
+  deParallelRouterBreakerTrippedThisProcess = false;
+  deParallelRouterUserManaged = false;
+  deParallelRouterUserManagedResolved = false;
 }
 
 /**
- * True once the trial should stop offering itself: already failed (on disk
- * or via this process's in-memory latch), hit the render-count backstop, or
- * telemetry isn't actually recordable right now.
+ * Has this install's router circuit breaker already tripped — on disk, or via
+ * this process's in-memory latch?
  *
- * Checks BOTH `shouldTrack()` and `config.telemetryEnabled` directly, not
- * `shouldTrack()` alone: `shouldTrack()` (`../telemetry/client.js`) memoizes
- * its verdict once per process and never invalidates, so during a long
- * `--batch` run (all rows share one process) a `hyperframes telemetry off`
- * issued from another terminal mid-batch would never be observed. The
- * caller must pass a `readConfigFresh()` snapshot for the same reason —
- * `readConfig()` serves a process-lifetime cache that is exactly as stale
- * as the `shouldTrack()` memoization this check exists to bypass (review
- * finding).
+ * Deliberately does NOT consider telemetry state. The old opt-in trial did:
+ * there was no point running an experimental path if the resulting signal
+ * couldn't be recorded. Now that the router is a shipped default, gating it
+ * on telemetry would mean users who opted out of analytics silently get a
+ * slower renderer — punishing a privacy choice with a performance penalty
+ * (review finding). Telemetry state governs REPORTING, never behavior.
  */
-function isDeParallelRouterTrialBlocked(config: HyperframesConfig): boolean {
-  const overRenderCap =
-    (config.deParallelRouterTrialRenderCount ?? 0) >= DE_PARALLEL_ROUTER_TRIAL_MAX_RENDERS;
-  return (
-    deParallelRouterTrialFiredThisProcess ||
-    Boolean(config.deParallelRouterTrialFired) ||
-    overRenderCap ||
-    !config.telemetryEnabled ||
-    !shouldTrack() ||
-    // cli.ts shows the first-run telemetry disclosure via a fire-and-forget,
-    // unawaited dynamic import — there's no guarantee it has printed before
-    // this render command reaches this point. Requiring telemetryNoticeShown
-    // means the trial simply never offers itself on a fresh install's very
-    // first invocation (before the disclosure is guaranteed to have run at
-    // least once), rather than racing an experimental opt-in message against
-    // the disclosure it depends on (review finding).
-    !config.telemetryNoticeShown
-  );
-}
-
-/** Shared cleanup for both `maybeEnableDeParallelRouterTrial` (this process
- * should stop offering the trial) and `maybeConsumeDeParallelRouterTrial`
- * (the trial just failed/hit its cap) — a no-op unless WE were the ones
- * managing the env var. */
-function stopManagingDeParallelRouterTrial(): void {
-  if (!deParallelRouterTrialManagedByUs) return;
-  delete process.env.HF_DE_PARALLEL_ROUTER;
-  deParallelRouterTrialManagedByUs = false;
+function hasDeParallelRouterBreakerTripped(config: HyperframesConfig): boolean {
+  return deParallelRouterBreakerTrippedThisProcess || Boolean(config.deParallelRouterTrialFired);
 }
 
 /**
- * Enable the DE parallel-router experiment (`HF_DE_PARALLEL_ROUTER`, default
- * off) for this render, on every eligible render for this install (up to
- * `DE_PARALLEL_ROUTER_TRIAL_MAX_RENDERS`), so we get real-traffic router
- * telemetry (revert rate, verify-db distribution) without requiring anyone
- * to manually set the env var — see `HyperframesConfig.deParallelRouterTrialFired`.
- * See `maybeConsumeDeParallelRouterTrial` for what turns it off. Returns
- * whether this call armed it (so the caller knows to check for consumption
- * afterward) — false unless the caller explicitly opted in (`enabled` —
- * OPT-IN polarity, review: only the top-level CLI render command's own
- * sequential call sites set it; programmatic `renderLocal` consumers get no
- * trial by default because the mechanism's process-wide state is unsafe
- * under concurrent invocation — see
- * `RenderOptions.enableDeParallelRouterTrial`), if it's already failed (or
- * hit the render cap) for this install, if the user already set the env var
- * themselves (never override an explicit choice — see
- * `deParallelRouterTrialManagedByUs` for how a later `--batch` row
- * distinguishes that from our own earlier arm), or if telemetry isn't
- * actually recordable right now (see `isDeParallelRouterTrialBlocked`; no
- * point risking the experimental path if we can't even record the
- * resulting signal).
+ * Latch the router OFF for the rest of this process by writing an explicit
+ * `"false"`.
+ *
+ * Under the old default-OFF flag this deleted the var, because absent meant
+ * off. With the router default-ON, deleting means ON — the same call would
+ * silently RE-ENABLE the router on exactly the host that just failed
+ * (review finding). Writing the explicit value is what makes the breaker a
+ * breaker. No-op when the user set the var themselves: their choice wins in
+ * both directions.
  */
-function maybeEnableDeParallelRouterTrial(quiet: boolean, enabled: boolean): boolean {
-  if (!enabled) return false;
-  // The in-process latch alone decides once it's set — short-circuit before
-  // the disk read so post-fired batch rows don't pay a config read + parse +
-  // shared-cache invalidation per row for an answer module state already
-  // knows (review finding).
-  if (deParallelRouterTrialFiredThisProcess) {
-    stopManagingDeParallelRouterTrial();
+/**
+ * Mirror of the producer's `isDeParallelRouterEnabled`. Deliberately
+ * duplicated rather than imported: `@hyperframes/producer` is lazily loaded
+ * (`loadProducer()`) to keep CLI startup fast, and this runs on the startup
+ * path. Keep the two in sync — the producer copy is the source of truth.
+ */
+function userValueEnablesDeParallelRouter(): boolean {
+  const raw = process.env.HF_DE_PARALLEL_ROUTER?.trim().toLowerCase();
+  if (raw === undefined || raw === "") return true;
+  return !(raw === "false" || raw === "0" || raw === "off" || raw === "no");
+}
+
+function applyDeParallelRouterBreaker(): void {
+  if (deParallelRouterUserManaged) return;
+  process.env.HF_DE_PARALLEL_ROUTER = "false";
+}
+
+/**
+ * Apply this install's router circuit breaker before a render.
+ *
+ * The router is default-ON, so the normal path does NOTHING here — the
+ * producer's own default takes over. This exists for the one case that must
+ * survive a shipped default: an install that already had a render fall back
+ * stays off, permanently, across processes (the verdict is persisted to
+ * `~/.hyperframes/config.json`). See `maybeConsumeDeParallelRouterTrial` for
+ * what trips it.
+ *
+ * Returns whether the router is active for this render, so the caller knows
+ * to inspect the outcome afterward.
+ */
+function applyDeParallelRouterCircuitBreaker(quiet: boolean): boolean {
+  // Latch the user's own choice on first observation, BEFORE the breaker can
+  // write the var itself and make the two indistinguishable.
+  //
+  // Ownership uses the SAME normalization as the two parsers: a set-but-empty
+  // (or whitespace) value means "unset / default ON", so it is NOT a user
+  // choice and must stay breaker-managed. Treating any defined value as
+  // user-managed would let `HF_DE_PARALLEL_ROUTER=` route the render (empty
+  // parses as ON) while exempting that install from the breaker — it would
+  // keep retrying a failing router forever, losing exactly the first-fallback
+  // protection this PR exists to provide (review finding).
+  if (!deParallelRouterUserManagedResolved) {
+    deParallelRouterUserManaged = (process.env.HF_DE_PARALLEL_ROUTER ?? "").trim() !== "";
+    deParallelRouterUserManagedResolved = true;
+  }
+  if (deParallelRouterUserManaged) {
+    // Explicit choice, either polarity — report whether it enables the
+    // router so outcomes are still consumed, but never override it.
+    return userValueEnablesDeParallelRouter();
+  }
+
+  // The in-process latch decides once set — short-circuit before the disk
+  // read so post-trip batch rows don't pay a config read + parse per row for
+  // an answer module state already knows.
+  if (deParallelRouterBreakerTrippedThisProcess) {
+    applyDeParallelRouterBreaker();
     return false;
   }
-  const userSetIt =
-    process.env.HF_DE_PARALLEL_ROUTER !== undefined && !deParallelRouterTrialManagedByUs;
-  if (userSetIt) return false;
-
-  // readConfigFresh, NOT readConfig: the cached read is exactly as stale as
-  // the shouldTrack() memoization the blocked-check exists to bypass — a
-  // mid-batch `hyperframes telemetry off` (or another process persisting
-  // fired=true) would never be observed through the cache (review finding).
-  if (isDeParallelRouterTrialBlocked(readConfigFresh())) {
-    stopManagingDeParallelRouterTrial();
+  // readConfigFresh, NOT readConfig: the cached read is process-lifetime, so
+  // another process persisting a trip mid-`--batch` would never be observed.
+  if (hasDeParallelRouterBreakerTripped(readConfigFresh())) {
+    deParallelRouterBreakerTrippedThisProcess = true;
+    applyDeParallelRouterBreaker();
+    if (!quiet) {
+      console.log(
+        c.dim(
+          "  Parallel drawElement capture stays off for this install (a previous render " +
+            "had to fall back). Re-enable with HF_DE_PARALLEL_ROUTER=true.",
+        ),
+      );
+    }
     return false;
   }
 
-  if (deParallelRouterTrialManagedByUs) return true;
-  deParallelRouterTrialManagedByUs = true;
-  process.env.HF_DE_PARALLEL_ROUTER = "true";
-  if (!quiet) {
-    console.log(
-      c.dim(
-        "  Trying the experimental parallel drawElement capture path for this install " +
-          "(disabled automatically if it ever needs to fall back; opt out anytime: " +
-          "HF_DE_PARALLEL_ROUTER=false)",
-      ),
-    );
-  }
+  // Nothing left to gate: the router is a shipped default for every install,
+  // so leave the var unset and let the producer's default-ON apply. The
+  // breaker above is the only thing that turns it off, per install, and only
+  // after a real fallback. `HF_DE_PARALLEL_ROUTER=false` remains the user-
+  // facing kill switch.
+  //
+  // The `de-parallel-router` canary that used to sit here was removed with its
+  // registry entry (they had to go together — at >=100 the evaluator
+  // short-circuits ahead of the CI/seedless exclusions, so deleting only the
+  // entry would have flipped whatever still resolved false at deletion time).
+  //
+  // Two claims from the ramp's rationale were wrong, recorded so they are not
+  // reintroduced: "~17x jump in exposure onto <=4 CPUs / Docker" overstated
+  // the reach — Docker renders never use drawElement at all (0 of 4,281
+  // measured) and the router requires it, so no percentage ever exposed
+  // Docker. And "~11% of installs already route" was an OUTCOME (the share
+  // clearing eligibility and the old 25-render cap), not an exposure setting;
+  // read as a rollout knob it inverted the arithmetic, which is how gating at
+  // 5% came to CUT fleet exposure ~25x rather than ramp it.
   return true;
 }
 
@@ -1275,8 +1345,9 @@ function persistDeParallelRouterTrialFired(): boolean {
 
 /**
  * After a trial-armed render, persist that the router's OWN bet actually
- * failed — its self-verify/generic-failure safety net fired
- * (`deParallelRouter === "reverted"`) — or that the render-count backstop
+ * failed — its self-verify/generic-failure safety net fired (recorded as
+ * anything other than a clean `"routed"`, e.g. `"reverted"`, or a stall/hang
+ * outcome — heygen-com/hyperframes#3441) — or that the render-count backstop
  * (`DE_PARALLEL_ROUTER_TRIAL_MAX_RENDERS`) was reached, so it's never
  * enabled again for this install. A clean "routed" (the render succeeded
  * with no fallback) does NOT consume the trial by itself — the whole point
@@ -1302,40 +1373,70 @@ function persistDeParallelRouterTrialFired(): boolean {
  * `persistDeParallelRouterTrialFired`.
  */
 function maybeConsumeDeParallelRouterTrial(
-  trialArmed: boolean,
+  routerActive: boolean,
   job: RenderJob,
   quiet: boolean,
 ): void {
-  if (!trialArmed) return;
+  if (!routerActive) return;
   const outcome = resolveDeParallelRouterOutcome(job);
   if (outcome === undefined) return;
 
   const config = readConfigFresh();
   const renderCount = (config.deParallelRouterTrialRenderCount ?? 0) + 1;
   config.deParallelRouterTrialRenderCount = renderCount;
-  const fired = outcome === "reverted" || renderCount >= DE_PARALLEL_ROUTER_TRIAL_MAX_RENDERS;
+  // Trip on any recorded non-success, not only the literal string
+  // "reverted". The old trial also tripped at a 25-render exposure cap,
+  // which was sampling logic: bound how long an experiment force-enables
+  // itself. Under a shipped default that would switch the feature off
+  // behind the user's back after 25 good renders — so a clean "routed" (no
+  // fallback needed) must NOT trip. But narrowing the positive check to the
+  // single string "reverted" (heygen-com/hyperframes#3441) meant any other
+  // non-success signal the observability layer might ever record — a stall,
+  // a timeout, a future outcome value — would silently fall through to "not
+  // fired" instead of tripping. `outcome` is `undefined`-filtered above, so
+  // by this point it is a real recorded outcome; the only one that means
+  // "no fallback happened" is "routed" itself.
+  const fired = outcome !== "routed";
   if (fired) {
     config.deParallelRouterTrialFired = true;
     // Latch BEFORE attempting persistence — the decision holds for this
     // process even if the disk write never sticks (unwritable config).
-    deParallelRouterTrialFiredThisProcess = true;
-    stopManagingDeParallelRouterTrial();
+    deParallelRouterBreakerTrippedThisProcess = true;
+    applyDeParallelRouterBreaker();
   }
   writeConfig(config);
-  // `!quiet`-gated like every other trial message: quiet/batch-json renders
-  // must produce no unexpected terminal output — CI wrappers asserting
-  // empty stderr would misread the warning as a render failure (review
-  // finding). The in-process latch above already guarantees the safety
-  // behavior the warning describes, whether or not it prints.
-  if (fired && !persistDeParallelRouterTrialFired() && !quiet) {
-    console.warn(
-      c.warn(
-        "  Could not persist the parallel drawElement trial's off-switch to " +
-          "~/.hyperframes/config.json (unwritable?). The experiment stays off for this " +
-          "process; future runs may retry it. Set HF_DE_PARALLEL_ROUTER=false to opt out.",
-      ),
-    );
-  }
+  // Only announce a trip the breaker could actually act on. With an explicit
+  // user opt-in the breaker is a no-op, so "now off for this install" would
+  // be false — and would reprint on every subsequent revert, since the user's
+  // value keeps the router active (review finding).
+  if (fired && !deParallelRouterUserManaged) reportDeParallelRouterBreakerTrip(quiet);
+}
+
+/**
+ * Tell the user the breaker tripped, and warn if the verdict couldn't be
+ * persisted. All output is `!quiet`-gated: quiet/batch-json renders must
+ * produce no unexpected terminal output — CI wrappers asserting empty stderr
+ * would misread a warning as a render failure (review finding). The
+ * in-process latch guarantees the safety behavior either way.
+ */
+function reportDeParallelRouterBreakerTrip(quiet: boolean): void {
+  const persisted = persistDeParallelRouterTrialFired();
+  if (quiet) return;
+  console.log(
+    c.dim(
+      "  A frame failed verification, so parallel drawElement capture fell back to the " +
+        "screenshot path and is now off for this install. Re-enable: " +
+        "HF_DE_PARALLEL_ROUTER=true",
+    ),
+  );
+  if (persisted) return;
+  console.warn(
+    c.warn(
+      "  Could not persist the parallel drawElement circuit breaker to " +
+        "~/.hyperframes/config.json (unwritable?). It stays off for this process; " +
+        "future runs may retry it. Set HF_DE_PARALLEL_ROUTER=false to opt out for good.",
+    ),
+  );
 }
 
 function handleRenderError(
@@ -1382,6 +1483,20 @@ function handleRenderError(
   const macosRemediation = macosOldChromeCrashRemediation(message);
   if (macosRemediation) {
     errorBox("Render failed — Chrome could not launch", message, macosRemediation);
+    failCommand();
+  }
+  // Windows chrome-headless-shell can crash at launch with
+  // STATUS_STACK_BUFFER_OVERRUN (exit 0xC0000409 / 3221225595). Same
+  // HYPERFRAMES_BROWSER_PATH remediation as the download-time hint (#2443)
+  // and the closed-with-invite arm64 macOS sibling (#2078). Field feedback
+  // ts=1784116246.
+  const windowsRemediation = windowsChromeCrashRemediation(message);
+  if (windowsRemediation) {
+    errorBox(
+      "Render failed — chrome-headless-shell crashed at launch",
+      message,
+      windowsRemediation,
+    );
     failCommand();
   }
   errorBox("Render failed", message, hint);
@@ -1431,6 +1546,7 @@ function trackRenderMetrics(
     docker,
     gpu: options.gpu,
     authoringSkill: options.authoringSkill,
+    catalogUsage: options.catalogUsage,
     staticDedupEnabled: perf?.staticDedup?.enabled,
     staticDedupArmed: perf?.staticDedup?.armed,
     staticDedupSkipReason: perf?.staticDedup?.skipReason,
@@ -1465,6 +1581,7 @@ function trackRenderMetrics(
     deBlankRecaptures: perf?.drawElement?.blankRecaptures,
     deBoundaryFrames: perf?.drawElement?.boundaryFrames,
     deNcprFallbacks: perf?.drawElement?.ncprFallbacks,
+    deFrameTimeouts: perf?.drawElement?.frameTimeouts,
     compositionDurationMs,
     compositionWidth: perf?.resolution.width,
     compositionHeight: perf?.resolution.height,
@@ -1499,48 +1616,70 @@ function trackRenderMetrics(
   });
 }
 
+function readOutputFootprint(outputPath: string): { fileSize: string; isDirectory: boolean } {
+  try {
+    const stat = statSync(outputPath);
+    if (!stat.isDirectory()) return { fileSize: formatBytes(stat.size), isDirectory: false };
+    // png-sequence output is a directory; sum contained file sizes so the
+    // user sees the deliverable footprint, not the directory inode size.
+    let total = 0;
+    for (const entry of readdirSync(outputPath, { withFileTypes: true })) {
+      if (!entry.isFile()) continue;
+      try {
+        total += statSync(join(outputPath, entry.name)).size;
+      } catch {
+        // skip unreadable entries
+      }
+    }
+    return { fileSize: formatBytes(total), isDirectory: true };
+  } catch {
+    return { fileSize: "unknown", isDirectory: false };
+  }
+}
+
 function printRenderComplete(
   outputPath: string,
   elapsedMs: number,
   quiet: boolean,
-  outputDurationSeconds?: number,
-  frameCount?: number,
+  perf?: RenderPerfSummary,
+  requestedGpuMode?: "auto" | "hardware" | "software",
 ): void {
   if (quiet) return;
-
-  let fileSize = "unknown";
-  let isDirectory = false;
-  try {
-    const stat = statSync(outputPath);
-    isDirectory = stat.isDirectory();
-    if (stat.isDirectory()) {
-      // png-sequence output is a directory; sum the contained file sizes so
-      // the user sees the on-disk footprint of the deliverable rather than
-      // the platform-specific size of the directory inode itself.
-      let total = 0;
-      for (const entry of readdirSync(outputPath, { withFileTypes: true })) {
-        if (!entry.isFile()) continue;
-        try {
-          total += statSync(join(outputPath, entry.name)).size;
-        } catch {
-          // skip unreadable entries
-        }
-      }
-      fileSize = formatBytes(total);
-    } else {
-      fileSize = formatBytes(stat.size);
-    }
-  } catch {
-    // file doesn't exist or is inaccessible
-  }
-
+  const { fileSize, isDirectory } = readOutputFootprint(outputPath);
   const detail = formatRenderSummaryDetail({
     elapsedMs,
-    outputDurationSeconds,
+    outputDurationSeconds: perf?.compositionDurationSeconds,
     isDirectory,
-    frameCount,
+    frameCount: perf?.totalFrames,
   });
   console.log("");
   console.log(c.success("\u25C7") + "  " + c.accent(outputPath));
   console.log("   " + c.bold(fileSize) + c.dim(" \u00B7 " + detail));
+  if (perf) printRenderPipeline(perf, requestedGpuMode);
+}
+
+function printRenderPipeline(
+  perf: RenderPerfSummary,
+  requestedGpuMode?: "auto" | "hardware" | "software",
+): void {
+  // aggregateDrawElement reports "unknown" when no session recorded a mode.
+  const capture = {
+    captureMode: resolvePrintedCaptureMode(
+      perf.drawElement?.mode,
+      perf.observability?.capture.captureMode,
+    ),
+    browserGpuMode: perf.observability?.capture.browserGpuMode,
+  };
+  const pipeline = formatRenderPipelineDetail({
+    ...capture,
+    streamingEncode: perf.observability?.capture.useStreamingEncode,
+    stages: perf.stages,
+  });
+  if (pipeline) console.log("   " + c.dim(pipeline));
+  const hint = formatScreenshotFallbackHint({
+    ...capture,
+    requestedGpuMode,
+    platform: process.platform,
+  });
+  if (hint) console.log("   " + c.dim(hint));
 }

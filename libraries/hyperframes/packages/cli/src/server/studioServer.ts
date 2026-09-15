@@ -7,9 +7,14 @@
 
 import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
-import { existsSync, readFileSync, writeFileSync, statSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { resolve, join, basename } from "node:path";
-import { createProjectWatcher, type ProjectWatcher } from "./fileWatcher.js";
+import { readBundleFile } from "./readBundleFile.js";
+import {
+  createProjectWatcher,
+  shouldWatchProjectFile,
+  type ProjectWatcher,
+} from "./fileWatcher.js";
 import {
   hashSignatureParts,
   loadRuntimeSource,
@@ -29,8 +34,10 @@ import {
   createStudioApi,
   createProjectSignature,
   createBackgroundRemovalJob,
-  consumeFileWriteReceipt,
+  identifyFileWrite,
+  fileContentVersion,
   getMimeType,
+  affectsProjectSignature,
   type PreviewApiAdapter,
   thumbnailDeviceScaleFactor,
   type ResolvedProject,
@@ -51,13 +58,30 @@ import {
 } from "../browser/gpuPolicy.js";
 
 const STUDIO_MANUAL_EDITS_PATH = ".hyperframes/studio-manual-edits.json";
+
+// Vite emits only content-hashed files under dist/assets; hand-authored
+// public/ files land at the dist root. The route is the signal because the
+// filename is not: rollup's base64url hash may itself contain a hyphen.
+const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
 const REMOTE_GIF_IMG_SRC_RE =
   /<img\b[^>]*?\bsrc\s*=\s*["'](https?:\/\/[^"']+\.gif(?:[?#][^"']*)?)["'][^>]*>/gi;
 
 async function loadStudioProducer() {
-  return isDevMode()
-    ? await import("../../../producer/src/index.js")
-    : await import("@hyperframes/producer");
+  if (!isDevMode()) return await import("@hyperframes/producer");
+  // The producer's SOURCE uses the TS convention of `.js` specifiers naming
+  // `.ts` files, which bun resolves and Node does not. Node 22 strips TS types
+  // natively, so a Node-hosted dev server boots fine and only dies here, as
+  // `Cannot find module .../renderOrchestrator.js` with no other context.
+  // Vite's own shebang is `#!/usr/bin/env node` and it hosts this API
+  // in-process, so `vite` without `bun --bun` lands exactly here.
+  if (!process.versions.bun) {
+    throw new Error(
+      "Studio dev-mode rendering requires bun (the producer is loaded from TypeScript source, " +
+        "which Node cannot resolve). Restart the studio with `bun run studio`.",
+    );
+  }
+  return await import("../../../producer/src/index.js");
 }
 
 // ── Path resolution ─────────────────────────────────────────────────────────
@@ -297,10 +321,9 @@ export interface StudioServer {
 export async function loadPreviewServerBuildSignature(): Promise<string> {
   const runtimeSignature = await loadRuntimeSourceSignature();
   const studioBundle = resolveStudioBundle();
-  const studioIndex =
-    studioBundle.available && existsSync(studioBundle.indexPath)
-      ? readFileSync(studioBundle.indexPath, "utf-8")
-      : "";
+  const studioIndex = studioBundle.available
+    ? (readBundleFile(studioBundle.indexPath)?.toString("utf-8") ?? "")
+    : "";
   return hashSignatureParts([
     version,
     runtimeSignature,
@@ -358,8 +381,10 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
 
   const project: ResolvedProject = { id: projectId, dir: projectDir, title: projectId };
   let cachedProjectSignature: string | null = null;
-  watcher.addListener(() => {
-    cachedProjectSignature = null;
+  watcher.addListener((changedPath) => {
+    if (affectsProjectSignature(projectDir, join(projectDir, changedPath))) {
+      cachedProjectSignature = null;
+    }
   });
 
   const adapter: PreviewApiAdapter = {
@@ -428,6 +453,11 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
     async lint(html: string, opts?: { filePath?: string }) {
       const { lintHyperframeHtml } = await import("@hyperframes/lint");
       return await lintHyperframeHtml(html, opts);
+    },
+
+    async lintProject(dir: string) {
+      const { lintProject } = await import("@hyperframes/lint");
+      return await lintProject(dir);
     },
 
     runtimeUrl: "/api/runtime.js",
@@ -710,8 +740,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   app.get("/api/runtime.js", (c) => {
     const serve = async () => {
       const runtimeSource =
-        (await loadRuntimeSource()) ??
-        (existsSync(runtimePath) ? readFileSync(runtimePath, "utf-8") : null);
+        (await loadRuntimeSource()) ?? readBundleFile(runtimePath)?.toString("utf-8") ?? null;
       if (!runtimeSource) return c.text("runtime not available", 404);
       return c.body(runtimeSource, 200, {
         "Content-Type": "text/javascript",
@@ -752,15 +781,71 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   app.get("/api/events", (c) => {
     return streamSSE(c, async (stream) => {
       const listener = (path: string) => {
-        const receipt = consumeFileWriteReceipt(resolve(projectDir, path));
+        const absPath = resolve(projectDir, path);
+        let version: string | null = null;
+        try {
+          version = fileContentVersion(readFileSync(absPath));
+        } catch {
+          // A deletion has no current bytes to match against an API write receipt.
+        }
+        // `version` ships even when no receipt matches: it is the client's only
+        // identity for an unlabelled change, and without it every duplicate
+        // delivery of one watcher event drains and reloads again.
+        const receipt = version ? identifyFileWrite(absPath, version) : null;
         stream
-          .writeSSE({ event: "file-change", data: JSON.stringify(receipt ?? { path }) })
+          .writeSSE({ event: "file-change", data: JSON.stringify({ path, version, ...receipt }) })
           .catch(() => {});
       };
-      watcher.addListener(listener);
-      while (true) {
-        await stream.sleep(30000);
+      // Re-applied here because the watcher now also emits the signature
+      // manifest files, which must not trigger a browser reload.
+      const wrappedListener = (changedPath: string) => {
+        if (shouldWatchProjectFile(changedPath)) listener(changedPath);
+      };
+      watcher.addListener(wrappedListener);
+      stream.onAbort(() => watcher.removeListener(wrappedListener));
+      try {
+        while (true) {
+          await stream.sleep(30000);
+        }
+      } finally {
+        watcher.removeListener(wrappedListener);
       }
+    });
+  });
+
+  // ── Encoder availability, asked before Export is offered ────────────────
+  // The render route below already refuses without FFmpeg, but discovering at
+  // export time that the encoder was never installed is the worst possible
+  // moment: the user has already built the whole composition. Studio asks here
+  // when the Render panel opens so it can say so up front, with the same
+  // per-platform install command `doctor` prints.
+  //
+  // Only a passing result is cached. A user who reads the prompt, installs
+  // FFmpeg and hits Recheck has to get a fresh answer, or the fix they just
+  // applied is invisible until they restart Studio.
+  let ffmpegReady = false;
+  app.get("/api/environment/ffmpeg", async (c) => {
+    if (ffmpegReady) return c.json({ ok: true });
+    const [{ runEnvironmentChecks }, { getFFmpegInstallCommand }] = await Promise.all([
+      import("../browser/preflight.js"),
+      import("../browser/ffmpeg.js"),
+    ]);
+    // With every optional check off this is exactly the FFmpeg and ffprobe
+    // pair — the same two `doctor` runs. ffprobe matters on its own: it ships
+    // with FFmpeg but is a separate binary, and a project with any media asset
+    // fails at probe time without it.
+    const { outcomes } = await runEnvironmentChecks();
+    const failed = outcomes.find((outcome) => !outcome.ok);
+    if (!failed) {
+      ffmpegReady = true;
+      return c.json({ ok: true });
+    }
+    return c.json({
+      ok: false,
+      title: failed.title ?? `${failed.name} not found`,
+      detail: failed.detail,
+      hint: failed.hint,
+      command: getFFmpegInstallCommand(),
     });
   });
 
@@ -798,17 +883,17 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   });
 
   // Studio SPA static files
-  const serveStudioStaticFile = (c: Context) => {
+  const serveStudioStaticFile = (cacheControl: string) => (c: Context) => {
     const filePath = resolve(studioDir, c.req.path.slice(1));
-    if (!existsSync(filePath) || !statSync(filePath).isFile()) return c.text("not found", 404);
-    const content = readFileSync(filePath);
+    const content = readBundleFile(filePath);
+    if (content === null) return c.text("not found", 404);
     return new Response(content, {
-      headers: { "Content-Type": getMimeType(filePath), "Cache-Control": "no-store" },
+      headers: { "Content-Type": getMimeType(filePath), "Cache-Control": cacheControl },
     });
   };
-  app.get("/assets/*", serveStudioStaticFile);
-  app.get("/icons/*", serveStudioStaticFile);
-  app.get("/favicon.svg", serveStudioStaticFile);
+  app.get("/assets/*", serveStudioStaticFile(IMMUTABLE_CACHE_CONTROL));
+  app.get("/icons/*", serveStudioStaticFile("no-store"));
+  app.get("/favicon.svg", serveStudioStaticFile("no-store"));
 
   // ── Runtime env injection ───────────────────────────────────────────────
   // When the studio is served as a pre-built SPA, Vite `VITE_STUDIO_*` env
@@ -829,7 +914,8 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
   // SPA fallback
   app.get("*", (c) => {
     const indexPath = resolve(studioDir, "index.html");
-    if (!existsSync(indexPath)) {
+    const indexContent = readBundleFile(indexPath);
+    if (indexContent === null) {
       return c.html(
         `<!doctype html>
 <html>
@@ -885,7 +971,7 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
         500,
       );
     }
-    let html = readFileSync(indexPath, "utf-8");
+    let html = indexContent.toString("utf-8");
     // Inject before the studio bundle runs. Identity script first (see
     // buildStudioHeadScripts) so the CLI distinct id is on `window` by the time
     // telemetry init reads it.
@@ -903,7 +989,10 @@ export function createStudioServer(options: StudioServerOptions): StudioServer {
     if (headScript) {
       html = html.replace("<head>", `<head>${headScript}`);
     }
-    return c.html(html);
+    // The shell names the current hashed bundle, so it always revalidates.
+    // `no-cache` not `no-store`: same refetch without an ETag, but `no-store`
+    // would blocklist the document from Chrome's bfcache.
+    return c.html(html, 200, { "Cache-Control": "no-cache" });
   });
 
   return { app, watcher, adapter };

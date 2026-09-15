@@ -43,6 +43,7 @@ import {
   probeBeginFrameLiveness,
 } from "@hyperframes/engine";
 import { fpsToNumber } from "@hyperframes/core";
+import { extractMediaSrcMutations } from "@hyperframes/parsers";
 import type { CompiledComposition } from "../../htmlCompiler.js";
 import {
   discoverMediaFromBrowser,
@@ -176,22 +177,58 @@ export function hasVariableBoundMedia(
   });
 }
 
+function reconcileBrowserMediaEnd(
+  existingEnd: number,
+  projectedEnd: number,
+  sourceChanged: boolean,
+  durationInferred: boolean,
+): number {
+  if (projectedEnd <= 0) return existingEnd;
+  if (sourceChanged && durationInferred) return projectedEnd;
+  return existingEnd <= 0 ? projectedEnd : Math.min(existingEnd, projectedEnd);
+}
+
 /**
  * Runtime-created media does not exist when the static compiler scans the HTML.
  * Launch a browser probe so discoverMediaFromBrowser can reconcile it before
  * extraction, even when the root duration is already known. External script
  * sources have no inline text to inspect and remain a known heuristic gap.
  */
-function hasRuntimeInsertedMedia(html: string): boolean {
+function hasRuntimeMediaChanges(html: string): boolean {
   const { document } = parseHTML(html);
-  const scriptBodies = [...document.querySelectorAll("script")]
-    .map((script) => script.textContent ?? "")
-    .join("\n");
-  return (
-    /\bcreateElement\s*\(\s*["'`](?:video|audio)["'`]\s*\)/i.test(scriptBodies) ||
-    /\bnew\s+(?:Audio|Video)\s*\(/i.test(scriptBodies) ||
-    /<(?:video|audio)\b[^>]*>/i.test(scriptBodies)
+  const scriptBodies = [...document.querySelectorAll("script")].map(
+    (script) => script.textContent ?? "",
   );
+  const insertedMedia = scriptBodies.some(
+    (script) =>
+      /\bcreateElement\s*\(\s*["'`](?:video|audio)["'`]\s*\)/i.test(script) ||
+      /\bnew\s+(?:Audio|Video)\s*\(/i.test(script) ||
+      /<(?:video|audio)\b[^>]*>/i.test(script),
+  );
+  if (insertedMedia) return true;
+
+  const isManagedMedia = (element: Element): boolean => {
+    const name = element.tagName.toLowerCase();
+    if (name === "video" || name === "audio") return true;
+    return name === "source" && element.closest("video, audio") !== null;
+  };
+  for (const script of scriptBodies) {
+    for (const mutation of extractMediaSrcMutations(script)) {
+      try {
+        const id = /^#[A-Za-z_][\w-]*$/.test(mutation.selector) ? mutation.selector.slice(1) : null;
+        const idTarget = id ? document.getElementById(id) : null;
+        const targets = id
+          ? idTarget
+            ? [idTarget]
+            : []
+          : [...document.querySelectorAll(mutation.selector)];
+        if (targets.some(isManagedMedia)) return true;
+      } catch {
+        // Invalid selectors are diagnosed by lint and cannot prove a media target here.
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -203,9 +240,9 @@ function hasRuntimeInsertedMedia(html: string): boolean {
  * `resolveCompositionElementCount` / `resolveDeShortBand`). Notably NONE of
  * these conditions fire for a known-duration, media-free composition that
  * builds thousands of `div`/`span` nodes in its own init script —
- * `hasRuntimeInsertedMedia` matches only `createElement("video"|"audio")` —
- * so that shape is measured statically and must never reach the band's
- * `applied` cohort (review finding, R4).
+ * `hasRuntimeMediaChanges` matches only media creation/source changes — so
+ * that shape is measured statically and must never reach the band's `applied`
+ * cohort (review finding, R4).
  */
 export function probeRequiresBrowser(args: {
   durationSeconds: number;
@@ -258,7 +295,7 @@ export async function runProbeStage(input: ProbeStageInput): Promise<ProbeStageR
     composition.audios.length,
   );
   const hasVariableMedia = hasVariableBoundMedia(compiled.html, job.config.variables);
-  const hasInsertedMedia = hasRuntimeInsertedMedia(compiled.html);
+  const hasInsertedMedia = hasRuntimeMediaChanges(compiled.html);
   const needsBrowser = probeRequiresBrowser({
     durationSeconds: composition.duration,
     unresolvedCompositionCount: compiled.unresolvedCompositions.length,
@@ -275,7 +312,7 @@ export async function runProbeStage(input: ProbeStageInput): Promise<ProbeStageR
       reasons.push(`${compiled.unresolvedCompositions.length} unresolved composition(s)`);
     if (hasAutoStart) reasons.push("auto-start video(s)");
     if (hasScriptedAudio) reasons.push("scripted audio volume");
-    if (hasInsertedMedia) reasons.push("runtime-inserted media");
+    if (hasInsertedMedia) reasons.push("runtime-created or source-mutated media");
     if (hasVariableMedia) reasons.push("variable-bound media source(s)");
 
     log.info("Launching browser for composition probe...", {
@@ -500,7 +537,8 @@ export async function runProbeStage(input: ProbeStageInput): Promise<ProbeStageR
             // Reconcile to browser/runtime media metadata (runtime src can differ from static HTML).
             const existing = composition.videos.find((v) => v.id === el.id);
             if (existing) {
-              if (existing.src !== src) {
+              const sourceChanged = existing.src !== src;
+              if (sourceChanged) {
                 existing.src = src;
               }
               const projectedEnd = projectBrowserEndToCompositionTimeline(
@@ -508,12 +546,12 @@ export async function runProbeStage(input: ProbeStageInput): Promise<ProbeStageR
                 el.start,
                 resolveBrowserMediaEnd(el.start, el.end, el.duration),
               );
-              if (
-                projectedEnd > 0 &&
-                (existing.end <= 0 || Math.abs(existing.end - projectedEnd) > BROWSER_MEDIA_EPSILON)
-              ) {
-                existing.end = projectedEnd;
-              }
+              existing.end = reconcileBrowserMediaEnd(
+                existing.end,
+                projectedEnd,
+                sourceChanged,
+                el.durationInferred,
+              );
               if (
                 el.mediaStart > 0 &&
                 (existing.mediaStart <= 0 ||
@@ -546,7 +584,8 @@ export async function runProbeStage(input: ProbeStageInput): Promise<ProbeStageR
           if (existingAudioIds.has(el.id)) {
             const existing = composition.audios.find((a) => a.id === el.id);
             if (existing) {
-              if (existing.src !== src) {
+              const sourceChanged = existing.src !== src;
+              if (sourceChanged) {
                 existing.src = src;
               }
               const projectedEnd = projectBrowserEndToCompositionTimeline(
@@ -554,12 +593,12 @@ export async function runProbeStage(input: ProbeStageInput): Promise<ProbeStageR
                 el.start,
                 resolveBrowserMediaEnd(el.start, el.end, el.duration),
               );
-              if (
-                projectedEnd > 0 &&
-                (existing.end <= 0 || Math.abs(existing.end - projectedEnd) > BROWSER_MEDIA_EPSILON)
-              ) {
-                existing.end = projectedEnd;
-              }
+              existing.end = reconcileBrowserMediaEnd(
+                existing.end,
+                projectedEnd,
+                sourceChanged,
+                el.durationInferred,
+              );
               if (
                 el.mediaStart > 0 &&
                 (existing.mediaStart <= 0 ||

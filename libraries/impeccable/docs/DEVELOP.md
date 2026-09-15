@@ -44,6 +44,10 @@ Your skill instructions here...
 
 ## Building
 
+### Developer Lab URLs
+
+No-index visual harnesses and internal inspectors live under `/labs/<subject>`. Use a short subject noun (`/labs/live-ui`, later `/labs/detector`), not a second `-lab` suffix. Stable public references such as `/docs` and `/design-system` stay top-level. Keep legacy top-level lab routes working through redirects when a lab moves; migrate existing exceptions when that surface is next changed rather than duplicating the page.
+
 ### Prerequisites
 - Bun (fast JavaScript runtime and package manager)
 - No external dependencies required
@@ -158,6 +162,7 @@ The skill-behavior suite runs three providers (claude-haiku-4-5, gpt-5.4-mini, g
 - [HARNESSES.md](HARNESSES.md) - Provider capabilities matrix
 - [Cursor Skills](https://cursor.com/docs/context/skills)
 - [Claude Code Skills](https://code.claude.com/docs/en/skills)
+- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 - [Gemini CLI Skills](https://geminicli.com/docs/cli/skills/)
 - [Codex CLI Skills](https://developers.openai.com/codex/skills/)
 - [VS Code Copilot Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
@@ -165,20 +170,25 @@ The skill-behavior suite runs three providers (claude-haiku-4-5, gpt-5.4-mini, g
 - [OpenCode Skills](https://opencode.ai/docs/skills/)
 - [Pi Skills](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/skills.md)
 - [Qoder Skills](https://docs.qoder.com/extensions/skills)
+- [Mistral Vibe Skills](https://docs.mistral.ai/vibe/code/cli/skills)
+- [Grok Build Skills, Plugins & Marketplaces](https://docs.x.ai/build/features/skills-plugins-marketplaces)
+- [Grok Build Hooks](https://docs.x.ai/build/features/hooks)
 
 ## Repository Structure
 
 ```
 impeccable/
-  source/                          # Edit these! Source of truth
-    skills/                        # Skill definitions
-      frontend-design/
-        SKILL.md
-        reference/*.md             # Domain-specific references
-      audit/SKILL.md
-      polish/SKILL.md
-      ...
-  dist/                            # Generated output (gitignored)
+  skill/                           # Edit these! Source of truth
+    SKILL.src.md                   # Frontmatter, shared design laws, command router
+    reference/                     # One <command>.md per command + domain references
+    scripts/                       # Skill runtime scripts (hooks, context.mjs, etc.)
+    agents/                        # Nested subagent definitions
+  cli/                             # Standalone `impeccable` CLI (npm package)
+  site/                            # impeccable.style (Astro)
+  extension/                       # Chrome extension
+  functions/                       # Cloudflare Pages Functions
+  plugin/                          # Committed Claude Code plugin build output
+  dist/                            # Generated provider output (gitignored)
   scripts/
     build.js                       # Main orchestrator
     lib/

@@ -23,7 +23,7 @@ npm install -g hyperframes
 | You want to              | Use                                                                                                                                                                                            |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Start a project          | [`init`](#init), [`add`](#add), [`catalog`](#catalog)                                                                                                                                          |
-| Bring in source material | [`capture`](#capture), [`transcribe`](#transcribe), [`tts`](#tts), [`remove-background`](#remove-background), [`media-treatment`](#media-treatment), [`beats`](#beats)                          |
+| Bring in source material | [`capture`](#capture), [`transcribe`](#transcribe), [`tts`](#tts), [`remove-background`](#remove-background), [`media-treatment`](#media-treatment), [`beats`](#beats), [`normalize-audio`](#normalize-audio) |
 | Look at it, or share it  | [`preview`](#preview), [`present`](#present-and-play), [`play`](#present-and-play), [`publish`](#publish)                                                                                       |
 | Find problems            | [`lint`](#lint), [`check`](#check), [`snapshot`](#snapshot), [`keyframes`](#keyframes), [`compare`](#compare-and-grade-compare), [`grade-compare`](#compare-and-grade-compare)                  |
 | Make a file              | [`render`](#render), [`benchmark`](#benchmark)                                                                                                                                                  |
@@ -89,19 +89,19 @@ off the check, the install, and the notice.
 Scaffold a new composition project from an example.
 
 ```bash
-# Agents and CI — every input from a flag
-npx hyperframes init my-video --example blank --video video.mp4 --non-interactive
+# Default: centered Inter blank. Non-TTY skips the wizard.
+npx hyperframes init my-video
+
+# Start from a video file
+npx hyperframes init my-video --video video.mp4 --non-interactive
 
 # With the Tailwind browser runtime
-npx hyperframes init my-video --example blank --tailwind
-
-# Interactive on a TTY
-npx hyperframes init my-video
+npx hyperframes init my-video --tailwind
 ```
 
 | Flag                | Description                                                                                                                                                                                                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `--example, -e`     | Example to scaffold. Required with `--non-interactive`. See [Examples](/examples) for the full list.                                                                                                                                                                                  |
+| `--example, -e`     | Example to scaffold. Default is the centered blank. See [Examples](/examples) for the full list.                                                                                                                                                                                     |
 | `--resolution`      | Canvas preset: `landscape` (1920×1080), `portrait` (1080×1920), `landscape-4k` (3840×2160), `portrait-4k` (2160×3840), `square` (1080×1080), `square-4k` (2160×2160). Aliases: `1080p`, `4k`, `uhd`, `1080p-square`, `square-1080p`, `4k-square`. Default: keep template dimensions. |
 | `--video, -v`       | Path to a video file (MP4, WebM, MOV)                                                                                                                                                                                                                                                |
 | `--audio, -a`       | Path to an audio file (MP3, WAV, M4A)                                                                                                                                                                                                                                                |
@@ -153,6 +153,12 @@ you a clear error pointing at `init --example`.
 pull from and where files land. If it is missing but the directory has an
 `index.html`, a default one is written on first use.
 
+When an item declares `registryDependencies`, `add` installs its dependencies
+first, resolving them transitively. Before installing any item files, it checks
+`minCliVersion` on every resolved item and reports upgrade guidance for an
+incompatible CLI. A `deprecated` message produces a warning without blocking
+installation.
+
 ### `catalog`
 
 Browse the registry.
@@ -186,8 +192,33 @@ npx hyperframes capture https://example.com --json
 
   Screenshots: 12
   Assets: 45
+  Dropped: 9 (6 size-floor, 3 cap-reached)
   Sections: 15
   Fonts: sohne-var
+```
+
+`Dropped` is how many assets the page referenced that are **not** in the
+folder, and why. It is printed only when it is non-zero, and `--json` always
+carries it as a `dropped` object. Without it, a capture of a spare page and a
+capture that a limit truncated are the same three-line summary, and the only
+way to tell them apart is to open the page yourself.
+
+| Reason             | What it means                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `size-floor`       | Fetched, then judged too small to be a real asset rather than a spacer or tracking pixel.               |
+| `budget-exhausted` | `--capture-budget` ran out before this one was reached. Raise it, or pass `--skip-vision` to buy time.  |
+| `cap-reached`      | A per-run or per-family limit was already met: 30 inline SVGs, 30 fonts, 6 faces per family.            |
+| `unavailable`      | The request or the write failed: network error, timeout, refused address, bad status, disk.             |
+
+Three of those are decisions the capture made and one is a failure it hit, so a
+run that is thin with an all-zero `dropped` is a thin page, and a run that is
+thin with counts on it was cut short.
+
+```json
+{
+  "assets": 45,
+  "dropped": { "size-floor": 6, "budget-exhausted": 0, "cap-reached": 3, "unavailable": 0 }
+}
 ```
 
 | Flag                | Description                                                                                                                                       |
@@ -207,7 +238,8 @@ metadata, and contact sheets — plus whatever Lottie, video, and WebGL context
 the page exposed. It is raw material for an agent, not a finished composition;
 the `/product-launch-video` workflow uses it when a real product has to appear
 on screen. Dynamic sites, protected pages, and unusual media loaders produce
-partial results, so read the warnings and contact sheets before you build.
+partial results, so read `dropped`, the warnings, and the contact sheets before
+you build.
 
 For AI image descriptions, set `GEMINI_API_KEY` in a `.env` file
 (~$0.001/image), or `OPENROUTER_API_KEY` to route any vision model through
@@ -430,6 +462,30 @@ a beat slightly.
 
 ## Look at it
 
+### `normalize-audio`
+
+Match one authored audio clip to a reference using the exact local media bytes
+and FFmpeg's integrated EBU R128 loudness measurement.
+
+```bash
+# Measure only (the default)
+npx hyperframes normalize-audio --reference target-audio --target user-audio
+
+# Persist the computed gain on #user-audio
+npx hyperframes normalize-audio --reference target-audio --target user-audio --write
+
+# Agent-readable result
+npx hyperframes normalize-audio --reference target-audio --target user-audio --json
+```
+
+`--reference` and `--target` are `<audio>` element ids, with or without `#`.
+The reference stays unchanged; the command accounts for both clips' current
+`data-volume` and writes the target's absolute matched gain. It measures
+`data-media-start` and `data-duration`, rejects remote or out-of-project sources,
+and refuses a result that exceeds Studio's +12 dB ceiling or would clip. Dry-run
+is deliberate: inspect the measurement before passing `--write`. Use
+`--tolerance <LU>` to change the default 0.5 LU no-op threshold.
+
 ### `preview`
 
 Start a live preview server with hot reload.
@@ -438,6 +494,8 @@ Start a live preview server with hot reload.
 npx hyperframes preview [dir]
 npx hyperframes preview --port 4567
 npx hyperframes preview --background     # keep running after the command exits
+npx hyperframes preview --foreground     # stay attached in a non-interactive shell
+npx hyperframes preview --status --json  # inspect a managed preview from an agent
 npx hyperframes preview --list           # every running preview
 ```
 
@@ -446,6 +504,8 @@ npx hyperframes preview --list           # every running preview
 | `--port`                             | Server port (default 3002)                                                                                |
 | `--open` / `--no-open`               | Open a browser, or leave it closed                                                                        |
 | `--background`                       | Keep an embedded preview running after the command exits                                                  |
+| `--foreground`                       | Keep the preview attached even when the shell is non-interactive                                          |
+| `--json`                             | Emit one versioned JSON result for managed start, status, stop, list, and kill-all operations              |
 | `--browser-gpu` / `--no-browser-gpu` | Hardware GPU for Studio thumbnails and frame capture, or deterministic SwiftShader (default: auto-detect)  |
 | `--proxy` / `--no-proxy`             | Auto-transcode browser-hostile codecs (HEVC, ProRes, AV1) to a cached authoring proxy (default: on)        |
 | `--browser-path`                     | Open a specific browser. `--user-data-dir`, `--remote-debugging-port`, and `--browser-no-gpu` require it.  |
@@ -454,6 +514,13 @@ To manage running servers: `--status` and `--stop` act on this project's
 background preview, `--list` and `--kill-all` act on all of them, and
 `--force-new` starts a second server for a project that already has one. Each
 exits straight after.
+
+Bare `preview` chooses the safest lifecycle for its caller: it stays in the
+foreground in a human interactive terminal, while a non-interactive or agent
+shell starts a managed background preview. Re-running the command for the same
+project reuses the healthy preview. Every start or status result includes the
+exact Studio project URL as well as the underlying server URL, so agents can
+hand off the intended project without guessing from the port.
 
 To read a running Studio from a script: `--selection` prints the selected
 element and `--context` prints the agent-readable context, both with `--json`.
@@ -589,7 +656,7 @@ drift), `*.motion.json` assertions, and WCAG AA contrast.
 | `--timeout`                                  | Render-ready budget in ms; also raises page navigation above its 10s floor (default 3000)                                   |
 | `--no-contrast`                              | Skip the WCAG pass while iterating                                                                                         |
 | `--strict`                                   | Exit non-zero on warnings too (default: errors only)                                                                        |
-| `--caption-zone "<x0=..;y0=..;x1=..;y1=..>"` | Opt-in band gate. Flags content whose centre sits inside the fractional band. Optional `severity` and `seek`.               |
+| `--caption-zone "<x0=..;y0=..;x1=..;y1=..>"` | Opt-in band gate. Flags a text element's DOM box that overlaps the fractional band. Optional `severity` and `seek`.         |
 | `--frame-check`                              | Opt-in out-of-frame detection for `img`, `svg`, `video`, and `canvas`                                                       |
 | `--layout`                                   | Layout knobs, currently `proseCoverageFloor=0.05` (0–1, default 0.15)                                                       |
 | `--browser-gpu` / `--no-browser-gpu`         | Hardware GPU capture, or deterministic SwiftShader (default: auto-detect)                                                   |
@@ -611,7 +678,10 @@ When the audit is wrong because the layout is deliberate, say so in the HTML and
 re-run. Put `data-layout-allow-overflow` on a planned off-canvas entrance,
 `data-layout-allow-overlap` on text you meant to stack, `data-layout-allow-occlusion`
 on text you meant to hide behind a prop, and `data-layout-ignore` on decoration
-that should not be audited at all. Each is inherited, so an ancestor works.
+that should not be audited at all. Overflow, occlusion, and ignore markers are
+inherited, so an ancestor works. The overlap marker is intentionally local: put it
+on the specific text block participating in the layering, never on a scene/root
+wrapper, so unrelated descendant collisions remain auditable.
 
 For deliberate lower-third copy under `--caption-zone`, use
 `data-layout-allow-caption-zone`. It silences `caption_zone_collision` and
@@ -658,6 +728,7 @@ Capture specific frames as PNGs, without waiting for a full render.
 npx hyperframes snapshot my-project --at 2.9,10.4,18.7
 npx hyperframes snapshot my-project --frames 10
 npx hyperframes snapshot my-project --zoom '#headline'
+npx hyperframes snapshot my-project --at 1.5,4.3 --against ref.mp4
 ```
 
 ```
@@ -676,6 +747,7 @@ npx hyperframes snapshot my-project --zoom '#headline'
 | `--output, -o`          | Where the PNGs go (default `<project>/snapshots`)                                                                                                                   |
 | `--end` / `--no-end`    | Always add a readable end-of-timeline frame (default: on). `--no-end` captures only your `--at` times.                                                              |
 | `--zoom`                | Crop to a CSS selector or an exact `x,y,w,h` region, using a raised device scale factor. Layout is untouched — never CSS zoom or a resized viewport. A selector that matches nothing is an error. |
+| `--against`             | A reference video, such as footage you are rebuilding. For every captured time also saves its frame-exact frame (`ref-XX-…png`) and a labelled render / reference pair (`pair-XX-…jpg`). |
 | `--zoom-scale`          | Pixel density for `--zoom` crops (default 3)                                                                                                                        |
 | `--angle`               | Orthogonal 3D camera for depth and occlusion checks: `front`, `iso`, `top`, `side`, or `yaw,pitch` in degrees. Tilts the whole stage, so you get real pixels.        |
 | `--describe`            | Gemini vision analysis of each frame. Runs by default when `GEMINI_API_KEY` is set. Pass a question to override the prompt, or `--describe false` to opt out.        |
@@ -703,7 +775,7 @@ npx hyperframes keyframes [dir] --selector "#card" --shot card-motion.png
 | `--json`             | Machine-readable results                                                                                                        |
 | `--shot`             | Write an onion-skin PNG of the real element sampled over the timeline. Pair with `--selector` to focus one element.             |
 | `--samples`          | Onion samples at equal time steps (default 9)                                                                                   |
-| `--layout`           | `path` — ghosts at real positions plus a path (default) — or `strip`, a filmstrip by time, for in-place or overlapping motion   |
+| `--layout`           | `path` — ghosts at real positions plus a path (default) — or `strip`, for in-place or overlapping motion. `strip` is a real per-time pixel filmstrip only when `--selector` targets an SVG element; any other selector (e.g. a DOM/sub-composition host) gets one live frame plus vector position markers instead |
 | `--from`, `--to`     | Sample only this time range, in seconds                                                                                         |
 | `--angle`            | Orbit camera: `front`, `iso`, `top`, `side`, `rear-iso`, or `yaw,pitch` in degrees                                             |
 | `--fit` / `--no-fit` | Zoom the motion to fill the diagnostic frame (default: on)                                                                      |
@@ -785,7 +857,7 @@ The flags that come up most:
 | `--composition, -c` | `index.html`                  | Render a different composition file. Sub-compositions using `<template>` wrappers must be referenced from `index.html` via `data-composition-src`. |
 | `--format`          | `mp4`                         | `mp4`, `webm`, `mov`, `gif`, or `png-sequence`. WebM and MOV carry transparency; `png-sequence` writes RGBA frames to a directory.                 |
 | `--fps, -f`         | root `data-fps`, otherwise 30 | 1–240, or an ffmpeg rational like `30000/1001` for 29.97                                                                                            |
-| `--quality, -q`     | `standard`                    | `draft`, `standard`, or `high`. Drives CRF and bitrate.                                                                                            |
+| `--quality, -q`     | `looks`                       | `draft`, `looks` (CRF 16, default), `delivery` (= `high`), `standard`, or `high`. MOV always uses the fixed alpha-preserving ProRes 4444 profile. |
 | `--resolution`      | the composition's size        | Supersample to a preset via Chrome's `deviceScaleFactor`. Aspect ratio must match and the scale must be a whole multiple. Not with `--hdr`. See [4K rendering](/guides/4k-rendering). |
 | `--docker`          | off                           | Render inside Docker for [deterministic output](/concepts/determinism)                                                                             |
 | `--variables`       | —                             | JSON object merged over the composition's `data-composition-variables` defaults                                                                    |
@@ -797,8 +869,8 @@ Quality and file size:
 
 | Flag                   | Default         | Description                                                                                              |
 | ---------------------- | --------------- | -------------------------------------------------------------------------------------------------------- |
-| `--crf`                | from `--quality`| Override encoder CRF, 0–51. Lower is better quality. Not with `--video-bitrate`.                          |
-| `--video-bitrate`      | from `--quality`| Target bitrate, e.g. `10M` or `5000k`. Not with `--crf`.                                                  |
+| `--crf`                | from `--quality`| Override MP4/WebM encoder CRF, 0–51. Lower is better quality. Not with `--video-bitrate`; rejected for MOV. |
+| `--video-bitrate`      | from `--quality`| Target MP4/WebM bitrate, e.g. `10M` or `5000k`. Not with `--crf`; rejected for MOV.                       |
 | `--vp9-cpu-used`       | encoder default | libvpx-vp9 speed/quality trade-off for WebM, -8 to 8. Env: `PRODUCER_VP9_CPU_USED`.                       |
 | `--gif-loop`           | `0`             | GIF loop count, `0` for forever. Range 0–65535, `--format gif` only.                                     |
 | `--video-frame-format` | `auto`          | How source video frames are extracted: `auto`, `jpg`, `png`. Use `png` for UI recordings, screen captures, and other colour-sensitive footage. |
@@ -1063,7 +1135,8 @@ npx hyperframes telemetry status
 Telemetry collects command names, render performance, render checkpoint and
 error names, aggregate browser diagnostic counts, browser initialization
 duration and tween count, aggregate video-extraction workload counts (extracted
-frames, VFR preflights), example choices, and system info — including a coarse
+frames, VFR preflights), example choices, the names of registry items `add`
+installs, and system info — including a coarse
 environment fingerprint: OS, kernel string, CPU and memory shape, sandbox
 runtime such as gVisor or Docker, and the _name_ of a coding agent driving the
 CLI when one is detected (`claude_code`, `codex`, `cursor`). That name is
@@ -1136,7 +1209,7 @@ variable.
 If you called the upstream command directly instead, set it yourself:
 
 ```bash
-GIT_CLONE_PROTECTION_ACTIVE=0 npx skills add heygen-com/hyperframes --full-depth
+GIT_CLONE_PROTECTION_ACTIVE=0 npx skills add heygen-com/hyperframes
 ```
 
 ### `figma` and `events`

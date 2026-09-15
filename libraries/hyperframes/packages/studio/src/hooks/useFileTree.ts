@@ -1,6 +1,8 @@
+import { buildProjectApiPath } from "../utils/projectRouting";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { FONT_EXT } from "../utils/mediaTypes";
 import { fontFamilyFromAssetPath, type ImportedFontAsset } from "../components/editor/fontAssets";
+import { captureProjectProvenance } from "../components/feedback/projectProvenance";
 
 interface UseFileTreeOptions {
   projectId: string | null;
@@ -21,12 +23,16 @@ export function useFileTree({ projectId, projectIdRef }: UseFileTreeOptions) {
     }
     let cancelled = false;
     setFileTreeLoaded(false);
-    fetch(`/api/projects/${projectId}`)
+    fetch(buildProjectApiPath(projectId))
       .then((r) => r.json())
       .then((data: { files?: string[]; dir?: string; compositions?: string[] }) => {
-        if (!cancelled && data.files) setFileTree(data.files);
-        if (!cancelled && data.compositions) setCompositionPaths(data.compositions);
-        if (!cancelled) setProjectDir(typeof data.dir === "string" ? data.dir : null);
+        if (cancelled) return;
+        if (data.files) setFileTree(data.files);
+        if (data.compositions) setCompositionPaths(data.compositions);
+        setProjectDir(typeof data.dir === "string" ? data.dir : null);
+        // Snapshot how this project was made, while the listing is in hand and
+        // the app is still alive. A crash later has no other way to learn it.
+        void captureProjectProvenance(projectId, data.files ?? [], data.compositions ?? []);
       })
       .catch(() => {
         if (!cancelled) setProjectDir(null);
@@ -42,7 +48,7 @@ export function useFileTree({ projectId, projectIdRef }: UseFileTreeOptions) {
   const refreshFileTree = useCallback(async () => {
     const pid = projectIdRef.current;
     if (!pid) return;
-    const res = await fetch(`/api/projects/${pid}`);
+    const res = await fetch(buildProjectApiPath(pid));
     const data = await res.json();
     if (data.files) setFileTree(data.files);
   }, [projectIdRef]);
@@ -57,12 +63,12 @@ export function useFileTree({ projectId, projectIdRef }: UseFileTreeOptions) {
 
   const fontAssets = useMemo<ImportedFontAsset[]>(
     () =>
-      assets
+      (projectId ? assets : [])
         .filter((asset) => FONT_EXT.test(asset))
         .map((asset) => ({
           family: fontFamilyFromAssetPath(asset),
           path: asset,
-          url: `/api/projects/${projectId}/preview/${asset}`,
+          url: projectId ? buildProjectApiPath(projectId, `/preview/${asset}`) : "",
         })),
     [assets, projectId],
   );

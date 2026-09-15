@@ -5,21 +5,55 @@ import { DEFAULT_SUITES, matchesSuiteTriggers } from './test-suites.mjs';
 
 const eventName = process.env.GITHUB_EVENT_NAME || '';
 const localNoChanges = !eventName && !process.env.CI_CHANGED_FILES;
-const changedFiles = localNoChanges ? [] : getChangedFiles();
-const forceDeterministic = localNoChanges || eventName === 'push' || eventName === 'workflow_dispatch';
+// The nightly schedule exists for exactly one thing: the full live-e2e
+// matrix. A schedule event has no diff base, so the change-detection path
+// degenerates to "everything changed"; without this guard that would flip on
+// every file-triggered opt-in suite, including the ones that bill LLM APIs
+// (skill-behavior, accept-cleanup, deepseek), every single night.
+const isSchedule = eventName === 'schedule';
+const changedFiles = localNoChanges || isSchedule ? [] : getChangedFiles();
+const forceDeterministic = localNoChanges || isSchedule || eventName === 'push' || eventName === 'workflow_dispatch';
 const forceOptIn = eventName === 'workflow_dispatch';
+// The Rust workspace (the engine) builds and tests when its own inputs move.
+// tests/oracle is included: the goldens are the engine's behavior gate and
+// the oracle job replays them against a source build.
+const RUST_PATTERNS = [
+  /^crates\//,
+  /^Cargo\.(toml|lock)$/,
+  /^rust-toolchain\.toml$/,
+  /^browser-bundle\//,
+  /^tests\/oracle\//,
+  /^\.github\/workflows\/ci\.yml$/,
+];
+const rustChanged = changedFiles.some((file) => RUST_PATTERNS.some((re) => re.test(file)));
 
-const plan = {
-  core: true,
-  detector: forceDeterministic || matchesSuiteTriggers('detector', changedFiles),
-  live: forceDeterministic || matchesSuiteTriggers('live', changedFiles),
-  framework: forceDeterministic || matchesSuiteTriggers('framework', changedFiles),
-  cli_remote_e2e: forceOptIn,
-  live_e2e: forceOptIn || matchesSuiteTriggers('live-e2e', changedFiles),
-  live_e2e_accept_cleanup: forceOptIn || matchesSuiteTriggers('live-e2e-accept-cleanup', changedFiles),
-  skill_behavior: forceOptIn || matchesSuiteTriggers('skill-behavior', changedFiles),
-  live_svelte_adapter_deepseek: forceOptIn || matchesSuiteTriggers('live-svelte-adapter-deepseek', changedFiles),
-};
+const plan = isSchedule
+  ? {
+    core: true,
+    oracle: true,
+    rust: true,
+    detector: true,
+    live: true,
+    framework: true,
+    cli_remote_e2e: false,
+    live_e2e: true,
+    live_e2e_accept_cleanup: false,
+    skill_behavior: false,
+    live_svelte_adapter_deepseek: false,
+  }
+  : {
+    core: true,
+    oracle: forceDeterministic || matchesSuiteTriggers('oracle', changedFiles),
+    rust: forceDeterministic || rustChanged,
+    detector: forceDeterministic || matchesSuiteTriggers('detector', changedFiles),
+    live: forceDeterministic || matchesSuiteTriggers('live', changedFiles),
+    framework: forceDeterministic || matchesSuiteTriggers('framework', changedFiles),
+    cli_remote_e2e: forceOptIn,
+    live_e2e: forceOptIn || matchesSuiteTriggers('live-e2e', changedFiles),
+    live_e2e_accept_cleanup: forceOptIn || matchesSuiteTriggers('live-e2e-accept-cleanup', changedFiles),
+    skill_behavior: forceOptIn || matchesSuiteTriggers('skill-behavior', changedFiles),
+    live_svelte_adapter_deepseek: forceOptIn || matchesSuiteTriggers('live-svelte-adapter-deepseek', changedFiles),
+  };
 
 writeGithubOutputs(plan);
 printSummary(plan, changedFiles);
@@ -78,7 +112,7 @@ function printSummary(outputs, files) {
   const deterministic = DEFAULT_SUITES.map((name) => `${name}=${outputs[name]}`).join(' ');
   console.log(`Event: ${eventName || 'local'}`);
   console.log(`Changed files: ${files.length}`);
-  console.log(`Deterministic suites: ${deterministic}`);
+  console.log(`Deterministic suites: ${deterministic} rust=${outputs.rust}`);
   console.log(
     [
       `cli_remote_e2e=${outputs.cli_remote_e2e}`,

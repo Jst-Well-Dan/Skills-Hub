@@ -8,16 +8,16 @@ This is not a UI framework. It is a constraint system for print, designed to kee
 
 **The ten invariants** (each has a real cost, think before overriding):
 
-1. Page background parchment `#f5f4ed`, never pure white
+1. Default page background parchment `#f5f4ed`; the white-paper print variant in production.md is the explicit exception
 2. Single accent: ink-blue `#1B365D`, no second chromatic color
 3. All grays warm-toned (yellow-brown undertone), no cool blue-grays
-4. English: serif for everything (headlines and body). Chinese: serif headlines, sans body. Sans only for UI elements (labels, eyebrows, meta) in both
+4. One serif family per page for headlines and body. Add a distinct sans only for genuine UI chrome
 5. Serif weight locked at 500, no bold
 6. Line-heights: tight headlines 1.1-1.3, dense body 1.4-1.45, reading body 1.5-1.55
 7. Letter-spacing: Chinese body 0.3pt for comfortable reading; English body 0; tracking only for short labels and overlines
 8. Tag backgrounds must be solid hex, never rgba (WeasyPrint renders a double rectangle)
-9. Depth via ring shadow or whisper shadow, never hard drop shadows
-10. **No italic in print templates**. No `font-style: italic` in any PDF template or demo. Exception: landing page (screen-only) uses italic for poetic lines (gallery captions, feature subtitles, footer ethos)
+9. Surfaces are flat by default; whisper shadows are reserved for real floating screenshots, popovers, or overlays
+10. **No italic in print templates**. No `font-style: italic` in any PDF template or demo. Exception: landing page (screen-only) allows italic for captions, feature subtitles, and a closing tagline; these need not be poetic
 
 This system is a fusion of Anthropic's visual language and real Chinese / English resume iteration. Details below.
 
@@ -30,7 +30,7 @@ This system is a fusion of Anthropic's visual language and real Chinese / Englis
 ### Brand
 
 ```css
---brand:       #1B365D;   /* Ink Blue - the only chromatic color. CTAs, accents, section-title left bar. */
+--brand:       #1B365D;   /* Ink Blue - the only chromatic color. CTAs, accents, and key labels. */
 --brand-light: #2D5A8A;   /* Ink Light - brighter variant, for links on dark surfaces. */
 ```
 
@@ -40,7 +40,8 @@ This system is a fusion of Anthropic's visual language and real Chinese / Englis
 
 ```css
 --parchment:    #f5f4ed;   /* Page background - warm cream, the emotional foundation */
---ivory:        #faf9f5;   /* Card / lifted container - brighter than parchment */
+--ivory:        #faf9f5;   /* Quiet filled container - brighter than parchment */
+--inline-code-bg: #f0eee6; /* Screen inline annotation - one warm-gray step darker than parchment */
 --warm-sand:    #e8e6dc;   /* Button default / interactive surface */
 --dark-surface: #30302e;   /* Dark-theme container - warm charcoal */
 --deep-dark:    #141413;   /* Dark-theme page background - not pure black, slight olive undertone */
@@ -64,7 +65,7 @@ Four levels: near-black (primary) > dark-warm (secondary) > olive (subtext) > st
 ### Border
 
 ```css
---border:      #e8e6dc;   /* Primary border - section dividers, table headers, card borders */
+--border:      #e8e6dc;   /* Primary border - section dividers, table headers, controls */
 --border-soft: #e5e3d8;   /* Secondary border - row separators, subtle dividers */
 ```
 
@@ -81,17 +82,19 @@ The "no second chromatic color" rule has exactly one approved exception: the bre
 
 **Why**: WeasyPrint's alpha compositing for padding vs glyph areas produces a visible double rectangle on zoom. See `production.md` Part 4 Pitfall #1.
 
-Ink Blue `#1B365D` over parchment `#f5f4ed`:
+Ink Blue `#1B365D` over parchment `#f5f4ed` resolves to two registered chromatic tints:
 
-| rgba alpha | Solid hex |
-|---|---|
-| 0.08 | `#EEF2F7` |
-| 0.14 | `#E4ECF5` |
-| **0.18** | **`#E4ECF5`** ← default tag |
-| 0.22 | `#D0DCE9` |
-| 0.30 | `#D6E1EE` |
+| Token | Hex | Use |
+|---|---|---|
+| `--tag-bg` | `#E4ECF5` | the default tag swatch |
+| `--brand-tint` | `#EEF2F7` | the lightest fill, when a tag must recede |
 
-The default tag swatch `#E4ECF5` is registered as the `--tag-bg` token in `tokens.json`, so its 15 template definitions stay under the sync guard.
+Use the token, never a hand-mixed `rgba()`. A tint outside these two is a new token: add it to `tokens.json` first, or `scripts/tokens.py` will fail the sync guard across the templates that define it.
+
+`--inline-code-bg` is a screen-only warm-neutral surface, not a third accent
+tint. Use it for small literals embedded in explanatory web copy, where blue
+would imply focus or a clickable state. Print templates keep their existing
+ivory inline-code treatment.
 
 ---
 
@@ -108,7 +111,7 @@ font-family: Charter, Georgia, Palatino,
 
 /* Chinese */
 font-family: "TsangerJinKai02",
-             "Source Han Serif SC", "Noto Serif CJK SC",
+             "Source Han Serif SC", "Source Han Serif CN", "Noto Serif CJK SC", "Noto Serif SC",
              "Songti SC", "STSong",
              Georgia, serif;
 
@@ -149,6 +152,10 @@ Any font-family that may render Chinese or Japanese must include a CJK fallback,
 **Minimum floor**: web text >= 12px, PDF text >= 9pt.
 **Slide caption floor**: slides 上 caption 至少 24px (不是 12px)。Print 9pt 在投影距离不可读，slide caption 用 pt x 2.67。
 
+**Ladder discipline**: sizes must land ON the scale, never between its steps. Components that each pick their own size drift into 12.5 / 13.5 / 14.5 / 17.5 neighbours; a reader cannot tell a 13.5 from a 14, so the difference registers as noise instead of hierarchy. Audit a screen stylesheet with `grep 'font-size:' <file> | sort | uniq -c`: every value should be a scale step, and the 12px floor should carry only uppercase micro-labels and badges, never prose (prose stops at 14).
+
+**Serif sets larger than sans at the same number**: a tall x-height serif at 15px already reads bigger than 15px sans. Do not raise a serif body size to fix perceived readability; check the ladder step first.
+
 ### Weight
 
 - **Serif body**: 400 (W04 font file)
@@ -175,19 +182,39 @@ Print documents are **tighter** than English web body. English web typically run
 | CJK screen body | 1.55-1.65 | 中日文 serif 在 slide scale (27-33px) 下比 print x1.33 更需松行高 |
 
 **Forbidden**:
-- 1.60+ - loose feel, web rhythm, not print
+- 1.60+ on a print body - loose feel, web rhythm, not print. The CJK screen-body row above is the one exception, and only at slide scale.
 - 1.00-1.05 - lines collide except at extreme display sizes
 
 ### Letter-spacing
 
 - Body text: **0**
-- Chinese and Japanese body text with TsangerJinKai02: **0.1–0.2pt** to compensate for the font's natural density; section titles and Mincho samples: **0**
+- Chinese and Japanese body text with TsangerJinKai02: **0.3pt**, the baseline every shipped CN/JA template uses (`long-doc.html`, `one-pager.html`, `slides-weasy.html`); section titles and Mincho samples: **0**
 - Chinese lede text (14–22pt) with TsangerJinKai02: **0.03–0.06em** to open up large-body paragraphs without breaking density; EN and JA lede: **0** (only TsangerJinKai02 needs density compensation)
 - Chinese and Japanese display text (24pt+): **0.2–1pt** optical spacing for visual breathing room at large sizes; scale with font size
 - English headings may use subtle optical tightening when needed; keep it localized, never inherited by body copy
 - Small labels (< 10pt): +0.2 to +0.5pt for readability
 - All-caps overlines: +0.5 to +1pt mandatory
 - **Slide-specific**: print tracking x0.5 at slide scale. Eyebrow max 3px (not 8px), display titles -0.5pt. Large type at 40pt+ will look scattered at print tracking values
+
+### External principles cross-check
+
+A cross-check against Pierrick Calvez, "A Five-Minute Guide to Better Typography" (external reference, read once for calibration, not reprinted here). Where the guide agrees with Kami it sharpens a rule already stated above; where it conflicts, the Kami invariant wins. Use this list to resist "improving" Kami toward habits that suit a Western multi-weight editorial page but break this constraint system.
+
+**Agrees with Kami (apply):**
+
+- **Set blocks, not glyphs.** Type is a beautiful group of letters, not a group of beautiful letters. Judge a paragraph as a shape and an even gray field, not one admirable character at a time. This is why Kami pins measure, line-height, and tracking per context rather than tuning individual words.
+- **Optical alignment beats mathematical alignment.** Text is aligned when it looks aligned, not when the box edges match. Nudge the optical edge back when a quotation mark, a bullet, a large display cap, or a hanging figure pushes a line visually past the margin. This is the same instinct behind the existing display-tracking and «cap both tracks» rules; it is a manual eyeball pass, not a token.
+- **Measure (line length) for reading body: about 40 to 70 characters per line.** Too wide and the eye loses the next line's start; too narrow and rhythm breaks. This is the character-count basis for the reading-measure caps already stated for screen prose (Section 11 «Documentation site», about 720px) and for the natural print measure held by the A4 margins in Section 3. Keep body reading inside this band; do not let a full-frame screen column run edge to edge.
+- **Line-spacing scales with measure and length.** Short blocks read fine near 1.2x the font size; long reading passages want roughly 1.5x. Map this onto Kami's locked tiers, do not invent your own: tight headlines 1.10-1.30, dense body 1.40-1.45, reading body 1.50-1.55. The guide's "1.5x" lands on Kami's reading tier; it is not a licence to reach 1.6+ on a print body (still forbidden above).
+- **Hierarchy comes from contrast, not ornament.** Separate levels with size, weight, and space, and when a step is unclear either skip a weight rather than adding a faint one, or open the size gap. Kami reaches the same end through its fixed ladder: use the next registered size step and the 500/400 weight pair, plus spacing, never a new in-between size (see «Ladder discipline») and never a decorative rule (see «Subtractive rule»).
+- **Left-align body; centre only short display lines.** Ragged-right left alignment gives the eye a stable return edge for running text. Centring is for a cover title, a short subtitle, or a single pinned callout line, never for paragraphs or lists. This matches the left-edge discipline in «Feature rows» and the centred-cover exceptions in the Deck Recipe.
+- **Kerning and tracking are optical tools for large and small type.** Spend them on display sizes and all-caps or small-caps labels, exactly where the Letter-spacing rules above already allow it. Do not track body copy for effect.
+
+**Conflicts with Kami (do not import):**
+
+- **Multi-weight typeface families.** The guide advises choosing a face with many weights (Light, Regular, Medium, Bold) and orchestrating them. Kami forbids this for the serif: body is 400, headings are 500, and that is the whole range. No 700 (synthetic bold is banned), no Light. Emphasis is carried by size, space, and ink-blue, per «Weight» and invariant 5. Do not add a weight step to a Kami serif document.
+- **Western ornamental punctuation habits.** Editorial guides written for English print lean on the em dash and decorative punctuation. Kami constrains dashes and decoration deliberately: see the no-em-dash rule in `AGENTS.md`, `references/anti-patterns.md` #28, and the list-marker rule in «Lists» (no faux en-dash bullets). Do not import em-dash-heavy phrasing or ornamental marks from the guide.
+- **Do not reprint the guide.** Keep this a distilled cross-check. Do not paste a full translation or a substantial verbatim excerpt of the source into the repo.
 
 ---
 
@@ -204,6 +231,14 @@ Print documents are **tighter** than English web body. English web typically run
 | xl | 24-32pt | Section-title margins |
 | 2xl | 40-60pt | Between major sections |
 | 3xl | 80-120pt | Between chapters (long docs) |
+
+**Proximity law (a heading belongs to what follows)**: the gap UNDER a section head must be clearly smaller than the gap ABOVE it, ideally by 2x or more. Get this backwards (generous below, tight above) and the head reads as the tail of the previous section, no matter how large its type is. A screen page runs on three steps and nothing else: inside a block, head-to-content, section-to-section.
+
+**A cramped head is an internal problem**: when a heading block feels dense, the cause is usually its own internals (eyebrow-to-title, title-to-lede), not the section gaps. Open those by a few points before touching the macro rhythm.
+
+**Two-column rows: cap both tracks, justify to the edges.** In an image-plus-copy row, let the copy column grow freely (`1fr`) and the text strands itself against an empty far edge. Cap both tracks and push the slack into the gutter instead: both outer edges stay aligned to the container, and the copy sits at its natural measure.
+
+**A repeated row is no place for ornament.** A connector line, a badge, or an index number that looks charming once becomes noise on the fifth repetition. Empty space between the two columns is the answer, not a graphic that fills it.
 
 ### Page margins (A4)
 
@@ -227,9 +262,8 @@ Print uses mm/pt; slides (screen) use px. The scale relationships differ:
 
 **Key rules**:
 - Slide padding-top: 72-80px (print is 96-120px; slides are more compact)
-- Slide letter-spacing = print value / 2 (8px tracking "falls apart" on screen; halve it)
 - Macro scale (font size, padding): multiply print pt values by ~1.6
-- Micro scale (letter-spacing, border, radius): multiply by ~0.6
+- Micro scale (display tracking, border, radius): halve the print value. Wide display tracking falls apart at slide scale; body letter-spacing stays at the print baseline.
 
 ---
 
@@ -240,73 +274,80 @@ Print uses mm/pt; slides (screen) use px. The scale relationships differ:
 ```css
 .card {
   background: var(--ivory);
-  border: 0.5pt solid var(--border-cream);
-  border-radius: 8pt;
+  border-radius: 4pt;
   padding: 16pt 20pt;
-}
-
-.card-featured {
-  border-radius: 16pt;
-  box-shadow: 0 4pt 24pt rgba(0,0,0,0.05);   /* whisper shadow */
 }
 ```
 
-Radius scale: 4pt -> 6pt -> 8pt (default) -> 12pt -> 16pt -> 24pt -> 32pt (hero containers).
+A lifted surface is carried by the fill, not by an outline: `--ivory` against
+`--parchment` is the whole gesture. Do not add a closed hairline border. Below
+1pt a closed border plus a radius renders as a double ring in WeasyPrint
+(`production.md` pitfall #2), and `scripts/lint.py` fails templates for it.
+When a card needs more weight than its fill, strengthen its label or opening
+sentence. Do not add an accent edge or ring all four sides.
 
-### Buttons
+Print radii stay within 2-6pt and follow physical scale, from compact chips to
+large media frames. Larger steps (8pt and up) belong to screen surfaces only,
+where `landing-page.html` sets its own scale. Do not use radius alone to create
+emphasis.
+
+### Subtractive rule
+
+A line earns its place only when it separates content regions, encodes state,
+or carries a data relationship. Decorative eyebrow ticks, short cover rules,
+contact rules, heading side bars, quotation side bars, and callout accent edges
+do none of those jobs and do not ship.
+
+Use type scale, labels, alignment, whitespace, and ivory fills to establish
+hierarchy. Keep table hairlines, chart axes, diagram connectors, input
+boundaries, full-width region separators, and current-state indicators. Apply
+the deletion test: if hiding a line preserves meaning, state, grouping, and
+navigation, delete it and restore any needed pause with spacing.
+
+### Screen buttons
 
 ```css
 /* Primary - brand-colored */
 .btn-primary {
   background: var(--brand);
   color: var(--ivory);
-  padding: 8pt 16pt;
-  border-radius: 8pt;
-  box-shadow: 0 0 0 1pt var(--brand);   /* ring shadow */
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--brand);
 }
 
 /* Secondary - warm-sand */
 .btn-secondary {
   background: var(--warm-sand);
   color: var(--dark-warm);
-  padding: 8pt 16pt;
-  border-radius: 8pt;
-  box-shadow: 0 0 0 1pt var(--border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 ```
 
 ### Tags
 
-Three tiers from weak to strong visual weight:
+Two tiers, both on registered tokens. A gradient tag oversells itself at this size; if the reader's eye lands on the tag's background shape before the text inside, the tag is too strong.
 
-**Lightest solid** (default, most restrained):
+**Default**:
 ```css
 .tag {
-  background: #EEF2F7;      /* 0.08 solid equivalent */
+  background: var(--tag-bg);   /* #E4ECF5 */
   color: var(--brand);
   font-size: 9pt;
   font-weight: 600;
-  padding: 1pt 5pt;
-  border-radius: 2pt;
+  padding: 1pt 6pt;
+  border-radius: 4pt;
   letter-spacing: 0.4pt;
   text-transform: uppercase;
 }
 ```
 
-**Standard solid** (when more contrast needed):
+**Recede** (dense pages, or several tags in one row):
 ```css
 .tag {
-  background: #E4ECF5;      /* 0.18 solid equivalent */
-  color: var(--brand);
-  padding: 1pt 6pt;
-  border-radius: 4pt;
-}
-```
-
-**Gradient brush** (only when "hand-painted" feel is required - use sparingly):
-```css
-.tag {
-  background: linear-gradient(to right, #D6E1EE, #E4ECF5 70%, #EEF2F7);
+  background: var(--brand-tint);   /* #EEF2F7 */
   color: var(--brand);
   padding: 1pt 5pt;
   border-radius: 2pt;
@@ -314,6 +355,8 @@ Three tiers from weak to strong visual weight:
 ```
 
 **Philosophy**: tint depth should be one step lighter than what decoration wants. Prefer pale over saturated. In iteration, "gradient brush" often steals focus - lightest solid wins most of the time.
+
+Inside an already filled editorial highlight, do not stack a filled tag on top of the fill. Use an ivory surface and a text-only ink-blue label; the label names the passage without becoming a second color block.
 
 **Never**: `background: rgba(201, 100, 66, 0.18)` - WeasyPrint double-rectangle bug.
 
@@ -336,8 +379,8 @@ ul.dash li::marker { color: var(--brand); }
 
 ```css
 .quote {
-  border-left: 2pt solid var(--brand);
-  padding: 4pt 0 4pt 14pt;
+  margin: 12pt 16pt;
+  padding: 4pt 0;
   color: var(--olive);
   line-height: 1.55;
 }
@@ -348,8 +391,7 @@ ul.dash li::marker { color: var(--brand); }
 ```css
 .code-block {
   background: var(--ivory);
-  border: 0.5pt solid var(--border-cream);
-  border-radius: 6pt;
+  border-radius: 4pt;              /* fill only; no border, see «Cards» */
   padding: 10pt 14pt;
   font-family: var(--mono);
   font-size: 9pt;
@@ -366,19 +408,16 @@ ul.dash li::marker { color: var(--brand); }
   font-weight: 500;
   color: var(--near-black);
   margin: 24pt 0 10pt 0;
-  border-left: 2.5pt solid var(--brand);
-  border-radius: 1.5pt;
-  padding-left: 8pt;
 }
 ```
 
-Resume exception: resume templates use a quiet bottom rule instead of the brand left bar, and project rows stay borderless to avoid double rules and page-top orphan lines.
+Resume templates use a quiet full-width bottom rule because it separates major content regions. Project rows stay borderless to avoid double rules and page-top orphan lines.
 
-Document header signature: across the document templates (one-pager, changelog, equity-report, long-doc cover) the page header opens with an uppercase eyebrow led by the 8pt x 1.5pt brand tick (a short horizontal bar, not a round bullet, which reads juvenile next to CJK), then the serif title, with any meta right-aligned and a 0.5pt hairline rule closing the block. This is the shared opener: no centered version block, no full-height left bar. The full-height brand left bar reads heavy and crude as a page-top frame, so keep it a section-level and pull-quote device only. Resume (name header) and letter (letterhead) keep their purpose-built headers and are exempt.
+Document header signature: across the document templates (one-pager, changelog, equity-report, long-doc cover) the page header opens with uppercase eyebrow text, then the serif title, with any meta right-aligned and an optional 0.5pt full-width hairline closing the block. The hairline is structural: it separates the header from the document body. No leading tick, centered version block, short decorative rule, or full-height side bar. Resume (name header) and letter (letterhead) keep their purpose-built headers.
 
-Hero product shot (one-pager): a product brief earns one real screenshot as its visual anchor, not a decorative texture. Frame it in a wrapper with `overflow: hidden`, `border-radius`, and a soft shadow (no closed sub-1pt border, which trips the `thin-border-radius` lint and risks a double ring); size the wrapper by `height` with the image set to `object-fit: cover` so dead background (wallpaper, chrome margins) is trimmed evenly while the app window stays whole. Give it a single caption that adds a fact, not a restatement. Adjust the wrapper height to fill the page rather than stretching text or leaving bottom whitespace.
+Hero product shot (one-pager): a product brief earns one real screenshot as its visual anchor, not a decorative texture. Frame it in a wrapper with `overflow: hidden`, restrained `border-radius`, and a soft shadow (no closed sub-1pt border, which trips the `thin-border-radius` lint and risks a double ring); size the wrapper for a legible crop with the image set to `object-fit: cover` so dead background (wallpaper, chrome margins) is trimmed evenly while the app window stays whole. Give it a single caption that adds a fact, not a restatement. If the page is still sparse, merge or rebalance the content; do not inflate the screenshot merely to occupy space.
 
-Changelog best practice: a release-notes doc uses the same editorial language as the one-pager, not a centered version block. Open with the left-aligned header (eyebrow tick + "Project Version" serif title + date on the right + hairline rule). Group entries under h2 section heads carrying the brand left bar (Breaking / Features / Fixes, or Highlights / Fixes), and drop any section that does not apply. Each entry is a numbered item with a bold lead-in, then a colon and the detail; the numbers carry sequence and restart per section, so no per-item bullet glyph is added (one repeated mark per row reads as clutter). Keep acknowledgements a quiet labelled note, never a filled card, and split the footer into left description and right URL. One locale per file, no bilingual stacking. A breaking entry may carry an inline `.tag.breaking` chip; that is the only inline tag worth keeping.
+Changelog best practice: a release-notes doc uses the same editorial language as the one-pager, not a centered version block. Open with the left-aligned header (uppercase eyebrow text + "Project Version" serif title + date on the right + structural hairline). Group entries under text-only h2 section heads (Breaking / Features / Fixes, or Highlights / Fixes), and drop any section that does not apply. Each entry is a numbered item with a bold lead-in, then a colon and the detail; the numbers carry sequence and restart per section, so no per-item bullet glyph is added. Keep acknowledgements a quiet labelled note, never a filled card, and split the footer into left description and right URL. One locale per file, no bilingual stacking. A breaking entry may carry an inline `.tag.breaking` chip; that is the only inline tag worth keeping.
 
 ### Table (kami-table)
 
@@ -391,11 +430,21 @@ table, .kami-table {
 }
 table th, .kami-table th {
   text-align: left; font-weight: 500; color: var(--dark-warm);
-  padding: 6pt 8pt; border-bottom: 1pt solid var(--border);
+  padding: 6pt 8pt; border-bottom: 0.6pt solid var(--border);
 }
 table td, .kami-table td {
-  padding: 5pt 8pt; border-bottom: 0.3pt solid var(--border-soft);
+  padding: 5pt 8pt; border-bottom: 0.25pt solid var(--border);
   vertical-align: top;
+}
+table.compact th, .kami-table.compact th {
+  padding: 3pt 6pt; font-size: 8pt;
+}
+table.compact td, .kami-table.compact td {
+  padding: 2.5pt 6pt; font-size: 8pt; line-height: 1.4;
+}
+table .total td, .kami-table .total td {
+  font-weight: 500; border-top: 0.6pt solid var(--border);
+  border-bottom: none; color: var(--near-black);
 }
 ```
 
@@ -403,14 +452,16 @@ table td, .kami-table td {
 
 | Class | Purpose |
 |---|---|
-| `.compact` | 8pt font, tighter padding. For data-dense tables in resume/one-pager. |
+| `.compact` | 8pt font, 3pt header and 2.5pt cell vertical padding. Use for 5+ columns, 8+ rows, or verified page-fit pressure. |
 | `.financial` | Right-align all columns except the first, enable `tabular-nums`. For revenue, pricing, metrics. |
-| `.striped` | Alternating `var(--ivory)` background on even rows. Improves scanability for wide tables. |
+| `.striped` | Optional neutral `var(--ivory)` background on even rows. Use only for 8+ body rows when row tracking remains difficult at normal viewing size. |
 
-**Total row**: add `.total` to the final `<tr>` for a bold summary row with a `1pt` brand top border.
+**Total row**: add `.total` to the final `<tr>` for a bold summary row with the same `0.6pt` neutral rule as the header. A total gains hierarchy from weight and placement, not a second color.
+
+**Acceptance rule**: every table rule uses `var(--border)`. Header and total rules are `0.6pt`; body rules are `0.25pt`. Normal tables keep at least `6pt` header and `5pt` cell vertical padding. Fixed-length one-pagers and resumes may step down once to `5pt` / `4pt`; compact tables never go below `3pt` / `2.5pt`. Start without striping. No category-colored values, brand-colored rules, tinted headers, vertical grid, or framed table. At normal viewing size, row separation must come from whitespace before line weight. Add neutral striping only when an 8+ row render still fails the row-tracking check.
 
 ```html
-<table class="kami-table financial striped">
+<table class="kami-table financial">
   <thead><tr><th>Category</th><th>Q1</th><th>Q2</th></tr></thead>
   <tbody>
     <tr><td>Revenue</td><td>$12.4M</td><td>$14.1M</td></tr>
@@ -434,22 +485,29 @@ Key numbers side-by-side (one-pager header, resume top, portfolio cover):
   font-variant-numeric: tabular-nums;   /* align digits in columns */
 }
 .metric-label { font-size: 9pt; color: var(--olive); white-space: nowrap; }
+.metric-suffix {
+  margin-left: 0.06em;
+  font-size: 0.58em;
+  font-weight: 400;
+  vertical-align: 0.08em;
+}
 ```
 
-Metric labels never wrap. The value and label share a baseline (`align-items: baseline`); a label that wraps to a second line dangles below that baseline and reads broken. Keep every label short enough for one line and set `white-space: nowrap`, so an over-long label is caught as overflow during QA instead of silently wrapping. Fix by shortening the words, not by letting it wrap.
+This inline form is the print one, and it holds only because print labels are fixed short strings that never wrap. The value and label share a baseline; a label that wraps to a second line dangles below it and reads broken. Keep every label short enough for one line and set `white-space: nowrap`, so an over-long label surfaces as overflow during QA instead of silently wrapping. Fix by shortening the words, not by letting it wrap.
+
+On screen the labels are translated, retitled, and read at 375px, so a landing-page metric stacks instead (`flex-direction: column`). Same for slides. `production.md` pitfall #20 owns that call.
+
+Treat a multiplication sign in a display value as a suffix, not a second digit. In values such as `10×`, keep the true multiplication sign, set it near 60% of the numeral size, and optically align it to the numeral body. A full-size `×` reads like a letter and steals attention from the value.
 
 ### Section Header (`.kami-section-header`)
 
-Lightweight section opener for content slides. Has an eyebrow and a horizontal rule.
+Lightweight, text-only section opener for content slides.
 
 ```css
 .kami-section-header {
   margin-bottom: 36px;
 }
 .kami-section-header .eyebrow {
-  display: flex;
-  align-items: center;             /* dot is geometric, center beats baseline */
-  gap: 8px;
   font-family: var(--sans);
   font-size: 12px;
   font-weight: 500;
@@ -457,19 +515,6 @@ Lightweight section opener for content slides. Has an eyebrow and a horizontal r
   text-transform: uppercase;
   color: var(--stone);
   margin-bottom: 14px;
-}
-.kami-section-header .eyebrow::before {
-  content: "";
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--brand);
-  flex-shrink: 0;
-}
-.kami-section-header .rule {
-  height: 1px;
-  background: var(--border-warm);
-  margin-bottom: 36px;             /* gap below rule >= 36px (>= 2x the gap above) */
 }
 .kami-section-header h1 {
   font-family: var(--serif);
@@ -480,7 +525,7 @@ Lightweight section opener for content slides. Has an eyebrow and a horizontal r
 }
 ```
 
-**Spacing rule**: eyebrow to rule: 14px; rule to H1: **≥ 36px** (the gap below must be at least double the gap above, creating a visual anchor).
+**Spacing rule**: keep 14-20px between eyebrow and H1, then let the section's outer margin create the larger pause. Do not insert a short rule or dot to manufacture hierarchy.
 
 ### Code Card (`.kami-code-card`)
 
@@ -489,7 +534,7 @@ For displaying pseudocode or code snippets in slides. More structured than a pla
 ```css
 .kami-code-card {
   background: var(--ivory);
-  border: 1px solid var(--border-cream);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 20px 24px;
   overflow: hidden;
@@ -569,9 +614,7 @@ Four key-number cells, placed after the TOC or on a chapter-opening page of a lo
   margin: 18pt 0;
 }
 .glance-cell {
-  padding: 12pt 0 10pt 14pt;
-  border-left: 2pt solid var(--brand);
-  border-radius: 1.5pt;
+  padding: 12pt 0 10pt 0;
 }
 .glance-label {
   font-family: var(--mono);
@@ -678,27 +721,18 @@ Replaces pricing line-item breakdowns with a short list of capability anchors. P
 
 ```css
 .value-anchors {
-  list-style: none;
-  padding: 0;
+  list-style: disc;
+  padding-left: 16pt;
   margin: 12pt 0 18pt 0;
 }
 .value-anchors li {
-  position: relative;
-  padding: 9pt 0 9pt 18pt;
+  padding: 9pt 0;
   border-bottom: 0.3pt solid var(--border-soft);
   line-height: 1.55;
   font-size: 10.5pt;
 }
 .value-anchors li:last-child { border-bottom: none; }
-.value-anchors li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 17pt;
-  width: 8pt;
-  height: 1.5pt;
-  background: var(--brand);
-}
+.value-anchors li::marker { color: var(--brand); }
 .value-anchors li strong {
   color: var(--brand);
   font-weight: 500;
@@ -706,61 +740,33 @@ Replaces pricing line-item breakdowns with a short list of capability anchors. P
 }
 ```
 
-The 8pt × 1.5pt brand bar (`::before`) replaces the round `<ul>` bullet. A round bullet next to CJK body reads juvenile; the bar reads editorial.
+Use the native disc marker. A custom short bar is decoration disguised as list structure.
 
-### Decoration density: editorial vs structured
+### Decoration density: subtractive by default
 
-Long-doc / proposal layouts have two acceptable decoration densities. Pick one and stay consistent across the whole document.
+Long-doc and proposal layouts use one rule: decoration does not create structure.
 
-| Context | Mode | Pattern |
-|---|---|---|
-| Data report, white paper, technical brief | **Structured** | Top hairlines (0.6-0.8pt brand) on callouts, glance cells, and pricing blocks. Roughly 5-8 brand lines per page. |
-| Proposal, advisory pitch, founder-facing brief | **Editorial** (default) | No decorative lines. Brand color appears only in text (chapter number, `.hl`, `<strong>`, digits, labels). Containers use ivory fill + 4pt radius. |
+Brand color appears in text, digits, labels, and intentional fills. Containers use
+ivory fill and restrained radius. Lines remain neutral and appear only when they
+separate content regions, encode state, or show a data relationship.
 
-The editorial mode reads as "content speaks"; the structured mode reads as "structure helps". The wrong mode is the third one: brand lines plus ivory plus radius plus borders, which signals over-packaging. When unsure, default to editorial.
+Do not layer a brand line, fill, radius, and border onto the same component. If
+removing a line leaves the same meaning and grouping, the line was ornament.
 
 ---
 
-## 5. Depth & Shadow
+## 5. Depth & Separation
 
-**Core rule**: do not use traditional hard shadows. Depth comes from three sources:
+**Core rule**: the default surface is flat. Establish hierarchy with type,
+alignment, whitespace, one quiet fill, or one neutral hairline. Do not stack a
+fill, border, radius, and shadow on the same component, and do not make card
+hover create artificial elevation.
 
-### 1. Ring shadow (border-like)
+Use a visible `outline` for keyboard focus. Reserve a whisper shadow for a real
+product screenshot, popover, or other element that physically floats above the
+page; never use it to make an ordinary card look more important.
 
-For **button** hover/focus states.
-
-```css
-/* Button default */
-box-shadow: 0 0 0 1pt var(--ring-warm);
-
-/* Button hover/active */
-box-shadow: 0 0 0 1pt var(--ring-deep);
-```
-
-**Do not use for card hover**: ring shadow is a border replacement. Layering it over an existing border creates three-layer visual stacking (border + ring + offset), which feels digital, not paper-like.
-
-### 2. Whisper shadow (barely visible lift)
-
-For **card hover** and **featured card** elevation.
-
-```css
-/* Card hover - mimics paper lifting slightly */
-.card {
-  transition: box-shadow 0.2s;
-}
-.card:hover {
-  box-shadow: 0 4pt 24pt rgba(0, 0, 0, 0.05);
-}
-
-/* Featured card default state */
-.featured-card {
-  box-shadow: 0 4pt 24pt rgba(0, 0, 0, 0.05);
-}
-```
-
-**Why whisper, not ring**: paper elevation is depth change, not outline change. Whisper shadow is singular, soft, outline-free, matching the paper-like tone.
-
-### 3. Section-level light/dark alternation
+### Section-level light/dark alternation
 
 Long docs alternate parchment `#f5f4ed` and `#141413` dark sections. This section-level light change creates the strongest contrast.
 
@@ -817,22 +823,27 @@ hand-fill page numerals; any pagination-affecting edit will make them drift.
 
 When you're not sure "what should I use":
 
+The answer is almost always a component a template already ships. Copy that one
+and edit its content; assembling a new container from a recipe is how a document
+ends up carrying three unrelated emphasis languages on one page.
+
 | Need | Use |
 |---|---|
 | Big headline | serif 500, size by level, line-height 1.10-1.30 |
-| Reading body (EN) | serif 400, 9.5-10pt, line-height 1.55 |
-| Reading body (CN) | sans 400, 9.5-10pt, line-height 1.55 |
+| Reading body | serif 400, 9.5-10pt, line-height 1.55. Every locale: CN templates pin `--sans: var(--serif)`, so one page carries one typeface |
 | Emphasize a number | `color: var(--brand)`, no bold |
-| Divide two sections | 2.5pt brand left bar, or 0.5pt warm-gray dotted |
-| Quote someone | 2pt brand left border + olive color |
-| Show code | ivory background + 0.5pt border + 6pt radius + mono |
-| Primary vs secondary button | Primary = brand fill + ivory text; Secondary = warm-sand + dark-warm |
-| Highlight one card in a list | `border: 0.5pt solid var(--brand)` or `border-left: 3pt solid var(--brand)` |
-| Start a chapter | serif heading + 2.5pt brand left bar |
-| Cover page | Display-size heading + right-aligned author/date + heavy whitespace |
-| Data card | ivory background + 8pt radius + serif big number + sans small label |
+| Raise a passage above body text | `.callout`: ivory fill + 3pt radius, no accent edge. Only padding tightens on denser pages |
+| Quote someone | `long-doc` `blockquote` / `.quote`: indented olive text with reading space, no fill or side rule |
+| Show code | `long-doc` `pre` / `code`: ivory fill, 4pt / 2pt radius, no border |
+| Show key figures | `one-pager` `.metric`: baseline row, transparent, no container. Numbers carry themselves; a filled card around them is the most common drift |
+| Start a section | serif scale and margin only; no leading tick, side bar, or short rule |
+| Mark out one item in a list | ivory fill, stronger label, or a short lead sentence; no accent edge |
+| Cover page | `long-doc` cover: display heading, right-aligned author/date, heavy whitespace |
+| Buttons (screen only) | `landing-page` `.btn-primary` / `.btn-ghost`. Print documents have no buttons |
 
-Not on this table -> return to first principles: **serif carries authority, sans carries utility, warm gray carries rhythm, ink-blue carries focus**.
+Nothing here fits -> return to first principles: **serif carries authority,
+sans carries utility, warm gray carries rhythm, ink-blue carries focus**. Then
+add the smallest thing that works, and prefer an existing class over a new one.
 
 ---
 
@@ -863,7 +874,7 @@ Global parameters for the slide body:
 ```css
 body {
   font-size: 13pt;
-  line-height: 1.65;
+  line-height: 1.55;
   letter-spacing: 0.3pt;   /* CJK: critical for breathing room */
 }
 ```
@@ -915,12 +926,12 @@ Content element scale:
 ```css
 table.data td {
   padding: 8pt;
-  border-bottom: 0.3pt solid var(--border);
+  border-bottom: 0.25pt solid var(--border);
   font-size: 11pt;
 }
 table.data td:first-child {
   font-weight: 500;
-  color: var(--brand);   /* first column: brand blue bold */
+  color: var(--dark-warm);   /* hierarchy without a second table color */
 }
 ```
 
@@ -940,11 +951,11 @@ table.data td:first-child {
 | Ghost deck test | Read only slide titles in order. They must tell the argument; disconnected titles mean the structure is not ready |
 | One evidence shape | Each slide has one primary proof form: chart, table, screenshot, code, quote, or conclusion. Split mixed evidence |
 | One line per bullet | Trim until each item fits on one line; never let it wrap |
-| Empty space ≥50% | Draft defect. Order: merge with neighbor slide > pin `.co` callout > add a chart that earns the space. Shrinking page size is a last resort and must apply to the whole deck, not per slide. |
-| Empty space 25-50% | Acceptable if the slide has a pinned `.co` callout. Otherwise add one supporting bullet or a small inline figure. Never pad with filler prose. |
+| Empty space ≥50% | Draft defect. Order: merge with a neighbor > remove the slide and fold its useful point into another slide > convert existing evidence only when another form is clearer. Never add a callout, chart, or image just to occupy space. |
+| Empty space 25-50% | Acceptable when one complete assertion and its proof genuinely need the room. Otherwise merge or tighten the slide; do not add supporting matter solely for density. |
 | Cover | No horizontal rule; title centered `38pt`; subtitle on one line; bottom meta centered |
 
-Before drafting an image-heavy deck, sketch a short slot map: `page -> slide title -> evidence shape -> image slot -> visual brief`. Use broad types only: cover, assertion, comparison, metric, quote, image evidence, closing. This is a rhythm check, not a locked layout registry. The `visual brief` is internal working material for image selection, crop, or generation; it must not leak into slide titles, body copy, or captions. Keep Kami's default simple: use the existing `.c2`, `table.t2x2`, `.co`, data table, and inline figure patterns unless the source material clearly needs something else.
+Image-heavy decks carry two acceptance bars: the visual brief (crop notes, prompt fragments, generation instructions) is internal working material and never appears in slide titles, body copy, or captions; and the deck uses the existing `.c2`, `table.t2x2`, `.co`, data table, and inline figure patterns unless the source material clearly needs something else. How you plan toward that (slot map, outline, or otherwise) is your call; whatever you sketch is a rhythm check, not a locked layout registry.
 
 If the user provides a real PPTX or brand template and explicitly asks to preserve it, do a template inventory before content editing: thumbnail the source deck, identify reusable layout families, then map each section to an existing layout. Do not do this for the default WeasyPrint or Marp paths; Kami templates are already the inventory.
 
@@ -954,18 +965,13 @@ If the user provides a real PPTX or brand template and explicitly asks to preser
 |---|---|
 | Content overflows to next page | Add `max-height` or trim content |
 | 2×2 columns misaligned | Switch from CSS Grid to `table.t2x2` |
-| Large blank at slide bottom | First check item count (target 3-5 items per slide). If content is genuinely short, pin a `.co` callout. Only reduce page size when the entire deck is uniformly sparse. |
+| Large blank at slide bottom | First check item count (target 3-5 items per slide). Merge or remove a weak slide before changing layout. Only reduce page size when the entire deck is uniformly sparse. |
 | CJK text looks tight | Add `letter-spacing: 0.3pt` |
 
 ### Core principles
 
 1. `letter-spacing` matters more than `font-size` for CJK density
-2. 2×2 layouts use `table`, not grid
-3. No section divider slides
-4. No white card panels on parchment; use border lines to divide
-5. Callout pins to bottom; whitespace above is the design
-6. Each bullet fits one line
-7. Shrink page first before adding more content
+2. No white card panels on parchment; use spacing first, then one neutral hairline only when a boundary must be explicit
 
 ### Marp variant
 
@@ -975,9 +981,9 @@ Files:
 
 | Asset | Path |
 |---|---|
-| CN theme CSS | `assets/templates/marp/slides-marp.css` |
+| CJK theme CSS (CN, JP/KO best-effort) | `assets/templates/marp/slides-marp.css` |
 | EN theme CSS | `assets/templates/marp/slides-marp-en.css` |
-| CN sample deck | `assets/templates/marp/slides-marp.md` |
+| CJK sample deck | `assets/templates/marp/slides-marp.md` |
 | EN sample deck | `assets/templates/marp/slides-marp-en.md` |
 
 Shared with WeasyPrint slides: every design token (`--parchment`, `--brand`, `--serif`, `--mono`), the Kami class scale (`.eyebrow`, `.lead`, `.mt`, `.ml`, `.mb`, `.mc`, `.co`, `.c2`, `table.t2x2`, `table.data`, `section.cover`), and the 280×158mm page size. The Marp theme is a port, not a redesign.
@@ -1001,7 +1007,7 @@ Marp-specific syntax to know:
 
 Constraints that bite if you arrive from the WeasyPrint slides:
 
-- The page unit is `section`, not `.slide`. CSS that targets `.slide` will not match. The theme already declares `section { width: 280mm; height: 158mm; position: relative; }`, so `.co { position: absolute; bottom: 12mm }` still pins to the bottom of the current slide.
+- The page unit is `section`, not `.slide`. CSS that targets `.slide` will not match. The theme already declares `section { width: 280mm; height: 158mm; position: relative; }`, so the theme's `.co { position: absolute; bottom: 18mm }` still pins to the bottom of the current slide.
 - Markdown blocks inside `<div>` wrappers need surrounding blank lines for Marp to parse them as Markdown. The sample deck shows the pattern for `.c2` and `table.t2x2`.
 - `paginate: true` injects a page number via the `section::after` pseudo-element. Do not also place a `.page-num` element by hand; you will get two numbers.
 
@@ -1135,12 +1141,41 @@ Use a small slot matrix before filling a landing page or product site. This keep
 
 Every screenshot path must resolve from the repo or a stable public URL. Never reference `/Users`, `file://`, or sibling checkouts. Missing visuals remain material gaps or omitted panels; they are not replaced with stock atmosphere.
 
+- **Localized UI needs localized captures.** When the product ships a localized UI, each locale page carries captures in that page's language (menu bars, window chrome, gallery states). One shared English screenshot across all locale pages breaks the promise the localized copy just made. Template the image directory per locale so every capture swaps at once, rather than overriding images one by one.
+- **Social image bytes must match the declared type.** A PNG renamed `.jpg` ships RGBA bytes against an `image/jpeg` Content-Type and social validators flag or drop it. Encode the og:image as a real baseline JPEG at 1200x630; the re-encode typically also cuts the file to a fraction of the PNG size.
+
 ### Layout
 
 - `max-width: 1120px` centered, padding `88px 64px 120px`
 - Sections numbered `00 · Label` through `04 · Label` with `section-num` / `section-title` / `section-lede` pattern
 - Two responsive breakpoints: `880px` (tablet) and `480px` (phone)
 - Section rhythm is a system, not per-gap. Run section spacing as one responsive ladder (e.g. desktop 96/72, tablet 72/54, phone 56/42). When a page reads too airy or too tight, scale the *whole* set by a single factor (about 0.75) across all breakpoints at once; nudging one gap leaves asymmetry, and asymmetry that survives tuning is structural. At the phone breakpoint step gutters down (64px to 16px) and shrink display sizes (hero title, price amount) in the same pass.
+
+### Single-line surfaces
+
+Certain copy surfaces must render as one line; a wrap there reads as a defect, not as text flow. The near-wrap state (one word from wrapping) counts as a failure too, because any locale or font fallback pushes it over.
+
+- Single-line at the desktop baseline (1280px): hero tagline, feature subtitles, benefit points, gallery captions, section ledes under ~12 words, footer ethos.
+- Single-line at 375px as well: key-fact tokens (price line, platform line, CTA labels, hero chips).
+- Check container geometry and forced breaks first, then shorten redundant wording without losing facts or approved meaning. Never shrink the font, force it with `<br>`, or shave padding to buy one word of width.
+- Any component whose height depends on its text (carousel captions, rotating taglines) must be verified with the longest shipped locale; a wrap that appears in one locale makes the component jump between slides.
+- One wrap found means sweeping every surface in this list across every locale, not fixing the reported spot (see `AGENTS.md` «Critical Line-Break Scan» for the PDF-side counterpart).
+
+### Decorative layers
+
+Start with the plain surface: page background, typography, content, and required
+controls. Add a background, particle field, connecting line, texture, or
+gradient motion only when it communicates a specific relationship, state, or
+brand fact that the plain version cannot. If its job can only be described as
+"more polished" or "fills the space," leave it out.
+
+### Mobile density inversion
+
+Below the phone breakpoint, the information diet reverses: images first, words second.
+
+- Feature blocks lead with the image; copy compresses to 1-2 sentences per block.
+- FAQ collapses by default (details/summary or equivalent); a phone reader scrolls past 8 open answers and loses the pricing section below them.
+- Wrap every hover style in `@media (hover: hover)`. On touch screens a tap must not flash the hover state; a flashing hover color on tap is a shipped bug, not a nicety.
 
 ### Eyebrow
 
@@ -1151,14 +1186,14 @@ Every screenshot path must resolve from the repo or a stable public URL. Never r
 ### Hero
 
 - Title: 96px (EN) / 88px (CN), weight 500, letter-spacing 0
-- Entrance animation: `translateY(10px) + blur(6px)` fading in over 900ms with 120ms delay
+- No entrance effect on the title. The product name should be immediately readable, not revealed through blur or staged motion
 - Tagline: 21px (EN) / 20px (CN), olive color, letter-spacing 0.2px (EN) / 0.4px (CN), max-width 820px
 - Tokens row: a few small chips as `<span>quality</span>`, 13px stone, `--latin-ui` font
 - CTA: pill buttons (border-radius 999px), primary filled + ghost outlined, 15px, 13px 28px padding
 - Quality chips, not a facts list. The tokens row should carry product *qualities* (good-looking, lightweight, AI-friendly), not an inventory (license, package manager, OS version). Push every hard fact to the footer or docs where it is referenceable. Pick about three.
 - No chip may repeat the tagline. Read tagline and chips together and cut any concept stated twice. If trimming a chip leaves an orphaned separator, the row should collapse to one clean line, not a dangling dot.
 - Wrap-safe chip separator. Put the middot on `span:not(:last-child)::after`, never on `::before` of the following item, so a chip that wraps to the next line never carries a leading dot. Use `color-mix(... 58%, transparent)` so the dot stays quieter than the text.
-- Line-widow discipline (title + tagline). Eliminate 1-2 word last lines by trimming the copy so the block rebalances, not by adding a `max-width` cap (a cap narrower than its container wraps early and leaves empty space on the right, which reads as a premature break). `text-wrap: balance` on the title and `pretty` on the tagline help only as a backstop; do not rely on them. Leave inherently-two-line notes alone.
+- Line-widow discipline (title + tagline). Use natural wrapping by default. Inspect container width and forced breaks before trimming redundant copy; preserve facts and approved meaning. Do not add a `max-width` cap merely to move a widow, or enable `balance` / `pretty` on body or tagline text by default. Deliberate headline balancing requires rendered verification. Leave inherently-two-line notes alone.
 
 ### Gallery
 
@@ -1166,12 +1201,17 @@ Every screenshot path must resolve from the repo or a stable public URL. Never r
 - Frame: dark background `--shot-bg: #141318`, rounded 8px, 1px border
 - Screenshots are final product surfaces first. Use real app/site captures over mockups; if the asset is missing, record a material gap or omit that panel rather than substituting unrelated imagery.
 - Transition: direction-aware slide + scale(0.985), 620-880ms cubic-bezier(0.22, 1, 0.36, 1)
-- Sweep overlay: diagonal light gradient that slides across on switch (540-920ms)
 - Auto-rotate: 4500ms interval, pauses on hover/focus, respects prefers-reduced-motion
 - Empty gallery: script exits cleanly; single-image gallery initializes caption/tab state without starting auto-rotate
 - Tabs: pill buttons 12px `--latin-ui`, active state uses brand-tint background
 - Click navigation: left half = previous, right half = next
-- Caption `.line`: italic serif, 14px olive. Poetic one-liners describing each screenshot
+- Caption `.line`: italic serif, 14px olive. Short captions explaining each screenshot or adding useful context
+- Rapid switching keeps caption and tab state synchronized with the visible frame; test by clicking faster than the transition duration, not just once per panel
+
+### Links
+
+- One link behavior across the whole site: brand color, no underline, hover lightens. Do not add per-component underline or color exceptions; two special cases drift into five and the reader loses the "brand color means clickable" contract.
+- That contract cuts both ways: brand color on non-links (FAQ questions, section titles) reads as clickable and misleads. Non-link headings stay near-black.
 
 ### Buttons
 
@@ -1188,7 +1228,12 @@ Mobile resting state: natural width, left-aligned to the hero text edge, height 
 
 ### Pricing
 
-- Amount: 112px serif, letter-spacing 0
+Content rules in `references/writing.md` «Pricing rules»: benefits lead, the price states itself once, the CTA never carries the number.
+
+- Benefits list `.price-benefits`: 4-6 items, serif 16px dark-warm, one line each at desktop width, plain borderless list (no bullets, no card frame)
+- Amount: 30px serif, one factual line (`$N · One-time purchase` shape), `lining-nums tabular-nums`; never display-size the price. Emphasis comes from the centered block and whitespace, not font size
+- The card stays quiet: no border box, shadow, or gradient. The page background and spacing provide the frame
+- CTA button label is the action (`Buy {{PRODUCT}}`), without the price
 - Comparison: 18px, use `<s>` for competitor prices (stone color, 1px underline)
 - Highlight: `.hl` class for brand-colored emphasis
 - Terms: 13.5px olive, centered, max-width 640px, line-height 1.5
@@ -1202,7 +1247,7 @@ Mobile resting state: natural width, left-aligned to the hero text edge, height 
 
 - `pre.code`: ivory background, 1px border, 6px radius, 18px 22px padding
 - Font: `--mono` 13.5px, tabular-nums, line-height 1.55; reduce to 11.5px at the phone breakpoint (480px) so wide lines stay legible without horizontal scroll. `code { min-width: max-content }` lets long lines scroll instead of wrapping.
-- Inline `code` is a distinct style, not the block palette: brand-tint background, brand text, 1px hairline, `0.9em`.
+- Inline `code` is an annotation, not a focal tag: `--inline-code-bg` background, dark-warm text, no border, 2px radius, minimal horizontal padding, `0.9em`.
 
 Screen code blocks may use a dark surface (`--shot-bg: #141318`, the same frame as the gallery) instead of ivory. Highlight at build time with zero runtime JS: a script bakes static `<span class>` markup (e.g. Pygments) and is idempotent, so re-running it after any doc edit refreshes the output; merge adjacent same-class spans so the markup stays small. Plain code stays the source of truth; the spans are generated, never hand-authored. Keep the token palette restrained on the dark surface:
 
@@ -1222,17 +1267,33 @@ Blocks without `class="language-*"` stay monochrome.
 - Flex row with 32px gap, each metric is value (36px serif 500) + label (13px `--latin-ui` stone)
 - `font-variant-numeric: tabular-nums` on values
 
+### Cards (site-wide contract)
+
+Like «Links» and «Buttons», cards are a vocabulary, not a per-section choice.
+
+- One border treatment across every card on the site (same token, same width). Before styling a new card component, grep the page for existing card borders and reuse them; "this section's cards look different" is the most-reported drift.
+- Ordinary cards stay flat on hover. If the whole card is a link, use the existing link color and a visible focus outline; do not simulate importance with shadow or lift.
+- Re-verify foreground/background contrast in the hover state, not just the resting state. A hover that recolors the background can land text on a same-color background (this has shipped); any hover that changes either color must be checked with both.
+
 ### Demo Card Grid
 
 - `auto-fill, minmax(240px, 1fr)` grid, 18px gap
-- Cards: ivory bg, 1px border, 8px radius, whisper shadow on hover
+- Cards: ivory bg, 1px border, 8px radius, no shadow or lift on hover
 - Image fills top, title 15px weight 500 + desc 12px olive below
+
+### Content card lists (article / blog indexes)
+
+For card grids whose content is written text (article listings, changelog indexes), length is controlled twice: at write time and at render time.
+
+- Title: `-webkit-line-clamp: 2` with ellipsis as the hard stop, but write titles to fit one line; a two-line title is tolerated, not targeted. Titles carry no parenthetical asides (move them into the summary) and use a tighter line-height than body text (1.2-1.3).
+- Summary: `-webkit-line-clamp: 4` with ellipsis. Never let overflow push card heights apart; the clamp keeps the grid rhythm even when content varies.
+- Clamp plus ellipsis is the only truncation gesture: no fading text, no "read more" inline links inside the clamped block.
 
 ### Features
 
 - Two-column grid: 200px name + 1fr description, 36px gap, separated by border-soft hairlines
 - Feature name: 22px brand, weight 500
-- Poetic subtitle: `<small>` below name, 13px olive, italic. One short line evoking the feature's character
+- Optional subtitle: `<small>` below name, 13px olive, italic. One short line adding useful context to the feature name
 - Description: 15px dark-warm, line-height 1.55
 - Tables stay editorial: no framed box, no tinted header bar, no vertical rules, no empty right gap. Content-sized columns, hairline row rules, a muted `--latin-ui` uppercase header. On phone, `display: block; overflow-x: auto` rather than cramming columns. A framed, tinted table adds weight without adding information.
 
@@ -1253,14 +1314,23 @@ The `.features` list above is the shipped default. A feature *row* (a visual on 
 - Wrap each dt/dd pair in `<div class="faq-pair">` for spacing (24px margin-bottom)
 - `<dt>` question: 16px, weight 500, no top margin
 - `<dd>` answer: 14px olive
-- Code spans: mono 12px on brand-tint background, 3px radius
+- Code spans: mono 12px, `--inline-code-bg` background, dark-warm text, no border, 2px radius
 - Tail paragraph: `.faq-tail` after `</dl>`, 13px stone, links to help page. Closes the FAQ without another section
+
+### Testimonial wall (only with real quotes)
+
+No template ships this section; build it only from real, attributed quotes (name, handle or source). When the quotes flow in masonry columns with a collapsed default state:
+
+- Clip the collapsed wall to the SHORTEST column so the fold is one flat line under the fade. Columns fill until each passes the collapse height and overshoot unevenly; clipped to the tallest, the expand control hangs off one column with dead space beside the others.
+- One expand control ("Show all") below the fade; the expanded state removes the clip entirely. Expansion reveals everything at once (no pagination, no second click) and keeps the scroll position anchored at the control; jumping the viewport to the bottom of the expanded wall disorients the reader.
+- Collapsed height is a conversion decision: roughly 9-12 quotes, and never so tall that the pricing section drops out of comfortable reach. Which quotes may appear collapsed is a content rule; see `references/writing.md` «Social proof rules».
+- An external "more quotes" link (search results, social feed) renders as a card in the wall's own visual language, placed last, one line of copy; a styled button or foreign embed after the wall reads as an ad.
 
 ### Footer
 
 - Two-column flex: brand mark (icon + name + tagline) left, colophon (links + ethos) right
 - Mark icon: 56px rounded 8px
-- Links: inline with middot (`&middot;`) separators between items, dark-warm color. Editorial pattern, not flex-gap
+- Links: middot separators live on `a:not(:last-child)::after`; anchors stay inline-block so wrapping never leaves a leading separator. Do not join the row with `&nbsp;`
 - Ethos: closing italic serif line, olive color, max-width 360px. The italic voice signals a personal sign-off
 - Tech credit, once. If the product builds on an upstream project or framework, credit it exactly once as a quiet footer line, never as a repeated selling point and never in the hero tagline. Grep the whole site for the upstream name and collapse it to this single instance; rewrite the hero around the product's own positioning. Hard facts that are not the credit (license, version) belong here too.
 - Collapses to single column below 880px
@@ -1272,7 +1342,7 @@ The `.features` list above is the shipped default. A feature *row* (a visual on 
 - **Avoid scaling the currency glyph with super.** Do not write `.price-currency { font-size: 0.5em; vertical-align: super }`. That trick makes `$` and the digit visually unequal. Prefer `font-size: 0.74em; line-height: 1; transform: translateY(0.015em);`.
 - **Language menu items need vertical room for descenders.** When `<a>` inside `.lang-menu` has `line-height: 1`, the descender of 'g' / 'y' / 'p' is clipped. Use `min-height: 32px; padding: 6px 10px; line-height: 1.35;`. Add an invisible `::before` bridge between trigger and menu so the cursor can cross the gap without dismissing the menu.
 
-> The main landing-page template does not ship a language switcher or a price card by default; the `{{HERO_LINKS}}` slot is where one would go. Kami's own site at `styles.css` L67-151 ships a tested `.lang-switch` + `.lang-menu` implementation (hover bridge, descender padding, focus-within fallback). Copy it when you add multi-locale links to a landing page.
+> The main landing-page template ships a pricing section but no language switcher; the `{{HERO_LINKS}}` slot is where one would go. Kami's own `styles.css` ships a tested `.lang-switch` + `.lang-menu` implementation (hover bridge, descender padding, focus-within fallback); grep for `.lang-switch`. Copy it when you add multi-locale links to a landing page.
 
 ### Multilingual SEO scaffolding
 
@@ -1304,23 +1374,26 @@ When the product site grows docs, help, or guide pages (see «Product site syste
 - On-this-page TOC: a thin in-flow list under a hairline top border, with a `--latin-ui` uppercase 11px "On this page" heading and depth-3 entries indented about 12px. Hide it entirely below the tablet breakpoint; it is an aid, not content.
 - Prev/next pager: quiet borderless text links, not bordered cards. A 2-column grid with one thin top divider; each link is a `--latin-ui` uppercase "Previous"/"Next" eyebrow over a brand serif title, `border: 0; background: none`. The next link aligns right (resets left on phone). Press feedback via `:active { opacity: 0.6 }`. A bordered card here reads heavy on mobile.
 - Mobile (tablet breakpoint): the sidebar un-sticks (`position: static`) and collapses to a horizontal scroll strip (`display: flex; overflow-x: auto; scrollbar-width: none`) with the active rail moved to `border-bottom`; the TOC is hidden. Reuse the landing page's existing breakpoints; do not invent a new ladder.
+- Acceptance: at 1280px the prose column holds the ~720px measure; at 375px the sidebar reads as a horizontal strip with the active rail on `border-bottom` and zero page overflow; `aria-current` and the visual rail always agree.
+
+### Dashboards (screen, no template)
+
+Data dashboards built in the Kami idiom (analytics boards, sales views, status pages) inherit the full design system plus these information rules. No template ships; build from the landing-page shell.
+
+- **One currency, one unit system.** Mixed currencies get converted to a single display currency before anything renders; a board that shows three currencies side by side cannot be scanned. Same for units (GB vs MB, days vs hours).
+- **Zero rows disappear.** Regions, SKUs, or days with a zero value are hidden or aggregated into "other", not rendered as rows of zeros. Empty rows are noise wearing a grid.
+- **One meaningful default time range.** Since-launch or last-30-days, chosen once; every selector option must answer a question the owner actually asks. Cut options rather than adding them.
+- **Implementation detail stays out of the surface.** Sync mechanisms, API states, internal field names, and refresh plumbing belong in logs, not on the board. The reader is deciding, not debugging.
+- **Every chart answers one question.** Where is growth, which region buys, what broke: if a chart only restates a number that is already on screen as a stat, delete the chart (screen twin of `references/anti-patterns.md` #18).
+- Numbers on the board follow the reconciliation rule: totals must be checked against one authoritative source before shipping, with the basis noted.
 
 ## 12. Mermaid diagrams
 
 Mermaid text is turned into Kami-styled diagrams via beautiful-mermaid plus
 `scripts/mermaid_normalize.py`. The theme maps beautiful-mermaid's seven color
-roles onto the canonical palette (single source: `references/mermaid-theme.json`,
-kept in sync with `tokens.json`):
-
-| role | token | hex |
-|------|-------|-----|
-| `bg` | `--parchment` | `#f5f4ed` |
-| `fg` | `--near-black` | `#141413` |
-| `line` | `--olive` | `#504e49` |
-| `accent` | `--brand` | `#1B365D` |
-| `muted` | `--stone` | `#6b6a64` |
-| `surface` | `--ivory` | `#faf9f5` |
-| `border` | `--border` | `#e8e6dc` |
+roles onto the canonical palette. `references/mermaid-theme.json` is the single
+source, kept in sync with `tokens.json`; `references/mermaid.md` «The Kami theme»
+prints the role-to-token mapping in readable form.
 
 Same invariants as every other surface: parchment canvas, one chromatic accent
 (ink-blue marks the focal element only), warm neutrals for everything else, serif
@@ -1334,10 +1407,13 @@ not apply). Full pipeline and rationale in `references/mermaid.md`.
 
 Before declaring any screen change done, screenshot the real rendered surface; a type check or CSS-balance read is not enough. Several regressions (early wraps, orphaned separator dots, table overflow, missed pages) are invisible in source and only show in the render.
 
-- Capture at phone (375px, plus 320px for CTAs) and desktop (1280px), in every shipped locale.
-- Scan for line widows objectively: measure each text block's last-line width against its widest line and flag anything below about 13%. Eyeballing misses pages, and nested `<code>` hides widows from greps. Accept "0 widows" only after the check confirms it.
+- Capture at phone (375px, plus 320px for CTAs), desktop (1280px), both sides of each actual breakpoint, and an intermediate tablet width, in every shipped locale. These are verification samples, not instructions to add layout branches.
+- Measure each text block's last-line width against its widest line; a ratio below about 13% is a review candidate, not a defect verdict. Inspect the rendered context, including nested `<code>` and intentional short lines, before changing anything. Preserve natural, meaningful text rather than rewriting it to force the candidate count to zero.
 - Confirm CTAs reach their natural-width left-aligned resting state with no overflow, code is legible at the reduced mobile font, the gallery and any multi-column grids collapse to a single column, and total page overflow is zero.
+- Scan each screenshot for sparse blocks: a low-information region taller than about a quarter viewport, an empty grid slot, or a single item rattling in a multi-column row. Fix by tightening, merging, rewriting, or removing the weak block. Add content only when required evidence is genuinely missing, never to fill space.
+- Check every «Single-line surfaces» entry at its required widths; key-fact tokens (price, platform, CTA) must hold one line at 375px.
 - Long pages do not fit one viewport; use a capture helper that can scroll to a specific element (first code block, pager) before shooting.
+- Serve fresh bytes: browsers cache stylesheets and restore scroll positions, so a plain reload can screenshot the OLD css at the OLD scroll point and pass a broken change. Verify through a cache-busted URL (or a fresh-named temp copy of the page) and confirm the viewport actually shows the section under review before trusting the capture.
 
 ## KO locale tuning
 

@@ -22,6 +22,7 @@ export const navigation: NavSection[] = [
     title: "Reference",
     items: [
       { name: "Commands", href: "/commands" },
+      { name: "WebMCP", href: "/webmcp" },
       { name: "Configuration", href: "/configuration" },
       { name: "Plugins", href: "/plugins" },
       { name: "Selectors", href: "/selectors" },
@@ -60,6 +61,10 @@ export const navigation: NavSection[] = [
       { name: "Browserbase", href: "/providers/browserbase" },
       { name: "Browserless", href: "/providers/browserless" },
       { name: "Kernel", href: "/providers/kernel" },
+      {
+        name: "Remote Agent Browser",
+        href: "/providers/remote-agent-browser",
+      },
     ],
   },
   {

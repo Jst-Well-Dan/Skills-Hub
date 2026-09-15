@@ -4,7 +4,7 @@
 
 雪踏乌云维护的 AI Agent Skill 全集，适用于 Codex、Claude Code 等支持 `SKILL.md` 的 Agent 工作流。
 
-当前共 **54 个 Skill**，分为两大类：
+当前共 **57 个 Skill**，分为两大类：
 
 ### 🎬 内容创作（视频 / 图文 / 文章）
 
@@ -13,6 +13,18 @@
 ### 💻 编码开发
 
 通用编码 Skill，持续补充中。
+
+## ❤️ 赞助商
+
+<table>
+<tr>
+<td width="180" align="center"><a href="https://www.packyapi.com/register?aff=cSVG"><img src="https://raw.githubusercontent.com/farion1231/cc-switch/main/assets/partners/logos/packycode.png" alt="PackyCode" width="150"></a></td>
+<td>
+<p>PackyCode 是一家稳定、高效的 API 中转服务商，一句话接入主流大模型。统一域名、统一密钥、智能容灾切换，97% 可用性。人民币1:1充值，无汇率无手续费坑，新用户首充立享折扣 + $1免费体验额度，多分组折扣低至 2 折起，提供专属Codex/Claude Code高速通道。</p>
+<p><strong><a href="https://www.packyapi.com/register?aff=cSVG">点此链接注册，立即开始使用！</a></strong></p>
+</td>
+</tr>
+</table>
 
 ## RN Cover Skill
 
@@ -73,6 +85,12 @@ cp -R skills/ra-人话 <project>/.claude/skills/ra-人话
 
 标记 `⬡` 的 Skill 来自或改编自外部开源项目，详见表中来源列和底部[致谢](#致谢与改编说明)。
 
+### Agent 与工具调用
+
+| Skill | 说明 | 来源 |
+|-------|------|------|
+| [`grok-build-cli`](skills/grok-build-cli/) | 让 Codex 调用本机 Grok Build CLI：检查登录与模型、选择单轮或 Agentic 调用、轮询长任务并可靠返回结果 | 原创 |
+
 ### 选题与策划
 
 | Skill | 说明 | 来源 |
@@ -81,6 +99,7 @@ cp -R skills/ra-人话 <project>/.claude/skills/ra-人话
 | [`ra-实操策划`](skills/ra-实操策划/) | 实操长片策划稿：测试题组、结构时间轴、出镜口播稿、录屏操作清单 | 原创 |
 | [`ra-hook`](skills/ra-hook/) | 短视频钩子选型：7 种类型 × 3 大类，带前提条件、句型模板和常见错误 | 原创 |
 | [`ra-video-title`](skills/ra-video-title/) | 视频标题生成：主题锁定 → 对标拆解 → 8-12 个两段式候选 + Top 3 推荐 | 原创 |
+| [`孙宇晨`](skills/孙宇晨/)（别名 [`孙割`](skills/孙割/)） | 孙宇晨公开决策模式分析：注意力采购、叙事覆盖、身份杠杆、场景切换、复制闭环+溢价、钱当溶剂六个模式，给你自己的选题/发布/公关决策做沙盘推演，不扮演 | 原创 |
 
 ### 内容创作
 
@@ -134,6 +153,7 @@ cp -R skills/ra-人话 <project>/.claude/skills/ra-人话
 | [`skill-cover`](skills/skill-cover/) | 封面生成：注册风格、双比例资产、自动出图 | 原创 |
 | [`editorial-dot-cover`](skills/editorial-dot-cover/) | 点阵编辑风封面：暖灰纸底 + 超大中文标题 + 留白 + 点阵矢量图标，输出 SVG + PNG | 原创 |
 | [`editorial-collage-motion`](skills/editorial-collage-motion/) | 半色调纸张拼贴动效：参考拆解 → 静帧生成 → 逐件组装动画 | ⬡ 灵感源自 [Vikash Kumar / Arcads Collage Motion](https://buldrr.com/arcads-collage-motion-skill/)，本地免费兼容版 |
+| [`rn-niulai-style-image`](skills/rn-niulai-style-image/) | 把实拍或电影画面转成《牛来》正片那种粗粝充气人偶 3D。默认学公开正片截帧，水墨海报模式需明确指定 | 原创 |
 
 ### 图文制作
 
@@ -154,6 +174,7 @@ cp -R skills/ra-人话 <project>/.claude/skills/ra-人话
 |-------|------|------|
 | [`rn-motion-director`](skills/rn-motion-director/) | 动效导演：选题/脚本 → 动效视频概念、视觉隐喻、运动语法、Anti-PPT 质量门 | 原创 |
 | [`rn-motion-replica`](skills/rn-motion-replica/) | 参考动效复刻：从获授权参考片段构建原创可编辑 HyperFrames 工程 + QC | 原创 |
+| [`rn-human-motion-extractor`](skills/rn-human-motion-extractor/) | 真人动作提取：参考视频 → 逐帧人体/双手关键点、匿名骨架视频与置信度质检 | 原创 |
 | [`rn-dark-saas-video`](skills/rn-dark-saas-video/) | 暗色 SaaS 产品视频：8 套场景蓝图、3 种时长预设 | 原创 |
 | [`rn-bw-text-opener`](skills/rn-bw-text-opener/) | 黑白打字机开场动画：3 种时长预设，附 Python 时序规划脚本 | 原创 |
 | [`rn-replica-qc`](skills/rn-replica-qc/) | 复刻质检：五级保真度 + 素材/运行时/交付三道全帧门 | 原创 |
@@ -222,3 +243,7 @@ cp -R skills/ra-人话 <project>/.claude/skills/ra-人话
 ## 作者
 
 雪踏乌云 · [@Pluvio9yte](https://x.com/Pluvio9yte)
+
+## Star 增长曲线
+
+[![Star 增长曲线](https://api.star-history.com/svg?repos=Pluviobyte/rnskill&type=Date)](https://www.star-history.com/#Pluviobyte/rnskill&Date)

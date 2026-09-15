@@ -19,6 +19,7 @@ REGISTRY_DIR = ROOT / "registry"
 PROJECTS_FILE = REGISTRY_DIR / "projects.yaml"
 TAGS_FILE = REGISTRY_DIR / "tags.yaml"
 CATEGORIES_FILE = REGISTRY_DIR / "categories.yaml"
+AGENTS_FILE = REGISTRY_DIR / "agents.json"
 DOCS_DIR = ROOT / "docs"
 
 
@@ -270,6 +271,26 @@ def load_registry() -> dict[str, Any]:
     if not PROJECTS_FILE.exists():
         return {"projects": []}
     return json.loads(PROJECTS_FILE.read_text(encoding="utf-8"))
+
+
+def load_agents() -> dict[str, Any]:
+    """加载 agent skills 路径映射表（来源见文件内 source 字段）。
+
+    返回 {"agents": [{id, name, project, global, common}], ...}，
+    global 为 None 表示该 agent 仅支持项目级目录。"""
+    if not AGENTS_FILE.exists():
+        return {"agents": []}
+    try:
+        data = json.loads(AGENTS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {"agents": []}
+    agents = data.get("agents", []) if isinstance(data, dict) else []
+    return {"agents": agents, "source": data.get("source", ""), "updated": data.get("updated", "")}
+
+
+def agent_index() -> dict[str, dict[str, Any]]:
+    """id -> agent 条目 的速查表。"""
+    return {a["id"]: a for a in load_agents().get("agents", []) if a.get("id")}
 
 
 def save_registry(data: dict[str, Any]) -> None:

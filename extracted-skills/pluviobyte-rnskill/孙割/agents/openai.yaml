@@ -1,0 +1,6 @@
+interface:
+  display_name: "孙割.skill（孙宇晨别名）"
+  short_description: "跳转到孙宇晨.skill"
+  default_prompt: "Use $孙割 as an alias of $孙宇晨. Load 孙宇晨/SKILL.md and return the structured analysis. Do not roleplay as him."
+policy:
+  allow_implicit_invocation: true

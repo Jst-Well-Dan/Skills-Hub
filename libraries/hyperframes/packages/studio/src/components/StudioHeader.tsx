@@ -196,6 +196,21 @@ export function ViewModeToggle() {
   );
 }
 
+/**
+ * Does the header's Inspector button open the panel, or close it?
+ *
+ * Takes the EFFECTIVE collapse state, so a panel the window has railed away
+ * counts as closed even though the user's stored intent still says open. The
+ * argument name is the guard: passing raw intent here is the bug this exists
+ * to keep out.
+ */
+export function shouldOpenInspector(
+  effectiveRightCollapsed: boolean,
+  inspectorPanelActive: boolean,
+): boolean {
+  return effectiveRightCollapsed || !inspectorPanelActive;
+}
+
 // fallow-ignore-next-line complexity
 export function StudioHeader({
   captureFrameHref,
@@ -208,8 +223,13 @@ export function StudioHeader({
   onExport,
 }: StudioHeaderProps) {
   const { projectId, editHistory, handleUndo, handleRedo, renderQueue } = useStudioShellContext();
-  const { rightCollapsed, setRightCollapsed, setRightPanelTab } = usePanelLayoutContext();
+  // effectiveRightCollapsed, not the raw intent: in the auto-railed state the
+  // intent is still "open" while the panel is hidden, so branching on intent
+  // made this button write rightCollapsed=true — and that value is synced into
+  // the shareable Studio URL, so a dead click would rewrite a link.
+  const { effectiveRightCollapsed, setRightCollapsed, setRightPanelTab } = usePanelLayoutContext();
   const isRendering = renderQueue.isRendering;
+  const ffmpegMissing = renderQueue.ffmpegMissing;
 
   return (
     <div className="flex items-center justify-between h-10 px-3 bg-neutral-900 border-b border-neutral-800 flex-shrink-0">
@@ -328,7 +348,7 @@ export function StudioHeader({
           <button
             type="button"
             onClick={() => {
-              if (rightCollapsed || !inspectorPanelActive) {
+              if (shouldOpenInspector(effectiveRightCollapsed, inspectorPanelActive)) {
                 trackStudioEvent("panel_toggle", { panel: "inspector", collapsed: false });
                 setRightPanelTab("design");
                 setRightCollapsed(false);
@@ -363,7 +383,11 @@ export function StudioHeader({
         </Tooltip>
         <Tooltip
           label={
-            isRendering ? "A render is already in progress" : "Render and export this composition"
+            ffmpegMissing
+              ? "FFmpeg is not installed. Opens the Renders panel with the install command."
+              : isRendering
+                ? "A render is already in progress"
+                : "Render and export this composition"
           }
           side="bottom"
         >
@@ -374,6 +398,12 @@ export function StudioHeader({
               if (isRendering) return;
               setRightPanelTab("renders");
               setRightCollapsed(false);
+              // Without an encoder this render cannot finish, so the click
+              // delivers the user to the prompt that fixes it instead of
+              // queueing a job that exists only to fail. Disabling the button
+              // would leave them staring at a dead control with no route to
+              // the explanation.
+              if (ffmpegMissing) return;
               onExport?.();
             }}
             className="h-7 flex items-center gap-1.5 px-3 rounded-md text-[11px] font-semibold bg-studio-accent text-[#09090B] enabled:hover:brightness-110 transition-[filter,transform] enabled:active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"

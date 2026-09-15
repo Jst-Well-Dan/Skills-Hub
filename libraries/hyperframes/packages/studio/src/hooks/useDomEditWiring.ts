@@ -23,6 +23,8 @@ export interface UseDomEditWiringParams {
   activeCompPath: string | null;
   domEditSelection: DomEditSelection | null;
   domEditSelectionRef: React.MutableRefObject<DomEditSelection | null>;
+  domEditGroupSelectionsRef: React.MutableRefObject<DomEditSelection[]>;
+  refreshDomEditGroupSelectionsFromPreview: (selections: DomEditSelection[]) => Promise<void>;
   previewIframeRef: React.RefObject<HTMLIFrameElement | null>;
   previewIframe: HTMLIFrameElement | null;
   captionEditMode: boolean;
@@ -31,7 +33,7 @@ export interface UseDomEditWiringParams {
   bumpGsapCache: () => void;
   showToast: (message: string, tone?: "error" | "info") => void;
   refreshPreviewDocumentVersion: () => void;
-  syncPreviewHistoryHotkey: (iframe: HTMLIFrameElement | null) => void;
+  syncPreviewHotkeys: (iframe: HTMLIFrameElement | null) => void;
   applyStudioManualEditsToPreviewRef: React.MutableRefObject<
     (iframe: HTMLIFrameElement) => Promise<void>
   >;
@@ -105,7 +107,7 @@ export interface UseDomEditWiringParams {
     resolvedFromValues?: Record<string, number | string>,
   ) => Promise<void>;
   removeAllKeyframes: (sel: DomEditSelection, animId: string) => Promise<void>;
-  handleDomManualEditsReset: (sel: DomEditSelection) => void;
+  handleDomManualEditsReset: (sel: DomEditSelection) => Promise<void>;
 }
 
 // fallow-ignore-next-line complexity
@@ -115,6 +117,8 @@ export function useDomEditWiring({
   activeCompPath,
   domEditSelection,
   domEditSelectionRef,
+  domEditGroupSelectionsRef,
+  refreshDomEditGroupSelectionsFromPreview,
   previewIframeRef,
   previewIframe,
   captionEditMode,
@@ -123,7 +127,7 @@ export function useDomEditWiring({
   bumpGsapCache,
   showToast,
   refreshPreviewDocumentVersion,
-  syncPreviewHistoryHotkey,
+  syncPreviewHotkeys,
   applyStudioManualEditsToPreviewRef,
   applyDomSelection,
   buildDomSelectionFromTarget,
@@ -219,7 +223,7 @@ export function useDomEditWiring({
   // ── Telemetry & fallback ──
 
   const trackGsapInteractionFailure = useGsapInteractionFailureTelemetry(activeCompPath, showToast);
-  const makeFetchFallback = useGsapAnimationFetchFallback(projectId, gsapSourceFile);
+  const makeFetchFallback = useGsapAnimationFetchFallback(projectId);
 
   // ── GSAP selection handlers ──
 
@@ -254,11 +258,13 @@ export function useDomEditWiring({
     activeCompPath,
     captionEditMode,
     domEditSelectionRef,
+    domEditGroupSelectionsRef,
     domEditSelection,
     applyDomSelection,
+    refreshDomEditGroupSelectionsFromPreview,
     buildDomSelectionFromTarget,
     refreshPreviewDocumentVersion,
-    syncPreviewHistoryHotkey,
+    syncPreviewHotkeys,
     applyStudioManualEditsToPreviewRef,
     openSourceForSelection,
     getSidebarTab,

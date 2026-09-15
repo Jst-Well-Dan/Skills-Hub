@@ -198,6 +198,31 @@ describe("injectDeterministicFontFaces — failClosedFontFetch: true", () => {
     expect((caught as FontFetchError).code).toBe(FONT_FETCH_FAILED);
   });
 
+  it("fails closed when a secondary family in the authored cascade is unresolved", async () => {
+    const html = `<!doctype html><html><head><style>
+      body { font-family: "Inter", "Author Custom Fallback", sans-serif; }
+    </style></head><body><p>hello</p></body></html>`;
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const family = new URL(input instanceof Request ? input.url : String(input)).searchParams.get(
+        "family",
+      );
+      return family?.startsWith("Inter:")
+        ? new Response("/* bundled Inter is sufficient */", { status: 200 })
+        : new Response("", { status: 400 });
+    }) as unknown as typeof fetch;
+
+    const caught = await rejectedError(
+      injectDeterministicFontFaces(html, {
+        failClosedFontFetch: true,
+        allowSystemFontCapture: false,
+        fetchImpl,
+      }),
+    );
+
+    expect(caught).toBeInstanceOf(FontFetchError);
+    expect((caught as FontFetchError).familyName).toContain("Author Custom Fallback");
+  });
+
   it("throws FontFetchUnavailableError on an exhausted 5xx response", async () => {
     const caught = await rejectedError(
       injectDeterministicFontFaces(HTML_REQUESTING_UNRESOLVED_FONT, {
@@ -246,6 +271,17 @@ describe("injectDeterministicFontFaces — failClosedFontFetch: true", () => {
     const html = `<!doctype html><html><head><style>
       body { font-family: var(--missing-font), sans-serif; }
     </style></head><body><h1>hello</h1></body></html>`;
+    const result = await injectDeterministicFontFaces(html, {
+      failClosedFontFetch: true,
+      fetchImpl: makeFailingFetch(),
+    });
+    expect(result).toBe(html);
+  });
+
+  it("does NOT throw when font-family uses a CSS var() reference with a fallback", async () => {
+    const html = `<!doctype html><html><head><style>
+      .title { font-family: var(--brand-font, inherit); }
+    </style></head><body><h1 class="title">hello</h1></body></html>`;
     const result = await injectDeterministicFontFaces(html, {
       failClosedFontFetch: true,
       fetchImpl: makeFailingFetch(),
